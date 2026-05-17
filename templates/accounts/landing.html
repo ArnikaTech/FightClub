@@ -1,9 +1,37 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}باشگاه ستاره‌ها | هاپکیدو{% endblock %}
 
 {% block content %}
-<h1>باشگاه ستاره‌ها</h1>
-<p>هاپکیدو</p>
-<a href="{% url 'accounts:login' %}">ورود به باشگاه</a>
+<div class="landing-screen">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-pattern"></div>
+    <div class="landing-particles" id="particlesContainer"></div>
+    
+    <div class="landing-content">
+        <div class="landing-logo animate__animated animate__fadeInDown">
+            <div class="logo-ring">
+                <div class="logo-inner">
+                    <i class="bi bi-shield-fill"></i>
+                </div>
+            </div>
+            <h1 class="gym-name">{{ site_settings.gym_name|default:"باشگاه ستاره‌ها" }}</h1>
+            <p class="gym-tagline">{{ site_settings.gym_type|default:"هاپکیدو" }}</p>
+        </div>
+        
+        <a href="{% url 'accounts:login' %}" class="landing-btn animate__animated animate__fadeInUp animate__delay-1s">
+            <i class="bi bi-box-arrow-in-left"></i>
+            ورود به باشگاه
+        </a>
+        
+        <div class="landing-quote animate__animated animate__fadeIn animate__delay-2s">
+            <div class="quote-divider"></div>
+            <p>هر <span>تمرین</span>، یک قدم به <span>قدرت</span> نزدیک‌تری</p>
+        </div>
+    </div>
+</div>
 {% endblock %}

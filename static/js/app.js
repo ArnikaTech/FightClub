@@ -103,11 +103,11 @@ document.addEventListener('DOMContentLoaded', function() {
             var phone = phoneInput ? phoneInput.value.trim() : '';
             var pass = passwordInput ? passwordInput.value.trim() : '';
             if (!phone || phone.length < 10) {
-                showLoginError('شماره موبایل معتبر وارد کنید', phoneInput);
+                showLoginError('شماره همراه معتبر وارد کنید', phoneInput);
                 return;
             }
             if (!pass || pass.length < 4) {
-                showLoginError('رمز عبور حداقل ۴ کاراکتر باشد', passwordInput);
+                showLoginError('گذرواژه حداقل ۴ حرف باشد', passwordInput);
                 return;
             }
             loginSubmit.classList.add('loading');

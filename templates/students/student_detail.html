@@ -17,10 +17,10 @@
     <tr><th>کد ملی</th><td>{{ student.user.national_code|default:"-" }}</td></tr>
     <tr><th>وضعیت بیمه</th><td>
         {% with days=student.insurance_days_left %}
-            {% if days is not None %}
-                {% if days <= 7 %}🟠 {{ days }} روز
-                {% else %}🟢 {{ days }} روز{% endif %}
-            {% else %}🔴 منقضی{% endif %}
+        {% if days is not None %}
+        {% if days <= 7 %}🟠 {{ days }} روز
+        {% else %}🟢 {{ days }} روز{% endif %}
+        {% else %}🔴 منقضی{% endif %}
         {% endwith %}
     </td></tr>
 </table>
@@ -38,10 +38,10 @@
             <td>{{ insurance.expiry_date|jformat:"%Y/%m/%d" }}</td>
             <td>
                 {% if insurance.expiry_date >= today %}
-    🟢 فعال
-{% else %}
-    🔴 منقضی
-{% endif %}
+                    🟢 فعال
+                {% else %}
+                    🔴 منقضی
+                {% endif %}
             </td>
             <td>{{ insurance.created_at|jformat:"%Y/%m/%d" }}</td>
         </tr>
@@ -53,14 +53,14 @@
 {% endif %}
 
 {% for contact in student.contacts.all %}
-    <p>
-        {{ contact.label|default:contact.get_contact_type_display }}: {{ contact.phone }}
-        <a href="tel:{{ contact.phone }}">📞</a>
-        <a href="{% url 'students:contact_edit' contact.pk %}">✏️</a>
-        <form method="post" action="{% url 'students:contact_delete' contact.pk %}" style="display:inline;" onsubmit="return confirm('حذف شود؟')">
-            {% csrf_token %}<button type="submit">❌</button>
-        </form>
-    </p>
+<p>
+    {{ contact.label|default:contact.get_contact_type_display }}: {{ contact.phone }}
+    <a href="tel:{{ contact.phone }}">📞</a>
+    <a href="{% url 'students:contact_edit' contact.pk %}">✏️</a>
+    <form method="post" action="{% url 'students:contact_delete' contact.pk %}" style="display:inline;" onsubmit="return confirm('حذف شود؟')">
+        {% csrf_token %}<button type="submit">❌</button>
+    </form>
+</p>
 {% endfor %}
 
 <h3>ثبت شماره والدین</h3>

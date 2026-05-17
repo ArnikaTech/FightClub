@@ -3,18 +3,79 @@
 {% block title %}ورود | باشگاه ستاره‌ها{% endblock %}
 
 {% block content %}
-<h1>ورود</h1>
+<div class="login-page">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    
+    <div class="login-card card-glass animate__animated animate__fadeInUp">
+        <a href="{% url 'accounts:landing' %}" class="login-back">
+            <i class="bi bi-arrow-right"></i>
+            بازگشت
+        </a>
+        
+        <div class="login-header">
+            <div class="icon-circle"><i class="bi bi-shield-fill"></i></div>
+            <h2>ورود به باشگاه</h2>
+            <p>برای ادامه شماره همراه و گذرواژه را وارد کنید</p>
+        </div>
+        
+        {% if messages %}
+        {% for m in messages %}
+        <div class="login-error">
+            <div class="alert-glass-danger">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>{{ m }}</span>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="login-input-group">
+                <input type="tel" name="username" class="input-glass" placeholder="شماره همراه" required>
+                <span class="input-icon"><i class="bi bi-phone"></i></span>
+            </div>
+            <div class="login-input-group">
+                <input type="password" name="password" id="password" class="input-glass" placeholder="گذرواژه" required>
+                <button type="button" class="toggle-password" id="togglePassword">
+                    <i class="bi bi-eye-slash"></i>
+                </button>
+                <span class="input-icon"><i class="bi bi-lock"></i></span>
+            </div>
+            <div class="login-options">
+                <label class="remember-label">
+                    <input type="checkbox" class="checkbox-custom">
+                    مرا به خاطر بسپار
+                </label>
+                <a href="#" class="forgot-link">فراموشی گذرواژه</a>
+            </div>
+            <button type="submit" id="btnSubmit" class="login-submit btn-primary-gradient">
+                <span class="btn-text">ورود</span>
+                <i class="bi bi-box-arrow-in-left"></i>
+                <span class="spinner spinner-small"></span>
+            </button>
+            <div class="login-divider divider-text">یا</div>
+            <a href="#" class="login-otp btn-glass">
+                <i class="bi bi-chat-dots-fill"></i>
+                ورود با گذرواژه یکبار مصرف
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}
 
-{% if messages %}
-    {% for m in messages %}
-        <p>{{ m }}</p>
-    {% endfor %}
-{% endif %}
-
-<form method="post">
-    {% csrf_token %}
-    <input type="text" name="username" placeholder="شماره موبایل" required>
-    <input type="password" name="password" placeholder="رمز عبور" required>
-    <button type="submit">ورود</button>
-</form>
+{% block extra_js %}
+<script>
+    var form = document.querySelector('form');
+    var submitBtn = document.getElementById('btnSubmit');
+    
+    form.addEventListener('submit', function() {
+        var phone = document.querySelector('input[name="username"]').value.trim();
+        var pass = document.getElementById('password').value.trim();
+        if (phone && pass) {
+            submitBtn.classList.add('loading');
+        }
+    });
+</script>
 {% endblock %}

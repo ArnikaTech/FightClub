@@ -31,17 +31,11 @@ class LoginView(View):
         
         if user:
             login(request, user)
-            messages.success(request, f'خوش آمدید {user.get_short_name()} عزیز')
             return redirect('accounts:dashboard')
         
-        messages.error(request, 'شماره موبایل یا رمز عبور اشتباه است')
+        list(messages.get_messages(request))
+        messages.error(request, 'شماره همراه یا گذرواژه اشتباه است.')
         return render(request, 'accounts/login.html')
-
-
-class LogoutView(View):
-    def get(self, request):
-        logout(request)
-        return redirect('accounts:landing')
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -73,23 +67,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         
         context['clubs'] = clubs
         context['selected_club'] = selected_club
-        
-        # آمار با پیش‌فرض ۰
         context['total_students'] = students.count() or 0
-        context['present_today'] = Attendance.objects.filter(
-            student__in=students, date=today, status='present'
-        ).count() or 0
-        context['absent_today'] = Attendance.objects.filter(
-            student__in=students, date=today, status='absent'
-        ).count() or 0
+        context['present_today'] = Attendance.objects.filter(student__in=students, date=today, status='present').count() or 0
+        context['absent_today'] = Attendance.objects.filter(student__in=students, date=today, status='absent').count() or 0
+        context['birthdays_today'] = students.filter(birth_date__month=today.month, birth_date__day=today.day).count() or 0
         
-        # تولدها
-        context['birthdays_today'] = students.filter(
-            birth_date__month=today.month,
-            birth_date__day=today.day
-        ).count() or 0
-        
-        # غیبت متوالی
         critical = 0
         for s in students:
             recent = list(s.attendances.order_by('-date')[:3])
@@ -97,7 +79,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 critical += 1
         context['critical_absences'] = critical or 0
         
-        # بیمه نزدیک انقضا
         expiring = 0
         for s in students:
             days = s.insurance_days_left()
@@ -106,6 +87,12 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context['expiring_insurance'] = expiring or 0
         
         return context
+
+
+class LogoutView(View):
+    def get(self, request):
+        logout(request)
+        return redirect('accounts:landing')
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):
