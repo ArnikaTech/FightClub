@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}ویرایش شهر{% endblock %}
+{% block content %}
+<h1>ویرایش شهر</h1>
+<form method="post">{% csrf_token %}
+    <p><label>نام شهر:</label><input name="name" value="{{ city.name }}" required></p>
+    <p><label>استان:</label>
+        <select name="province" required>
+            {% for p in provinces %}<option value="{{ p.id }}" {% if p.id == city.province_id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+        </select>
+    </p>
+    <button type="submit">ذخیره</button>
+</form>
+{% endblock %}

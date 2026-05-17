@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}ویرایش استان{% endblock %}
+{% block content %}
+<h1>ویرایش استان</h1>
+<form method="post">{% csrf_token %}
+    <p><label>نام استان:</label><input name="name" value="{{ province.name }}" required></p>
+    <button type="submit">ذخیره</button>
+</form>
+{% endblock %}

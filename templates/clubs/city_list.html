@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}شهرها{% endblock %}
+{% block content %}
+<h1>شهرها ({{ cities.count }})</h1>
+{% if messages %}{% for m in messages %}<p style="color:green;">{{ m }}</p>{% endfor %}{% endif %}
+<a href="{% url 'clubs:city_add' %}">➕ شهر جدید</a>
+{% for c in cities %}
+    <p>
+        {{ c.name }} - {{ c.province.name }}
+        <a href="{% url 'clubs:city_edit' c.pk %}">✏️</a>
+        <form method="post" action="{% url 'clubs:city_delete' c.pk %}" style="display:inline;" onsubmit="return confirm('حذف شود؟')">
+            {% csrf_token %}<button type="submit">❌</button>
+        </form>
+    </p>
+{% endfor %}
+{% endblock %}

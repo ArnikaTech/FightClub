@@ -194,3 +194,154 @@ class ClubActivateView(LoginRequiredMixin, View):
 def get_cities(request, province_id):
     cities = City.objects.filter(province_id=province_id).values('id', 'name')
     return JsonResponse(list(cities), safe=False)
+
+
+# ========== استان‌ها ==========
+
+class ProvinceListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = Province
+    template_name = 'clubs/province_list.html'
+    context_object_name = 'provinces'
+    
+    def test_func(self):
+        return self.request.user.is_super_manager
+
+
+class ProvinceCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager
+    
+    def get(self, request):
+        return render(request, 'clubs/province_add.html')
+    
+    def post(self, request):
+        name = request.POST.get('name', '').strip()
+        if name:
+            Province.objects.create(name=name)
+            messages.success(request, f'استان {name} ایجاد شد')
+            return redirect('clubs:province_list')
+        messages.error(request, 'نام استان الزامی است')
+        return redirect('clubs:province_add')
+
+
+class ProvinceEditView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager
+    
+    def get(self, request, pk):
+        province = get_object_or_404(Province, pk=pk)
+        return render(request, 'clubs/province_edit.html', {'province': province})
+    
+    def post(self, request, pk):
+        province = get_object_or_404(Province, pk=pk)
+        name = request.POST.get('name', '').strip()
+        if name:
+            province.name = name
+            province.save()
+            messages.success(request, 'استان بروزرسانی شد')
+            return redirect('clubs:province_list')
+        messages.error(request, 'نام استان الزامی است')
+        return redirect('clubs:province_edit', pk=pk)
+
+
+# ========== شهرها ==========
+
+class CityListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = City
+    template_name = 'clubs/city_list.html'
+    context_object_name = 'cities'
+    
+    def test_func(self):
+        return self.request.user.is_super_manager
+    
+    def get_queryset(self):
+        return City.objects.select_related('province').all()
+
+
+class CityCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager
+    
+    def get(self, request):
+        provinces = Province.objects.all()
+        return render(request, 'clubs/city_add.html', {'provinces': provinces})
+    
+    def post(self, request):
+        name = request.POST.get('name', '').strip()
+        province_id = request.POST.get('province')
+        if name and province_id:
+            City.objects.create(name=name, province_id=province_id)
+            messages.success(request, f'شهر {name} ایجاد شد')
+            return redirect('clubs:city_list')
+        messages.error(request, 'نام شهر و استان الزامی است')
+        return redirect('clubs:city_add')
+
+
+class CityEditView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager
+    
+    def get(self, request, pk):
+        city = get_object_or_404(City, pk=pk)
+        provinces = Province.objects.all()
+        return render(request, 'clubs/city_edit.html', {'city': city, 'provinces': provinces})
+    
+    def post(self, request, pk):
+        city = get_object_or_404(City, pk=pk)
+        name = request.POST.get('name', '').strip()
+        province_id = request.POST.get('province')
+        if name and province_id:
+            city.name = name
+            city.province_id = province_id
+            city.save()
+            messages.success(request, 'شهر بروزرسانی شد')
+            return redirect('clubs:city_list')
+        messages.error(request, 'نام شهر و استان الزامی است')
+        return redirect('clubs:city_edit', pk=pk)
+
+
+class ProvinceDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager
+    
+    def post(self, request, pk):
+        province = get_object_or_404(Province, pk=pk)
+        name = province.name
+        
+        # چک: آیا حتی یک باشگاه فعال در این استان هست؟
+        has_active = Club.objects.filter(
+            province=province,
+            is_active=True
+        ).exists()
+        
+        if has_active:
+            messages.error(request, f'استان {name} باشگاه فعال دارد. ابتدا باشگاه‌ها را غیرفعال کنید.')
+            return redirect('clubs:province_list')
+        
+        # حذف امن
+        province.delete()
+        messages.success(request, f'استان {name} با موفقیت حذف شد')
+        return redirect('clubs:province_list')
+
+
+class CityDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager
+    
+    def post(self, request, pk):
+        city = get_object_or_404(City, pk=pk)
+        name = city.name
+        
+        # چک: آیا حتی یک باشگاه فعال در این شهر هست؟
+        has_active = Club.objects.filter(
+            city=city,
+            is_active=True
+        ).exists()
+        
+        if has_active:
+            messages.error(request, f'شهر {name} باشگاه فعال دارد. ابتدا باشگاه‌ها را غیرفعال کنید.')
+            return redirect('clubs:city_list')
+        
+        city.delete()
+        messages.success(request, f'شهر {name} با موفقیت حذف شد')
+        return redirect('clubs:city_list')

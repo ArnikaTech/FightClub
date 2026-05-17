@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}استان جدید{% endblock %}
+{% block content %}
+<h1>استان جدید</h1>
+<form method="post">{% csrf_token %}
+    <p><label>نام استان:</label><input name="name" required></p>
+    <button type="submit">ایجاد</button>
+</form>
+{% endblock %}

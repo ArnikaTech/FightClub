@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}شهر جدید{% endblock %}
+{% block content %}
+<h1>شهر جدید</h1>
+<form method="post">{% csrf_token %}
+    <p><label>نام شهر:</label><input name="name" required></p>
+    <p><label>استان:</label>
+        <select name="province" required>
+            <option value="">--</option>
+            {% for p in provinces %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+        </select>
+    </p>
+    <button type="submit">ایجاد</button>
+</form>
+{% endblock %}

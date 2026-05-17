@@ -17,4 +17,13 @@ urlpatterns = [
     path('coaches/add/', views.CoachCreateView.as_view(), name='coach_add'),
     path('coaches/<int:pk>/edit/', views.CoachEditView.as_view(), name='coach_edit'),
     path('coaches/<int:pk>/delete/', views.CoachDeleteView.as_view(), name='coach_delete'),
+
+    path('provinces/<int:pk>/delete/', views.ProvinceDeleteView.as_view(), name='province_delete'),
+    path('cities/<int:pk>/delete/', views.CityDeleteView.as_view(), name='city_delete'),
+    path('provinces/', views.ProvinceListView.as_view(), name='province_list'),
+    path('provinces/add/', views.ProvinceCreateView.as_view(), name='province_add'),
+    path('provinces/<int:pk>/edit/', views.ProvinceEditView.as_view(), name='province_edit'),
+    path('cities/', views.CityListView.as_view(), name='city_list'),
+    path('cities/add/', views.CityCreateView.as_view(), name='city_add'),
+    path('cities/<int:pk>/edit/', views.CityEditView.as_view(), name='city_edit'),
 ]

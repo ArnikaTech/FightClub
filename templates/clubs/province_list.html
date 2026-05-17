@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}استان‌ها{% endblock %}
+{% block content %}
+<h1>استان‌ها ({{ provinces.count }})</h1>
+{% if messages %}{% for m in messages %}<p style="color:green;">{{ m }}</p>{% endfor %}{% endif %}
+<a href="{% url 'clubs:province_add' %}">➕ استان جدید</a>
+{% for p in provinces %}
+    <p>
+        {{ p.name }} ({{ p.cities.count }} شهر)
+        <a href="{% url 'clubs:province_edit' p.pk %}">✏️</a>
+        <form method="post" action="{% url 'clubs:province_delete' p.pk %}" style="display:inline;" onsubmit="return confirm('حذف شود؟')">
+            {% csrf_token %}<button type="submit">❌</button>
+        </form>
+    </p>
+{% endfor %}
+{% endblock %}
