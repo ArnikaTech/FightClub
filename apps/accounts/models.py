@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
+from django_jalali.db import models as jmodels
+
 
 class UserMnaager(BaseUserManager):
     def create_user(self, phone, password=None, **extra):
@@ -24,6 +26,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=11, unique=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
+    birth_date = jmodels.jDateField('تاریخ تولد', null=True, blank=True)
     national_code = models.CharField(max_length=10, blank=True, null=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     is_super_manager = models.BooleanField(default=False)

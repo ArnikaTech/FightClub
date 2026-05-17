@@ -129,8 +129,6 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
 
 class ProfileEditView(LoginRequiredMixin, View):
-    """ویرایش پروفایل"""
-    
     def get(self, request):
         return render(request, 'accounts/profile_edit.html')
     
@@ -148,9 +146,23 @@ class ProfileEditView(LoginRequiredMixin, View):
         user.last_name = last_name
         user.national_code = request.POST.get('national_code', '').strip() or None
         
+        # تاریخ تولد
+        birth_date_str = request.POST.get('birth_date', '').strip()
+        if birth_date_str:
+            try:
+                parts = list(map(int, birth_date_str.replace('/', '-').split('-')))
+                user.birth_date = jdatetime.date(*parts)
+            except:
+                messages.error(request, 'تاریخ تولد نامعتبر است')
+                return redirect('accounts:profile_edit')
+        
         avatar = request.FILES.get('avatar')
         if avatar:
             user.avatar = avatar
+        
+        if user.is_super_manager:
+            user.is_club_manager = request.POST.get('is_club_manager') == 'on'
+            user.is_instructor = request.POST.get('is_instructor') == 'on'
         
         user.save()
         messages.success(request, 'پروفایل بروزرسانی شد')

@@ -6,43 +6,65 @@
 {% block content %}
 <h1>پروفایل من</h1>
 
-{% if messages %}
-    {% for m in messages %}
-        <p style="color: {% if m.tags == 'success' %}green{% else %}red{% endif %};">{{ m }}</p>
-    {% endfor %}
-{% endif %}
+{% if messages %}{% for m in messages %}<p style="color:{% if m.tags == 'error' %}red{% else %}green{% endif %};">{{ m }}</p>{% endfor %}{% endif %}
 
-<p>
+<!-- عکس -->
+<p style="text-align:center;">
     {% if user.avatar %}
-    <img src="{{ user.avatar.url }}" width="100" height="100" style="border-radius:50%;">
+    <img src="{{ user.avatar.url }}" width="100" height="100" style="border-radius:50%;border:3px solid #ccc;">
     {% else %}
-    👤
+    <span style="font-size:80px;">👤</span>
     {% endif %}
 </p>
 
-<h2>{{ user.get_full_name }}</h2>
-<p>📞 {{ user.phone }}</p>
-<p>کد ملی: {{ user.national_code|default:"-" }}</p>
-<p>نقش:
-    {% if user.is_super_manager %}مدیر کل{% endif %}
-    {% if user.is_club_manager %}مدیر باشگاه{% endif %}
-    {% if user.is_instructor %}مربی{% endif %}
-    {% if not user.is_super_manager and not user.is_club_manager and not user.is_instructor %}هنرجو{% endif %}
-</p>
+<h2 style="text-align:center;">{{ user.get_full_name }}</h2>
 
+<!-- اطلاعات شخصی (همه کاربران) -->
+<h3>اطلاعات شخصی</h3>
+<table border="1" width="100%">
+    <tr><th>نام</th><td>{{ user.first_name }}</td></tr>
+    <tr><th>نام خانوادگی</th><td>{{ user.last_name }}</td></tr>
+    <tr><th>شماره موبایل</th><td>{{ user.phone }}</td></tr>
+    <tr><th>کد ملی</th><td>{{ user.national_code|default:"-" }}</td></tr>
+    <tr><th>تاریخ تولد</th><td>{{ user.birth_date|jformat:"%Y/%m/%d"|default:"-" }}</td></tr>
+    <tr><th>نقش</th><td>
+        {% if user.is_super_manager %}👑 مدیر کل{% endif %}
+        {% if user.is_club_manager %}🏢 مدیر باشگاه{% endif %}
+        {% if user.is_instructor %}👨‍🏫 مربی{% endif %}
+        {% if not user.is_super_manager and not user.is_club_manager and not user.is_instructor %}👤 هنرجو{% endif %}
+    </td></tr>
+</table>
+
+<!-- اطلاعات هنرجویی (فقط اگر Student داشته باشه) -->
 {% if student %}
 <h3>اطلاعات هنرجویی</h3>
-<p>کد: {{ student.student_code }} | کمربند: {{ student.get_current_belt_display }} | باشگاه: {{ student.club.name }}</p>
-{% if student.birth_date %}<p>تولد: {{ student.birth_date|jformat:"%Y/%m/%d" }} ({{ student.age }} سال)</p>{% endif %}
-{% if student.insurance_days_left is not None %}<p>🟢 بیمه: {{ student.insurance_days_left }} روز</p>{% else %}<p>🔴 بیمه: منقضی</p>{% endif %}
+<table border="1" width="100%">
+    <tr><th>کد هنرجویی</th><td>{{ student.student_code }}</td></tr>
+    <tr><th>باشگاه</th><td>{{ student.club.name }} - {{ student.club.city.name }}</td></tr>
+    <tr><th>کمربند</th><td><span style="color:{{ student.belt_color }};">●</span> {{ student.get_current_belt_display }}</td></tr>
+    <tr><th>تاریخ عضویت</th><td>{{ student.joined_at|jformat:"%Y/%m/%d" }}</td></tr>
+    <tr><th>وضعیت بیمه</th><td>
+        {% with days=student.insurance_days_left %}
+        {% if days is not None %}🟢 {{ days }} روز{% else %}🔴 منقضی{% endif %}
+        {% endwith %}
+    </td></tr>
+</table>
 {% endif %}
 
+<!-- باشگاه‌های تحت مدیریت -->
 {% if managed_clubs %}
-<h3>باشگاه‌های من</h3>
-{% for club in managed_clubs %}<p>{{ club.name }} - {{ club.city.name }}</p>{% endfor %}
+<h3>باشگاه‌های تحت مدیریت</h3>
+<table border="1" width="100%">
+    {% for club in managed_clubs %}
+    <tr><td>{{ club.name }}</td><td>{{ club.city.name }}</td><td>{{ club.students.count }} هنرجو</td></tr>
+    {% endfor %}
+</table>
 {% endif %}
 
-<a href="{% url 'accounts:profile_edit' %}">✏️ ویرایش پروفایل</a> |
-<a href="{% url 'accounts:password_change' %}">🔒 تغییر رمز</a> |
-<a href="{% url 'accounts:logout' %}">🚪 خروج</a>
+<!-- لینک‌ها -->
+<p>
+    <a href="{% url 'accounts:profile_edit' %}">✏️ ویرایش پروفایل</a> |
+    <a href="{% url 'accounts:password_change' %}">🔒 تغییر رمز</a> |
+    <a href="{% url 'accounts:logout' %}">🚪 خروج</a>
+</p>
 {% endblock %}

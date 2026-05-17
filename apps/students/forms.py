@@ -92,7 +92,8 @@ class StudentCreateForm(forms.Form):
             password=self.cleaned_data['password'],
             first_name=self.cleaned_data['first_name'],
             last_name=self.cleaned_data['last_name'],
-            national_code=self.cleaned_data.get('national_code', '')
+            national_code=self.cleaned_data.get('national_code', ''),
+            birth_date=self.cleaned_data.get('birth_date')
         )
         
         # ۲. تولید کد هنرجویی

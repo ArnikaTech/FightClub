@@ -1,23 +1,43 @@
 {% extends 'base.html' %}
+{% load jformat %}
 
 {% block title %}ویرایش پروفایل{% endblock %}
 
 {% block content %}
 <h1>ویرایش پروفایل</h1>
 
+{% if messages %}{% for m in messages %}<p style="color:{% if m.tags == 'error' %}red{% else %}green{% endif %};">{{ m }}</p>{% endfor %}{% endif %}
+
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     
-    {% if user.avatar %}
-    <p><img src="{{ user.avatar.url }}" width="80" height="80" style="border-radius:50%;"></p>
-    {% endif %}
-    <p><label>تصویر:</label><input type="file" name="avatar" accept="image/*"></p>
+    <!-- عکس -->
+    <p style="text-align:center;">
+        {% if user.avatar %}
+        <img src="{{ user.avatar.url }}" width="80" height="80" style="border-radius:50%;">
+        {% else %}
+        <span style="font-size:60px;">👤</span>
+        {% endif %}
+        <br>
+        <input type="file" name="avatar" accept="image/*">
+    </p>
+    
     <p><label>نام:</label><input name="first_name" value="{{ user.first_name }}" required></p>
     <p><label>نام خانوادگی:</label><input name="last_name" value="{{ user.last_name }}" required></p>
     <p><label>کد ملی:</label><input name="national_code" value="{{ user.national_code|default:'' }}"></p>
-    <p><label>شماره موبایل:</label><input value="{{ user.phone }}" disabled></p>
-    
-    <button type="submit">ذخیره</button>
+    <p><label>تاریخ تولد:</label><input name="birth_date" value="{{ user.birth_date|jformat:'%Y/%m/%d'|default:'' }}" placeholder="۱۳۸۰/۰۱/۰۱"></p>
+    <p><label>شماره موبایل:</label><input value="{{ user.phone }}" disabled> <small>قابل تغییر نیست</small></p>
+
+    {% if user.is_super_manager %}
+    <p><label>نقش‌ها (فقط مدیر کل می‌تواند تغییر دهد):</label><br>
+        <label><input type="checkbox" name="is_club_manager" {% if user.is_club_manager %}checked{% endif %}> مدیر باشگاه</label>
+        <label><input type="checkbox" name="is_instructor" {% if user.is_instructor %}checked{% endif %}> مربی</label>
+    </p>
+{% else %}
+    <p><label>نقش:</label><input value="{% if user.is_club_manager %}مدیر باشگاه{% elif user.is_instructor %}مربی{% else %}هنرجو{% endif %}" disabled></p>
+{% endif %}
+
+    <button type="submit">💾 ذخیره</button>
     <a href="{% url 'accounts:profile' %}">انصراف</a>
 </form>
 {% endblock %}
