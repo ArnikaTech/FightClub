@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}باشگاه‌ها | باشگاه ستاره‌ها{% endblock %}
+
+{% block content %}
+<h1>باشگاه‌ها</h1>
+
+{% if messages %}
+    {% for m in messages %}<p style="color:green;">{{ m }}</p>{% endfor %}
+{% endif %}
+
+<a href="{% url 'clubs:club_add' %}">➕ باشگاه جدید</a>
+
+<h2>فعال ({{ clubs.count }})</h2>
+{% for club in clubs %}
+    <p>
+        <a href="{% url 'clubs:club_detail' club.pk %}">{{ club.name }}</a>
+        - {{ club.city.name }}، {{ club.province.name }}
+        - {{ club.students.count }} هنرجو
+        <a href="{% url 'clubs:club_edit' club.pk %}">✏️</a>
+        <form method="post" action="{% url 'clubs:club_delete' club.pk %}" style="display:inline;" onsubmit="return confirm('غیرفعال شود؟')">
+            {% csrf_token %}<button type="submit">❌</button>
+        </form>
+    </p>
+{% empty %}
+    <p>باشگاه فعالی نیست</p>
+{% endfor %}
+
+{% if inactive_clubs %}
+<h2>غیرفعال ({{ inactive_clubs.count }})</h2>
+{% for club in inactive_clubs %}
+    <p style="opacity:0.5;">
+        <a href="{% url 'clubs:club_detail' club.pk %}">{{ club.name }}</a>
+        - {{ club.city.name }}
+        <form method="post" action="{% url 'clubs:club_activate' club.pk %}" style="display:inline;">
+            {% csrf_token %}<button type="submit">🔄 فعال‌سازی</button>
+        </form>
+    </p>
+{% endfor %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}مربیان | باشگاه ستاره‌ها{% endblock %}
+
+{% block content %}
+<h1>مربیان ({{ coaches.count }} نفر)</h1>
+
+{% if messages %}
+    {% for m in messages %}<p style="color:green;">{{ m }}</p>{% endfor %}
+{% endif %}
+
+<a href="{% url 'clubs:coach_add' %}">➕ مربی جدید</a>
+
+{% for m in coaches %}
+    <p>
+        <strong>{{ m.user.get_full_name }}</strong>
+        - {{ m.get_role_display }}
+        - باشگاه: {{ m.club.name }}
+        - 📞 {{ m.user.phone }}
+        <a href="{% url 'clubs:coach_edit' m.pk %}">✏️</a>
+        <form method="post" action="{% url 'clubs:coach_delete' m.pk %}" style="display:inline;" onsubmit="return confirm('حذف شود؟')">
+            {% csrf_token %}<button type="submit">❌</button>
+        </form>
+    </p>
+{% empty %}
+    <p>مربی‌ای ثبت نشده</p>
+{% endfor %}
+{% endblock %}

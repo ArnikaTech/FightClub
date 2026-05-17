@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}ویرایش {{ club.name }}{% endblock %}
+
+{% block content %}
+<h1>ویرایش {{ club.name }}</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <p><label>نام:</label><input name="name" value="{{ club.name }}" required></p>
+    <p><label>تلفن:</label><input name="phone" value="{{ club.phone|default:'' }}"></p>
+    <p><label>آدرس:</label><textarea name="address">{{ club.address|default:'' }}</textarea></p>
+    <p><label>استان:</label>
+        <select name="province" id="provinceSelect">
+            {% for p in provinces %}<option value="{{ p.id }}" {% if p.id == club.province_id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+        </select>
+    </p>
+    <p><label>شهر:</label>
+        <select name="city" id="citySelect">
+            {% for c in cities %}<option value="{{ c.id }}" {% if c.id == club.city_id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+        </select>
+    </p>
+    <button type="submit">ذخیره</button>
+</form>
+
+<script>
+document.getElementById('provinceSelect').addEventListener('change', function(){
+    fetch('/clubs/get-cities/'+this.value+'/')
+    .then(r=>r.json())
+    .then(d=>{
+        var c=document.getElementById('citySelect');
+        c.innerHTML='';
+        d.forEach(function(i){c.innerHTML+='<option value="'+i.id+'">'+i.name+'</option>';});
+    });
+});
+</script>
+{% endblock %}

@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django_jalali.forms import jDateField
 from apps.clubs.models import Club
 from .models import Student
+import jdatetime
 
 User = get_user_model()
 
@@ -44,10 +45,10 @@ class StudentCreateForm(forms.Form):
         queryset=Club.objects.filter(is_active=True),
         widget=forms.Select(attrs={'class': 'input-glass'})
     )
-    birth_date = jDateField(
+    birth_date = forms.CharField(
         label='تاریخ تولد',
         required=False,
-        widget=forms.TextInput(attrs={'class': 'input-glass', 'placeholder': '۱۴۰۵/۰۲/۲۷'})
+        widget=forms.TextInput(attrs={'class': 'input-glass', 'placeholder': '۱۳۸۰/۰۱/۰۱'})
     )
     current_belt = forms.ChoiceField(
         label='کمربند فعلی',
@@ -60,6 +61,28 @@ class StudentCreateForm(forms.Form):
         if User.objects.filter(phone=phone).exists():
             raise forms.ValidationError('این شماره موبایل قبلاً ثبت شده است')
         return phone
+    
+    def clean_birth_date(self):
+        value = self.cleaned_data.get('birth_date')
+        if not value:
+            return None
+        
+        # تبدیل اعداد فارسی به انگلیسی
+        persian_digits = '۰۱۲۳۴۵۶۷۸۹'
+        english_digits = '0123456789'
+        trans = str.maketrans(persian_digits, english_digits)
+        value = value.translate(trans)
+        
+        # پاک کردن فاصله‌ها
+        value = value.replace(' ', '').replace('،', '/')
+        
+        try:
+            parts = list(map(int, value.split('/')))
+            if len(parts) != 3:
+                raise ValueError
+            return jdatetime.date(parts[0], parts[1], parts[2])
+        except:
+            raise forms.ValidationError('تاریخ معتبر وارد کنید (مثال: ۱۳۸۰/۰۱/۰۱)')
     
     def save(self):
         """ایجاد User و Student همزمان"""

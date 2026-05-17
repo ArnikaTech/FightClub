@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ club.name }}{% endblock %}
+
+{% block content %}
+<h1>{{ club.name }}</h1>
+<p>استان: {{ club.province.name }}</p>
+<p>شهر: {{ club.city.name }}</p>
+<p>تلفن: {{ club.phone|default:"-" }}</p>
+<p>آدرس: {{ club.address|default:"-" }}</p>
+<p>هنرجویان: {{ club.students.count }} نفر</p>
+<a href="{% url 'clubs:club_edit' club.pk %}">✏️ ویرایش</a>
+<a href="{% url 'clubs:club_list' %}">بازگشت</a>
+{% endblock %}

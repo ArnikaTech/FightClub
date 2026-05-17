@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}باشگاه جدید{% endblock %}
+
+{% block content %}
+<h1>باشگاه جدید</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <p><label>نام:</label><input name="name" required></p>
+    <p><label>استان:</label>
+        <select name="province" id="provinceSelect" required>
+            <option value="">--</option>
+            {% for p in provinces %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+        </select>
+    </p>
+    <p><label>شهر:</label>
+        <select name="city" id="citySelect" required>
+            <option value="">-- استان را انتخاب کنید --</option>
+        </select>
+    </p>
+    <p><label>تلفن:</label><input name="phone"></p>
+    <p><label>آدرس:</label><textarea name="address"></textarea></p>
+    <button type="submit">ایجاد</button>
+</form>
+
+<script>
+document.getElementById('provinceSelect').addEventListener('change', function(){
+    fetch('/clubs/get-cities/'+this.value+'/')
+    .then(r=>r.json())
+    .then(d=>{
+        var c=document.getElementById('citySelect');
+        c.innerHTML='<option value="">--</option>';
+        d.forEach(function(i){c.innerHTML+='<option value="'+i.id+'">'+i.name+'</option>';});
+    });
+});
+</script>
+{% endblock %}

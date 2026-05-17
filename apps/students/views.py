@@ -42,7 +42,7 @@ class StudentCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     """ثبت هنرجوی جدید"""
     template_name = 'students/student_add.html'
     form_class = StudentCreateForm
-    success_url = reverse_lazy('accounts:dashboard')  # موقتاً داشبورد
+    success_url = reverse_lazy('students:student_list')
     
     def test_func(self):
         """فقط مدیر کل و مدیر باشگاه"""
@@ -61,10 +61,15 @@ class StudentCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
 
 class ContactDeleteView(LoginRequiredMixin, View):
     def post(self, request, contact_pk):
-        contact = get_object_or_404(StudentContact, pk=contact_pk)
-        student_pk = contact.student.pk
-        contact.delete()
-        messages.success(request, 'شماره تماس حذف شد')
+        try:
+            contact = get_object_or_404(StudentContact, pk=contact_pk)
+            student_pk = contact.student.pk
+            contact.delete()
+            messages.success(request, 'شماره تماس حذف شد')
+        except Exception as e:
+            messages.error(request, f'خطا در حذف شماره: {str(e)}')
+            student_pk = request.POST.get('student_pk', 0)
+        
         return redirect('students:student_detail', pk=student_pk)
 
 
@@ -81,69 +86,126 @@ class StudentEditView(LoginRequiredMixin, View):
         student = get_object_or_404(Student, pk=pk)
         user = student.user
         
-        user.first_name = request.POST.get('first_name', user.first_name)
-        user.last_name = request.POST.get('last_name', user.last_name)
-        user.national_code = request.POST.get('national_code', user.national_code)
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        
+        # اعتبارسنجی نام
+        if not first_name or not last_name:
+            messages.error(request, 'نام و نام خانوادگی الزامی است')
+            return redirect('students:student_edit', pk=pk)
+        
+        if len(first_name) < 2 or len(last_name) < 2:
+            messages.error(request, 'نام و نام خانوادگی باید حداقل ۲ کاراکتر باشد')
+            return redirect('students:student_edit', pk=pk)
+        
+        # اعتبارسنجی تاریخ تولد
+        birth_date_str = request.POST.get('birth_date', '').strip()
+        if birth_date_str:
+            try:
+                parts = list(map(int, birth_date_str.replace('/', '-').split('-')))
+                birth_date = jdatetime.date(*parts)
+                today = jdatetime.date.today()
+                if birth_date > today:
+                    messages.error(request, 'تاریخ تولد نمی‌تواند در آینده باشد')
+                    return redirect('students:student_edit', pk=pk)
+                if today.year - birth_date.year > 100:
+                    messages.error(request, 'تاریخ تولد نامعتبر است')
+                    return redirect('students:student_edit', pk=pk)
+            except:
+                messages.error(request, 'فرمت تاریخ تولد نامعتبر است (مثال: ۱۳۸۰/۰۱/۰۱)')
+                return redirect('students:student_edit', pk=pk)
+        else:
+            birth_date = student.birth_date
+        
+        # ذخیره
+        user.first_name = first_name
+        user.last_name = last_name
+        user.national_code = request.POST.get('national_code', '').strip() or None
         user.save()
         
-        student.birth_date = request.POST.get('birth_date') or student.birth_date
+        student.birth_date = birth_date
         student.current_belt = request.POST.get('current_belt', student.current_belt)
         student.club_id = request.POST.get('club', student.club_id)
-        student.notes = request.POST.get('notes', student.notes)
+        student.notes = request.POST.get('notes', '').strip()
         student.save()
         
-        messages.success(request, 'اطلاعات بروزرسانی شد')
+        messages.success(request, 'اطلاعات با موفقیت بروزرسانی شد')
         return redirect('students:student_detail', pk=pk)
 
 
 class InsuranceCreateView(LoginRequiredMixin, View):
-    """ثبت بیمه برای هنرجو"""
-    
     def post(self, request, pk):
         student = get_object_or_404(Student, pk=pk)
         
-        start_date = request.POST.get('start_date')
-        expiry_date = request.POST.get('expiry_date')
+        start_date = request.POST.get('start_date', '').strip()
+        expiry_date = request.POST.get('expiry_date', '').strip()
         
-        if start_date and expiry_date:
-            try:
-                start_parts = list(map(int, start_date.replace('/', '-').split('-')))
-                expiry_parts = list(map(int, expiry_date.replace('/', '-').split('-')))
-                
-                Insurance.objects.create(
-                    student=student,
-                    start_date=jdatetime.date(*start_parts),
-                    expiry_date=jdatetime.date(*expiry_parts),
-                )
-                messages.success(request, 'بیمه با موفقیت ثبت شد')
-            except:
-                messages.error(request, 'تاریخ نامعتبر است')
-        else:
+        if not start_date or not expiry_date:
             messages.error(request, 'هر دو تاریخ الزامی است')
+            return redirect('students:student_detail', pk=pk)
+        
+        try:
+            start_parts = list(map(int, start_date.replace('/', '-').split('-')))
+            expiry_parts = list(map(int, expiry_date.replace('/', '-').split('-')))
+            
+            start = jdatetime.date(*start_parts)
+            expiry = jdatetime.date(*expiry_parts)
+            
+            if expiry <= start:
+                messages.error(request, 'تاریخ انقضا باید بعد از تاریخ شروع باشد')
+                return redirect('students:student_detail', pk=pk)
+            
+            Insurance.objects.create(
+                student=student,
+                start_date=start,
+                expiry_date=expiry,
+            )
+            messages.success(request, 'بیمه با موفقیت ثبت شد')
+            
+        except ValueError:
+            messages.error(request, 'فرمت تاریخ نامعتبر است (مثال: ۱۴۰۳/۰۱/۰۱)')
+        except Exception as e:
+            messages.error(request, f'خطا در ثبت بیمه: {str(e)}')
         
         return redirect('students:student_detail', pk=pk)
 
 
 class ContactCreateView(LoginRequiredMixin, View):
-    """ثبت شماره تماس والدین"""
-    
     def post(self, request, pk):
         student = get_object_or_404(Student, pk=pk)
         
-        phone = request.POST.get('phone')
+        phone = request.POST.get('phone', '').strip()
         contact_type = request.POST.get('contact_type', 'parent')
-        label = request.POST.get('label', '')
+        label = request.POST.get('label', '').strip()
         
-        if phone and len(phone) >= 10:
+        # اعتبارسنجی
+        if not phone:
+            messages.error(request, 'شماره تماس الزامی است')
+            return redirect('students:student_detail', pk=pk)
+        
+        if not phone.isdigit():
+            messages.error(request, 'شماره تماس فقط باید شامل اعداد باشد')
+            return redirect('students:student_detail', pk=pk)
+        
+        if len(phone) < 10 or len(phone) > 11:
+            messages.error(request, 'شماره تماس باید ۱۰ یا ۱۱ رقم باشد')
+            return redirect('students:student_detail', pk=pk)
+        
+        # محدودیت تعداد مخاطب
+        if student.contacts.count() >= 5:
+            messages.error(request, 'حداکثر ۵ شماره تماس مجاز است')
+            return redirect('students:student_detail', pk=pk)
+        
+        try:
             StudentContact.objects.create(
                 student=student,
                 phone=phone,
                 contact_type=contact_type,
-                label=label
+                label=label or None
             )
             messages.success(request, 'شماره تماس با موفقیت ثبت شد')
-        else:
-            messages.error(request, 'شماره تماس معتبر وارد کنید')
+        except Exception as e:
+            messages.error(request, f'خطا در ثبت شماره: {str(e)}')
         
         return redirect('students:student_detail', pk=pk)
 
@@ -187,34 +249,46 @@ class AttendanceView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 
 class AttendanceSaveView(LoginRequiredMixin, View):
-    """ذخیره حضور و غیاب"""
-    
     def post(self, request):
         student_ids = request.POST.getlist('student_ids')
-        date = jdatetime.date.today()
         
-        user = request.user
-        if user.is_super_manager:
-            students = Student.objects.filter(is_active=True)
-        else:
-            students = Student.objects.filter(
-                club__memberships__user=user,
-                club__memberships__is_active=True,
-                is_active=True
-            )
+        if not student_ids:
+            messages.warning(request, 'هیچ هنرجویی انتخاب نشده است')
+            return redirect('students:attendance')
         
-        present_count = 0
-        for student in students:
-            status = 'present' if str(student.id) in student_ids else 'absent'
-            Attendance.objects.update_or_create(
-                student=student,
-                date=date,
-                defaults={'status': status}
-            )
-            if status == 'present':
-                present_count += 1
+        try:
+            date = jdatetime.date.today()
+            
+            user = request.user
+            if user.is_super_manager:
+                students = Student.objects.filter(is_active=True)
+            else:
+                students = Student.objects.filter(
+                    club__memberships__user=user,
+                    club__memberships__is_active=True,
+                    is_active=True
+                )
+            
+            if not students.exists():
+                messages.warning(request, 'هیچ هنرجوی فعالی یافت نشد')
+                return redirect('students:attendance')
+            
+            present_count = 0
+            for student in students:
+                status = 'present' if str(student.id) in student_ids else 'absent'
+                Attendance.objects.update_or_create(
+                    student=student,
+                    date=date,
+                    defaults={'status': status}
+                )
+                if status == 'present':
+                    present_count += 1
+            
+            messages.success(request, f'{present_count} هنرجو حاضر، {students.count() - present_count} غایب')
+            
+        except Exception as e:
+            messages.error(request, f'خطا در ثبت حضور و غیاب: {str(e)}')
         
-        messages.success(request, f'{present_count} هنرجو حاضر، {students.count() - present_count} غایب')
         return redirect('students:attendance')
 
 

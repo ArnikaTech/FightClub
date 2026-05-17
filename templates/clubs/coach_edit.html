@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}ویرایش مربی{% endblock %}
+
+{% block content %}
+<h1>ویرایش {{ membership.user.get_full_name }}</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <p><label>باشگاه:</label>
+        <select name="club_id">
+            {% for c in clubs %}<option value="{{ c.id }}" {% if c.id == membership.club_id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+        </select>
+    </p>
+    <p><label>نقش:</label>
+        <select name="role">
+            <option value="instructor" {% if membership.role == 'instructor' %}selected{% endif %}>مربی</option>
+            <option value="manager" {% if membership.role == 'manager' %}selected{% endif %}>مدیر</option>
+            <option value="assistant" {% if membership.role == 'assistant' %}selected{% endif %}>کمک‌مربی</option>
+        </select>
+    </p>
+    <button type="submit">ذخیره</button>
+</form>
+{% endblock %}

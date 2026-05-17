@@ -7,6 +7,19 @@
 <h1>پیشخوان</h1>
 <p>خوش آمدید {{ user.get_full_name }}</p>
 
+{% if user.is_super_manager and clubs %}
+<form method="get" style="margin-bottom: 20px;">
+    <select name="club_id" onchange="this.form.submit()">
+        <option value="">همه باشگاه‌ها</option>
+        {% for club in clubs %}
+        <option value="{{ club.id }}" {% if selected_club and selected_club.id == club.id %}selected{% endif %}>
+            {{ club.name }}
+        </option>
+        {% endfor %}
+    </select>
+</form>
+{% endif %}
+
 <!-- کارت‌های آمار -->
 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
     <div style="border: 1px solid #ccc; padding: 15px; text-align: center;">
