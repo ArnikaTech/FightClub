@@ -1,13 +1,54 @@
 {% extends 'base.html' %}
+{% load jformat %}
 
-{% block title %}پیشخوان{% endblock %}
+{% block title %}پیشخوان | باشگاه ستاره‌ها{% endblock %}
 
 {% block content %}
 <h1>پیشخوان</h1>
 <p>خوش آمدید {{ user.get_full_name }}</p>
-<a href="{% url 'students:student_list' %}">لیست هنرجویان</a>
- | 
-<a href="{% url 'students:absentees' %}">📋 پیگیری غیبت‌ها</a>
- | 
-<a href="{% url 'accounts:logout' %}">خروج</a>
+
+<!-- کارت‌های آمار -->
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+    <div style="border: 1px solid #ccc; padding: 15px; text-align: center;">
+        <h2>{{ total_students }}</h2>
+        <p>کل هنرجویان</p>
+    </div>
+    
+    <div style="border: 1px solid #4caf50; padding: 15px; text-align: center;">
+        <h2 style="color: green;">{{ present_today }}</h2>
+        <p>حاضر امروز</p>
+    </div>
+    
+    <div style="border: 1px solid #f44336; padding: 15px; text-align: center;">
+        <h2 style="color: red;">{{ absent_today }}</h2>
+        <p>غایب امروز</p>
+    </div>
+    
+    <div style="border: 1px solid #ff9800; padding: 15px; text-align: center;">
+        <h2>{{ birthdays_today }}</h2>
+        <p>🎂 تولد امروز</p>
+    </div>
+</div>
+
+<!-- هشدارها -->
+<div style="margin-top: 20px;">
+    {% if critical_absences %}
+    <p style="color: red;">⚠️ {{ critical_absences }} هنرجو ۳+ جلسه غیبت متوالی</p>
+    {% endif %}
+    
+    {% if expiring_insurance %}
+    <p style="color: orange;">⚠️ {{ expiring_insurance }} بیمه نزدیک به انقضا</p>
+    {% endif %}
+</div>
+
+<!-- لینک‌ها -->
+<div style="margin-top: 30px;">
+    <h3>دسترسی سریع</h3>
+    <a href="{% url 'students:student_list' %}">👥 لیست هنرجویان</a> |
+    <a href="{% url 'students:attendance' %}">📋 حضور و غیاب</a> |
+    <a href="{% url 'students:absentees' %}">⚠️ پیگیری غیبت‌ها</a> |
+    <a href="{% url 'students:student_add' %}">➕ ثبت هنرجو جدید</a>
+</div>
+
+<a href="{% url 'accounts:logout' %}">🚪 خروج</a>
 {% endblock %}
