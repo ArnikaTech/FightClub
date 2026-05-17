@@ -346,3 +346,30 @@ class AbsenteeListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context['critical_count'] = sum(1 for a in absentee_data if a['consecutive'] >= 3)
         
         return context
+
+
+class ContactEditView(LoginRequiredMixin, View):
+    """ویرایش شماره تماس"""
+    
+    def get(self, request, contact_pk):
+        contact = get_object_or_404(StudentContact, pk=contact_pk)
+        return render(request, 'students/contact_edit.html', {'contact': contact})
+    
+    def post(self, request, contact_pk):
+        contact = get_object_or_404(StudentContact, pk=contact_pk)
+        
+        phone = request.POST.get('phone', '').strip()
+        contact_type = request.POST.get('contact_type', 'parent')
+        label = request.POST.get('label', '').strip()
+        
+        if not phone or not phone.isdigit() or len(phone) < 10:
+            messages.error(request, 'شماره تماس معتبر وارد کنید')
+            return redirect('students:contact_edit', contact_pk=contact_pk)
+        
+        contact.phone = phone
+        contact.contact_type = contact_type
+        contact.label = label or None
+        contact.save()
+        
+        messages.success(request, 'شماره تماس بروزرسانی شد')
+        return redirect('students:student_detail', pk=contact.student.pk)

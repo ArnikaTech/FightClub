@@ -29,9 +29,9 @@
     <p>
         {{ contact.label|default:contact.get_contact_type_display }}: {{ contact.phone }}
         <a href="tel:{{ contact.phone }}">📞</a>
-        <form method="post" action="{% url 'students:contact_delete' contact.pk %}" style="display:inline;" onsubmit="return confirm('آیا مطمئن هستید؟')">
-            {% csrf_token %}
-            <button type="submit">❌</button>
+        <a href="{% url 'students:contact_edit' contact.pk %}">✏️</a>
+        <form method="post" action="{% url 'students:contact_delete' contact.pk %}" style="display:inline;" onsubmit="return confirm('حذف شود؟')">
+            {% csrf_token %}<button type="submit">❌</button>
         </form>
     </p>
 {% endfor %}

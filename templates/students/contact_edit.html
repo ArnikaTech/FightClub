@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}ویرایش شماره تماس{% endblock %}
+
+{% block content %}
+<h1>ویرایش شماره تماس</h1>
+<p>هنرجو: {{ contact.student.user.get_full_name }}</p>
+
+<form method="post">
+    {% csrf_token %}
+    <p>
+        <label>شماره تماس:</label>
+        <input type="text" name="phone" value="{{ contact.phone }}" required>
+    </p>
+    <p>
+        <label>نوع:</label>
+        <select name="contact_type">
+            <option value="parent" {% if contact.contact_type == 'parent' %}selected{% endif %}>والدین</option>
+            <option value="emergency" {% if contact.contact_type == 'emergency' %}selected{% endif %}>اضطراری</option>
+            <option value="other" {% if contact.contact_type == 'other' %}selected{% endif %}>سایر</option>
+        </select>
+    </p>
+    <p>
+        <label>برچسب:</label>
+        <input type="text" name="label" value="{{ contact.label|default:'' }}" placeholder="مثال: پدر، مادر">
+    </p>
+    <button type="submit">ذخیره</button>
+    <a href="{% url 'students:student_detail' contact.student.pk %}">انصراف</a>
+</form>
+{% endblock %}
