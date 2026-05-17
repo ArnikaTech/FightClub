@@ -1,0 +1,124 @@
+{% load static %}
+<aside class="dashboard-sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-sm">
+            <i class="bi bi-shield-fill"></i>
+        </div>
+        <span class="logo-text">{{ site_settings.gym_name }}</span>
+    </div>
+    
+    <div class="sidebar-menu-wrapper">
+        <ul class="sidebar-nav">
+            <li>
+                <a href="{% url 'accounts:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-grid-fill"></i>
+                    <span>پیشخوان</span>
+                </a>
+            </li>
+        </ul>
+        
+        <div class="sidebar-category">مدیریت</div>
+        <ul class="sidebar-nav">
+            {% if user.is_super_manager or user.is_club_manager %}
+            <li>
+                <a href="{% url 'students:member_list' %}" class="{% if request.resolver_match.url_name == 'member_list' %}active{% endif %}">
+                    <i class="bi bi-people-fill"></i>
+                    <span>هنرجوها</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'students:attendance' %}" class="{% if request.resolver_match.url_name == 'attendance' %}active{% endif %}">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    <span>ثبت حضور و غیاب</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'students:absentees' %}" class="{% if request.resolver_match.url_name == 'absentees' %}active{% endif %}">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>پیگیری غیبت‌ها</span>
+                </a>
+            </li>
+            {% endif %}
+            
+            {% if user.is_super_manager %}
+            <li>
+    <a href="{% url 'clubs:club_list' %}" class="{% if request.resolver_match.url_name == 'club_list' %}active{% endif %}">
+        <i class="bi bi-building"></i>
+        <span>باشگاه‌ها</span>
+    </a>
+</li>
+            <li>
+                <a href="{% url 'clubs:coach_list' %}" class="{% if request.resolver_match.url_name == 'coach_list' %}active{% endif %}">
+                    <i class="bi bi-person-badge-fill"></i>
+                    <span>مربیان</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+        
+        <div class="sidebar-category">کمربندها</div>
+        <ul class="sidebar-nav">
+            {% if user.is_super_manager or user.is_club_manager %}
+            <li>
+                <a href="#">
+                    <i class="bi bi-award-fill"></i>
+                    <span>ارتقا کمربند</span>
+                </a>
+            </li>
+            {% endif %}
+            <li>
+                <a href="#">
+                    <i class="bi bi-bar-chart-fill"></i>
+                    <span>پیشرفت کمربند</span>
+                </a>
+            </li>
+        </ul>
+        
+        <div class="sidebar-category">ارتباطات</div>
+        <ul class="sidebar-nav">
+            <li>
+                <a href="#">
+                    <i class="bi bi-chat-dots-fill"></i>
+                    <span>ارسال پیامک</span>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="bi bi-file-text-fill"></i>
+                    <span>قالب پیامک‌ها</span>
+                </a>
+            </li>
+        </ul>
+        
+        <div class="sidebar-category">پروفایل</div>
+        <ul class="sidebar-nav">
+            <li>
+    <a href="{% url 'accounts:profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+        <i class="bi bi-person-circle"></i>
+        <span>پروفایل من</span>
+    </a>
+</li>
+        </ul>
+    </div>
+    
+    <div class="sidebar-user">
+        <div class="user-avatar">
+            <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="user-info">
+            <div class="user-name">{{ user.get_full_name }}</div>
+            <div class="user-role">
+                {% if user.is_super_manager %}مدیر کل
+                {% elif user.is_club_manager %}مدیر باشگاه
+                {% elif user.is_instructor %}مربی
+                {% else %}هنرجو{% endif %}
+            </div>
+        </div>
+        <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn" title="خروج">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+        </form>
+    </div>
+</aside>

@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %}پیشخوان{% endblock %}
+
+{% block content %}
+<h1>پیشخوان</h1>
+<p>خوش آمدید {{ user.get_full_name }}</p>
+<a href="{% url 'students:student_list' %}">لیست هنرجویان</a>
+ | 
+<a href="{% url 'accounts:logout' %}">خروج</a>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load jformat %}
+
+{% block title %}ثبت هنرجو جدید | {{ site_settings.gym_name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}
+    {% include 'partials/_mobile_nav.html' %}
+    
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div>
+                <h1 class="page-title">ثبت هنرجوی جدید</h1>
+                <div class="page-subtitle">{{ today|jformat:"%Y/%m/%d" }}</div>
+            </div>
+            <a href="{% url 'students:member_list' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                <i class="bi bi-arrow-right"></i>
+                <span class="btn-add-text">بازگشت</span>
+            </a>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- اطلاعات کاربر -->
+            <div class="form-section animate__animated animate__fadeInUp">
+                <div class="form-section-title">
+                    <i class="bi bi-person-fill"></i>
+                    اطلاعات کاربری
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>نام *</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                        <small class="text-danger">{{ form.first_name.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label>نام خانوادگی *</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                        <small class="text-danger">{{ form.last_name.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>شماره موبایل *</label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                        <small class="text-danger">{{ form.phone.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label>رمز عبور *</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                        <small class="text-danger">{{ form.password.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>کد ملی</label>
+                    {{ form.national_code }}
+                </div>
+            </div>
+            
+            <!-- اطلاعات هنرجو -->
+            <div class="form-section animate__animated animate__fadeInUp animate__delay-1s">
+                <div class="form-section-title">
+                    <i class="bi bi-person-badge-fill"></i>
+                    اطلاعات هنرجو
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>باشگاه *</label>
+                        {{ form.club }}
+                    </div>
+                    <div class="form-group">
+                        <label>تاریخ تولد</label>
+                        {{ form.birth_date }}
+                        {% if form.birth_date.errors %}
+                        <small class="text-danger">{{ form.birth_date.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>کمربند فعلی *</label>
+                    {{ form.current_belt }}
+                </div>
+                
+                <div class="form-group">
+                    <label>یادداشت</label>
+                    {{ form.notes }}
+                </div>
+            </div>
+            
+            <!-- دکمه‌ها -->
+            <div class="form-actions animate__animated animate__fadeInUp animate__delay-2s">
+                <button type="submit" class="btn-submit-form">
+                    <i class="bi bi-check-lg"></i>
+                    ثبت هنرجو
+                </button>
+                <a href="{% url 'students:member_list' %}" class="btn-cancel-form">
+                    <i class="bi bi-x-lg"></i>
+                    انصراف
+                </a>
+            </div>
+        </form>
+    </main>
+    
+    {% include 'partials/_bottom_nav.html' %}
+    {% include 'partials/_bottom_sheet.html' %}
+    {% include 'partials/_toast.html' %}
+</div>
+{% endblock %}

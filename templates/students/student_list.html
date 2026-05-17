@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}هنرجویان | باشگاه ستاره‌ها{% endblock %}
+
+{% block content %}
+<h1>هنرجویان ({{ students.count }} نفر)</h1>
+
+<a href="{% url 'students:student_add' %}">+ هنرجوی جدید</a>
+
+{% if students %}
+<table border="1">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>نام</th>
+            <th>شماره</th>
+            <th>کد هنرجویی</th>
+            <th>کمربند</th>
+            <th>باشگاه</th>
+            <th>جزئیات</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in students %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ s.user.get_full_name }}</td>
+            <td>{{ s.user.phone }}</td>
+            <td>{{ s.student_code }}</td>
+            <td>{{ s.get_current_belt_display }}</td>
+            <td>{{ s.club.name }}</td>
+            <td><a href="{% url 'students:student_detail' s.pk %}">مشاهده</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>هیچ هنرجویی ثبت نشده</p>
+{% endif %}
+{% endblock %}

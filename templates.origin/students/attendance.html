@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load jformat %}
+
+{% block title %}ثبت حضور | {{ site_settings.gym_name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}
+    {% include 'partials/_mobile_nav.html' %}
+    
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div>
+                <h1 class="page-title">ثبت حضور امروز</h1>
+                <div class="page-subtitle">{{ today|jformat:"%Y/%m/%d" }}</div>
+            </div>
+        </div>
+        
+        <!-- کارت تاریخ -->
+        <div class="date-card animate__animated animate__fadeIn">
+            <div class="date-icon">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="date-text">
+                {{ today|jformat:"%Y/%m/%d" }}
+                <small>تاریخ امروز</small>
+            </div>
+        </div>
+        
+        <!-- آمار -->
+        <div class="stats-bar animate__animated animate__fadeInUp">
+            <div class="stat-mini">
+                <div class="stat-num green">{{ stats.present }}</div>
+                <div class="stat-lbl">حاضر</div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-num red">{{ stats.absent }}</div>
+                <div class="stat-lbl">غایب</div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-num yellow">{{ stats.birthdays }}</div>
+                <div class="stat-lbl">تولد</div>
+            </div>
+        </div>
+        
+        <!-- لیست -->
+        <div class="section-block animate__animated animate__fadeInUp animate__delay-1s">
+            <div class="section-head">
+                <h3>هنرجو ({{ stats.total }} نفر)</h3>
+                <span id="selectedCount" style="font-size:0.75rem;color:var(--accent);">۰ انتخاب شده</span>
+            </div>
+            
+            <form id="attendanceForm" method="post" action="{% url 'students:attendance_save' %}">
+                {% csrf_token %}
+                <input type="hidden" name="date" value="{{ today|jformat:'%Y/%m/%d' }}">
+                <input type="hidden" name="student_ids" id="studentIdsInput">
+                
+                <div class="attendance-list" id="attendanceList">
+                    {% for student in students %}
+                    <div class="attendance-item {% if student.id in attended_today %}checked{% endif %}" 
+                         data-id="{{ student.id }}" 
+                         data-name="{{ student.user.get_full_name }}"
+                         data-birthday="{% if student.is_birthday_today %}true{% else %}false{% endif %}">
+                        
+                        <div class="att-item-avatar">
+                            {% if student.user.avatar %}
+                            <img src="{{ student.user.avatar.url }}" alt="{{ student.user.get_full_name }}">
+                            {% else %}
+                            <i class="bi bi-person-fill"></i>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="att-item-info">
+                            <div class="att-name">
+                                {{ student.user.get_full_name }}
+                                {% if student.is_birthday_today %}
+                                <span class="badge-birthday"><i class="bi bi-gift-fill"></i></span>
+                                {% endif %}
+                            </div>
+                            <div class="att-meta">
+                                <span>{{ student.get_current_belt_display }}</span>
+                                <span>{{ student.student_code }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="att-check">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted">هیچ هنرجویی یافت نشد</div>
+                    {% endfor %}
+                </div>
+                
+                <input type="hidden" name="student_ids[]" id="studentIdsInput">
+                
+                <div class="btn-save-wrapper">
+                    <button type="submit" class="btn-save" id="btnSave">
+                        <i class="bi bi-cloud-check"></i>
+                        ذخیره حضور و غیاب
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+    
+    {% include 'partials/_bottom_nav.html' %}
+    {% include 'partials/_bottom_sheet.html' %}
+    {% include 'partials/_toast.html' %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var attList = document.getElementById('attendanceList');
+    if (!attList) return;
+    
+    // کلیک روی هر هنرجو
+    attList.addEventListener('click', function(e) {
+        var item = e.target.closest('.attendance-item');
+        if (!item) return;
+        item.classList.toggle('checked');
+        updateCounts();
+    });
+    
+    // بروزرسانی آمار
+    function updateCounts() {
+        var checked = document.querySelectorAll('.attendance-item.checked').length;
+        document.getElementById('selectedCount').textContent = checked + ' انتخاب شده';
+        document.getElementById('presentCount').textContent = checked;
+        
+        var total = document.querySelectorAll('.attendance-item').length;
+        document.getElementById('absentCount').textContent = total - checked;
+    }
+    
+    // قبل از سابمیت
+    document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+    var ids = [];
+    document.querySelectorAll('.attendance-item.checked').forEach(function(item) {
+        ids.push(parseInt(item.getAttribute('data-id')));
+    });
+    document.getElementById('studentIdsInput').value = JSON.stringify(ids);
+    console.log('Submitting IDs:', ids); // چک کن تو کنسول
+});
+    
+    // toast
+    {% if messages %}
+        {% for message in messages %}
+            if (typeof showToast === 'function') {
+                showToast(
+                    '{% if message.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}',
+                    '{% if message.tags == "success" %}green{% else %}red{% endif %}',
+                    '{% if message.tags == "success" %}موفق{% else %}خطا{% endif %}',
+                    '{{ message|escapejs }}'
+                );
+            }
+        {% endfor %}
+    {% endif %}
+});
+</script>
+{% endblock %}

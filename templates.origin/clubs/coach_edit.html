@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ویرایش مربی | {{ site_settings.gym_name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}
+    {% include 'partials/_mobile_nav.html' %}
+    
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <h1 class="page-title">ویرایش مربی</h1>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-section animate__animated animate__fadeInUp">
+                <div class="form-section-title">
+                    <i class="bi bi-person-badge-fill"></i>
+                    {{ membership.user.get_full_name }}
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>باشگاه</label>
+                        <select name="club_id" class="input-glass">
+                            {% for c in clubs %}
+                            <option value="{{ c.id }}" {% if c.id == membership.club_id %}selected{% endif %}>{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>نقش</label>
+                        <select name="role" class="input-glass">
+                            <option value="instructor" {% if membership.role == 'instructor' %}selected{% endif %}>مربی</option>
+                            <option value="manager" {% if membership.role == 'manager' %}selected{% endif %}>مدیر</option>
+                            <option value="assistant" {% if membership.role == 'assistant' %}selected{% endif %}>کمک مربی</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions animate__animated animate__fadeInUp">
+                <button type="submit" class="btn-submit-form">
+                    <i class="bi bi-check-lg"></i>
+                    ذخیره
+                </button>
+                <a href="{% url 'clubs:coach_list' %}" class="btn-cancel-form">انصراف</a>
+            </div>
+        </form>
+    </main>
+    
+    {% include 'partials/_bottom_nav.html' %}
+    {% include 'partials/_bottom_sheet.html' %}
+    {% include 'partials/_toast.html' %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if messages %}
+        {% for message in messages %}
+        if (typeof showToast === 'function') {
+            showToast(
+            '{% if message.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}',
+            '{% if message.tags == "success" %}green{% else %}red{% endif %}',
+            '{% if message.tags == "success" %}موفق{% else %}خطا{% endif %}',
+            '{{ message|escapejs }}'
+            );
+        }
+        {% endfor %}
+        {% endif %}
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}ورود | باشگاه ستاره‌ها{% endblock %}
+
+{% block content %}
+<h1>ورود</h1>
+
+{% if messages %}
+    {% for m in messages %}
+        <p>{{ m }}</p>
+    {% endfor %}
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    <input type="text" name="username" placeholder="شماره موبایل" required>
+    <input type="password" name="password" placeholder="رمز عبور" required>
+    <button type="submit">ورود</button>
+</form>
+{% endblock %}

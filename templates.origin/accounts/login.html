@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ورود | باشگاه ستاره‌ها{% endblock %}
+
+{% block content %}
+<div class="login-page">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    
+    <div class="login-card card-glass animate__animated animate__fadeInUp">
+        <a href="{% url 'accounts:landing' %}" class="login-back">
+            <i class="bi bi-arrow-right"></i>
+            بازگشت
+        </a>
+        
+        <div class="login-header">
+            <div class="icon-circle">
+                <i class="bi bi-shield-fill"></i>
+            </div>
+            <h2>ورود به باشگاه</h2>
+            <p>برای ادامه شماره همراه و گذرواژه را وارد کنید</p>
+        </div>
+        
+        {% if form.errors %}
+        <div class="login-error">
+            <div class="alert-glass-danger">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>شماره همراه یا گذرواژه اشتباه است</span>
+            </div>
+        </div>
+        {% endif %}
+        
+        <form method="post" id="loginForm">
+            {% csrf_token %}
+            
+            <div class="login-input-group">
+                <input type="tel" name="username" id="phone" class="input-glass" placeholder="شماره همراه" autocomplete="tel">
+                <span class="input-icon"><i class="bi bi-phone"></i></span>
+            </div>
+            
+            <div class="login-input-group">
+                <input type="password" name="password" id="password" class="input-glass" placeholder="گذرواژه">
+                <button type="button" class="toggle-password" id="togglePassword">
+                    <i class="bi bi-eye-slash"></i>
+                </button>
+                <span class="input-icon"><i class="bi bi-lock"></i></span>
+            </div>
+            
+            <div class="login-options">
+                <label class="remember-label">
+                    <input type="checkbox" class="checkbox-custom" name="remember">
+                    مرا به خاطر بسپار
+                </label>
+                <a href="javascript:void(0)" class="forgot-link">بازیابی گذرواژه</a>
+            </div>
+            
+            <button type="submit" class="login-submit btn-primary-gradient" id="btnSubmit">
+                <span class="btn-text">ورود</span>
+                <i class="bi bi-box-arrow-in-left"></i>
+                <span class="spinner spinner-small"></span>
+            </button>
+            
+            <div class="login-divider divider-text">یا</div>
+            
+            <a href="javascript:void(0)" class="login-otp btn-glass">
+                <i class="bi bi-chat-dots-fill"></i>
+                ورود با گذرواژه یکبار مصرف
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load jformat %}
+
+{% block title %}حضور و غیاب | باشگاه ستاره‌ها{% endblock %}
+
+{% block content %}
+<h1>ثبت حضور و غیاب</h1>
+<p>{{ today|jformat:"%Y/%m/%d" }} - {{ today|jformat:"l" }}</p>
+
+<p>
+    حاضر: {{ present_count }} | غایب: {{ absent_count }} | کل: {{ total_count }}
+</p>
+
+{% if messages %}
+    {% for m in messages %}
+        <p style="color: green;">{{ m }}</p>
+    {% endfor %}
+{% endif %}
+
+<form method="post" action="{% url 'students:attendance_save' %}">
+    {% csrf_token %}
+    
+    <table border="1">
+        <thead>
+            <tr>
+                <th>حاضر</th>
+                <th>نام</th>
+                <th>کمربند</th>
+                <th>کد</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in students %}
+            <tr>
+                <td>
+                    <input type="checkbox" name="student_ids" value="{{ s.id }}"
+                    {% if s.id in attended_today %}checked{% endif %}>
+                </td>
+                <td>{{ s.user.get_full_name }}</td>
+                <td>{{ s.get_current_belt_display }}</td>
+                <td>{{ s.student_code }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">هیچ هنرجویی یافت نشد</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <button type="submit">💾 ذخیره حضور و غیاب</button>
+</form>
+
+<a href="{% url 'accounts:dashboard' %}">بازگشت</a>
+{% endblock %}

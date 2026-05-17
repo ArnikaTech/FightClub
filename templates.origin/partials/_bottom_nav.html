@@ -1,0 +1,28 @@
+<nav class="bottom-nav">
+    <a href="{% url 'accounts:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <i class="bi bi-grid-fill"></i>
+        <span>پیشخوان</span>
+    </a>
+    
+    {% if user.is_super_manager or user.is_club_manager %}
+    <a href="{% url 'students:member_list' %}" class="{% if '/students' in request.path %}active{% endif %}">
+        <i class="bi bi-people"></i>
+        <span>هنرجوها</span>
+    </a>
+    
+    <a href="{% url 'students:attendance' %}" class="{% if '/attendance' in request.path %}active{% endif %}">
+        <i class="bi bi-calendar-check"></i>
+        <span>حضور</span>
+    </a>
+    {% endif %}
+    
+    <a href="#">
+        <i class="bi bi-chat-dots-fill"></i>
+        <span>پیامک</span>
+    </a>
+    
+    <a href="#" id="moreBtn">
+        <i class="bi bi-three-dots"></i>
+        <span>بیشتر</span>
+    </a>
+</nav>

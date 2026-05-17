@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load jformat %}
+
+{% block title %}{{ student.user.get_full_name }} | باشگاه ستاره‌ها{% endblock %}
+
+{% block content %}
+<h1>{{ student.user.get_full_name }}</h1>
+
+<table border="1">
+    <tr><th>کد هنرجویی</th><td>{{ student.student_code }}</td></tr>
+    <tr><th>شماره موبایل</th><td>{{ student.user.phone }}</td></tr>
+    <tr><th>باشگاه</th><td>{{ student.club.name }}</td></tr>
+    <tr><th>تاریخ تولد</th><td>{{ student.birth_date|jformat:"%Y/%m/%d"|default:"-" }}</td></tr>
+    <tr><th>سن</th><td>{{ student.age }} سال</td></tr>
+    <tr><th>کمربند</th><td>{{ student.get_current_belt_display }}</td></tr>
+    <tr><th>تاریخ عضویت</th><td>{{ student.joined_at|jformat:"%Y/%m/%d" }}</td></tr>
+    <tr><th>کد ملی</th><td>{{ student.user.national_code|default:"-" }}</td></tr>
+    <tr><th>وضعیت بیمه</th><td>
+        {% with days=student.insurance_days_left %}
+            {% if days is not None %}
+                {% if days <= 7 %}🟠 {{ days }} روز
+                {% else %}🟢 {{ days }} روز{% endif %}
+            {% else %}🔴 منقضی{% endif %}
+        {% endwith %}
+    </td></tr>
+</table>
+
+{% for contact in student.contacts.all %}
+    <p>
+        {{ contact.label|default:contact.get_contact_type_display }}: {{ contact.phone }}
+        <a href="tel:{{ contact.phone }}">📞</a>
+        <form method="post" action="{% url 'students:contact_delete' contact.pk %}" style="display:inline;" onsubmit="return confirm('آیا مطمئن هستید؟')">
+            {% csrf_token %}
+            <button type="submit">❌</button>
+        </form>
+    </p>
+{% endfor %}
+
+<h3>ثبت شماره والدین</h3>
+<form method="post" action="{% url 'students:contact_add' student.pk %}">
+    {% csrf_token %}
+    <p>
+        <label>شماره تماس:</label>
+        <input type="text" name="phone" placeholder="۰۹۱۲۳۴۵۶۷۸۹" required>
+    </p>
+    <p>
+        <label>نوع:</label>
+        <select name="contact_type">
+            <option value="parent">والدین</option>
+            <option value="emergency">اضطراری</option>
+            <option value="other">سایر</option>
+        </select>
+    </p>
+    <p>
+        <label>برچسب:</label>
+        <input type="text" name="label" placeholder="مثال: پدر، مادر">
+    </p>
+    <button type="submit">ثبت شماره</button>
+</form>
+
+<h3>ثبت/تمدید بیمه</h3>
+<form method="post" action="{% url 'students:insurance_add' student.pk %}">
+    {% csrf_token %}
+    <p>
+        <label>تاریخ شروع:</label>
+        <input type="text" name="start_date" placeholder="۱۴۰۳/۰۱/۰۱" required>
+    </p>
+    <p>
+        <label>تاریخ انقضا:</label>
+        <input type="text" name="expiry_date" placeholder="۱۴۰۴/۰۱/۰۱" required>
+    </p>
+    <button type="submit">ثبت بیمه</button>
+</form>
+
+<a href="{% url 'students:student_edit' student.pk %}">✏️ ویرایش هنرجو</a>
+
+<a href="{% url 'students:student_list' %}">بازگشت به لیست</a>
+{% endblock %}

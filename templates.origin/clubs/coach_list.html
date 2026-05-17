@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}مربیان | {{ site_settings.gym_name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}
+    {% include 'partials/_mobile_nav.html' %}
+    
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div>
+                <h1 class="page-title">مربیان <span>{{ coaches.count }} نفر</span></h1>
+            </div>
+            <a href="{% url 'clubs:coach_add' %}" class="btn-add">
+                <i class="bi bi-plus-lg"></i>
+                <span class="btn-add-text">مربی جدید</span>
+            </a>
+        </div>
+        
+        <div class="coach-list-page">
+            {% for membership in coaches %}
+            <div class="coach-card-page animate__animated animate__fadeInUp">
+                <div class="coach-avatar-page">
+                    {% if membership.user.avatar %}
+                    <img src="{{ membership.user.avatar.url }}" alt="">
+                    {% else %}
+                    <i class="bi bi-person-fill"></i>
+                    {% endif %}
+                </div>
+                <div class="coach-info-page">
+                    <div class="coach-name-page">{{ membership.user.get_full_name }}</div>
+                    <div class="coach-meta-page">
+                        <span>{{ membership.get_role_display }}</span>
+                        <span>{{ membership.club.name }}</span>
+                        <span>{{ membership.user.phone }}</span>
+                    </div>
+                </div>
+                <div class="coach-actions">
+                    <a href="tel:{{ membership.user.phone }}" class="coach-action-btn call">
+                        <i class="bi bi-telephone-fill"></i>
+                    </a>
+                    <a href="{% url 'clubs:coach_edit' membership.pk %}" class="coach-action-btn edit">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <button type="button" class="coach-action-btn delete" onclick="confirmDeleteCoach({{ membership.pk }}, '{{ membership.user.get_full_name|escapejs }}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-people" style="font-size: 3rem;"></i>
+                <p class="mt-3">مربی‌ای ثبت نشده است</p>
+                <a href="{% url 'clubs:coach_add' %}" class="btn-add mt-2">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>افزودن مربی</span>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+    
+    <!-- مودال حذف مربی -->
+    <div class="modal-overlay" id="deleteCoachModalOverlay"></div>
+    <div class="modal-sheet" id="deleteCoachModal" style="max-width: 400px;">
+        <div class="modal-handle"></div>
+        <div class="modal-title">تایید حذف</div>
+        <div class="modal-body text-center">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; color: var(--primary);"></i>
+            <p class="mt-3">آیا از حذف <span id="deleteCoachName"></span> از مربیان مطمئن هستید؟</p>
+            <div class="modal-btn-row mt-3">
+                <button type="button" class="btn-cancel-sm" onclick="closeDeleteCoachModal()">انصراف</button>
+                <form id="deleteCoachForm" method="post" style="flex:1;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-submit-sm" style="width:100%;">
+                        <i class="bi bi-trash"></i>
+                        حذف
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    {% include 'partials/_bottom_nav.html' %}
+    {% include 'partials/_bottom_sheet.html' %}
+    {% include 'partials/_toast.html' %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmDeleteCoach(pk, name) {
+        document.getElementById('deleteCoachName').textContent = name;
+        document.getElementById('deleteCoachForm').action = '/clubs/coaches/' + pk + '/delete/';
+        document.getElementById('deleteCoachModalOverlay').classList.add('show');
+        document.getElementById('deleteCoachModal').classList.add('show');
+    }
+    
+    function closeDeleteCoachModal() {
+        document.getElementById('deleteCoachModalOverlay').classList.remove('show');
+        document.getElementById('deleteCoachModal').classList.remove('show');
+    }
+    
+    document.getElementById('deleteCoachModalOverlay')?.addEventListener('click', closeDeleteCoachModal);
+    
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if messages %}
+        {% for message in messages %}
+        if (typeof showToast === 'function') {
+            showToast(
+            '{% if message.tags == "success" %}bi-check-circle-fill{% elif message.tags == "error" %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %}',
+            '{% if message.tags == "success" %}green{% elif message.tags == "error" %}red{% else %}blue{% endif %}',
+            '{% if message.tags == "success" %}موفق{% elif message.tags == "error" %}خطا{% else %}توجه{% endif %}',
+            '{{ message|escapejs }}'
+            );
+        }
+        {% endfor %}
+        {% endif %}
+    });
+</script>
+{% endblock %}

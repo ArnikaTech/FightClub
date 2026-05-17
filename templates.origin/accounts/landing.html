@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}باشگاه ستاره‌ها | هاپکیدو{% endblock %}
+
+{% block content %}
+<div class="landing-screen">
+    <!-- گوی‌های نورانی -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    
+    <!-- پس‌زمینه گرید -->
+    <div class="bg-grid"></div>
+    <div class="bg-pattern"></div>
+    
+    <!-- ذرات شناور -->
+    <div class="landing-particles" id="particlesContainer"></div>
+    
+    <!-- محتوای اصلی -->
+    <div class="landing-content">
+        <!-- لوگو -->
+        <div class="landing-logo animate__animated animate__fadeInDown">
+            <div class="logo-ring">
+                <div class="logo-inner">
+                    <i class="bi bi-shield-fill"></i>
+                </div>
+            </div>
+            <h1 class="gym-name">{{ site_settings.gym_name }}</h1>
+            <p class="gym-tagline">{{ site_settings.gym_type }}</p>
+        </div>
+        
+        <!-- دکمه ورود -->
+        <a href="{% url 'accounts:login' %}" class="landing-btn animate__animated animate__fadeInUp animate__delay-1s" id="btnEnter">
+            <i class="bi bi-box-arrow-in-left"></i>
+            ورود به باشگاه
+        </a>
+        
+        <!-- نقل قول -->
+        <div class="landing-quote animate__animated animate__fadeIn animate__delay-2s">
+            <div class="quote-divider"></div>
+            <p>هر <span>تمرین</span>، یک قدم به <span>قدرت</span> نزدیک‌تری</p>
+            <!-- <p>{{ site_settings.gym_slogan|safe }}</p> -->
+        </div>
+    </div>
+</div>
+{% endblock %}

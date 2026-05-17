@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}ثبت هنرجوی جدید | باشگاه ستاره‌ها{% endblock %}
+
+{% block content %}
+<h1>ثبت هنرجوی جدید</h1>
+
+{% if messages %}
+{% for m in messages %}
+<p style="color: {% if m.tags == 'success' %}green{% else %}red{% endif %};">{{ m }}</p>
+{% endfor %}
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    
+    <fieldset>
+        <legend>اطلاعات کاربری</legend>
+        
+        <p>
+            {{ form.first_name.label_tag }}
+            {{ form.first_name }}
+            {{ form.first_name.errors }}
+        </p>
+        
+        <p>
+            {{ form.last_name.label_tag }}
+            {{ form.last_name }}
+            {{ form.last_name.errors }}
+        </p>
+        
+        <p>
+            {{ form.phone.label_tag }}
+            {{ form.phone }}
+            {{ form.phone.errors }}
+        </p>
+        
+        <p>
+            {{ form.password.label_tag }}
+            {{ form.password }}
+            {{ form.password.errors }}
+        </p>
+        
+        <p>
+            {{ form.national_code.label_tag }}
+            {{ form.national_code }}
+        </p>
+    </fieldset>
+    
+    <fieldset>
+        <legend>اطلاعات هنرجویی</legend>
+        
+        <p>
+            {{ form.club.label_tag }}
+            {{ form.club }}
+        </p>
+        
+        <p>
+            {{ form.birth_date.label_tag }}
+            {{ form.birth_date }}
+            {{ form.birth_date.errors }}
+        </p>
+        
+        <p>
+            {{ form.current_belt.label_tag }}
+            {{ form.current_belt }}
+        </p>
+    </fieldset>
+    
+    <button type="submit">ثبت هنرجو</button>
+</form>
+
+<a href="{% url 'accounts:dashboard' %}">بازگشت به داشبورد</a>
+{% endblock %}

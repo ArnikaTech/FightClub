@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ club.name }} | {{ site_settings.gym_name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}
+    {% include 'partials/_mobile_nav.html' %}
+    
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="gym-header animate__animated animate__fadeIn">
+            <div class="gym-logo">
+                <i class="bi bi-building"></i>
+            </div>
+            <div class="gym-name">{{ club.name }}</div>
+            <div class="gym-city">{{ club.city.name }} - {{ club.province.name }}</div>
+        </div>
+        
+        <div class="info-card animate__animated animate__fadeInUp">
+            <div class="info-title"><i class="bi bi-info-circle-fill"></i> اطلاعات</div>
+            <div class="info-row"><span class="info-label">استان</span><span class="info-value">{{ club.province.name }}</span></div>
+            <div class="info-row"><span class="info-label">شهر</span><span class="info-value">{{ club.city.name }}</span></div>
+            <div class="info-row"><span class="info-label">آدرس</span><span class="info-value">{{ club.address|default:"-" }}</span></div>
+            <div class="info-row"><span class="info-label">تلفن</span><span class="info-value">{{ club.phone|default:"-" }}</span></div>
+            <div class="info-row"><span class="info-label">هنرجویان</span><span class="info-value">{{ club.students.count }} نفر</span></div>
+        </div>
+        
+        <div class="info-card animate__animated animate__fadeInUp">
+            <div class="info-title"><i class="bi bi-people-fill"></i> کادر فنی ({{ coaches.count }} نفر)</div>
+            {% for m in coaches %}
+            <div class="info-row">
+                <span class="info-label">{{ m.get_role_display }}</span>
+                <span class="info-value">{{ m.user.get_full_name }}</span>
+            </div>
+            {% empty %}
+            <div class="text-center text-muted py-3">مربی‌ای ثبت نشده</div>
+            {% endfor %}
+        </div>
+        
+        <a href="{% url 'clubs:club_edit' club.pk %}" class="btn-edit-gym">
+            <i class="bi bi-pencil"></i> ویرایش باشگاه
+        </a>
+    </main>
+    
+    {% include 'partials/_bottom_nav.html' %}
+    {% include 'partials/_bottom_sheet.html' %}
+    {% include 'partials/_toast.html' %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if messages %}
+        {% for message in messages %}
+            if (typeof showToast === 'function') {
+                showToast(
+                    '{% if message.tags == "success" %}bi-check-circle-fill{% elif message.tags == "error" %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %}',
+                    '{% if message.tags == "success" %}green{% elif message.tags == "error" %}red{% else %}blue{% endif %}',
+                    '{% if message.tags == "success" %}موفق{% elif message.tags == "error" %}خطا{% else %}توجه{% endif %}',
+                    '{{ message|escapejs }}'
+                );
+            }
+        {% endfor %}
+    {% endif %}
+});
+</script>
+{% endblock %}
