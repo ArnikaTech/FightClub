@@ -25,6 +25,33 @@
     </td></tr>
 </table>
 
+<h3>تاریخچه بیمه</h3>
+{% if student.insurances.all %}
+<table border="1" width="100%">
+    <thead>
+        <tr><th>شروع</th><th>انقضا</th><th>وضعیت</th><th>تاریخ ثبت</th></tr>
+    </thead>
+    <tbody>
+        {% for insurance in student.insurances.all %}
+        <tr>
+            <td>{{ insurance.start_date|jformat:"%Y/%m/%d" }}</td>
+            <td>{{ insurance.expiry_date|jformat:"%Y/%m/%d" }}</td>
+            <td>
+                {% if insurance.expiry_date >= today %}
+    🟢 فعال
+{% else %}
+    🔴 منقضی
+{% endif %}
+            </td>
+            <td>{{ insurance.created_at|jformat:"%Y/%m/%d" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>بیمه‌ای ثبت نشده</p>
+{% endif %}
+
 {% for contact in student.contacts.all %}
     <p>
         {{ contact.label|default:contact.get_contact_type_display }}: {{ contact.phone }}

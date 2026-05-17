@@ -32,10 +32,14 @@ class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 
 class StudentDetailView(LoginRequiredMixin, DetailView):
-    """جزئیات هنرجو"""
     model = Student
     template_name = 'students/student_detail.html'
     context_object_name = 'student'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['today'] = jdatetime.date.today()
+        return context
 
 
 class StudentCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
