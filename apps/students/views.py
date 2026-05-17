@@ -216,3 +216,59 @@ class AttendanceSaveView(LoginRequiredMixin, View):
         
         messages.success(request, f'{present_count} هنرجو حاضر، {students.count() - present_count} غایب')
         return redirect('students:attendance')
+
+
+class AbsenteeListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    """لیست غایب‌ها"""
+    template_name = 'students/absentees.html'
+    context_object_name = 'absentees'
+    
+    def test_func(self):
+        user = self.request.user
+        return user.is_super_manager or user.is_club_manager
+    
+    def get_queryset(self):
+        """هنرجویان فعال"""
+        user = self.request.user
+        if user.is_super_manager:
+            return Student.objects.filter(is_active=True).select_related('user', 'club').prefetch_related('contacts', 'attendances')
+        return Student.objects.filter(
+            club__memberships__user=user,
+            club__memberships__is_active=True,
+            is_active=True
+        ).select_related('user', 'club').prefetch_related('contacts', 'attendances')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        absentee_data = []
+        for student in self.get_queryset():
+            recent = student.attendances.order_by('-date')[:10]
+            
+            # غیبت‌های متوالی
+            consecutive = 0
+            for att in recent:
+                if att.status == 'absent':
+                    consecutive += 1
+                else:
+                    break
+            
+            # فقط غایب‌ها رو نشون بده
+            if consecutive > 0:
+                last_present = student.attendances.filter(status='present').order_by('-date').first()
+                absentee_data.append({
+                    'student': student,
+                    'consecutive': consecutive,
+                    'last_present_date': last_present.date if last_present else None,
+                    'recent_absences': [att.date for att in recent if att.status == 'absent'][:5],
+                    'contacts': student.contacts.all(),
+                })
+        
+        # مرتب‌سازی: غیبت‌های بیشتر اول
+        absentee_data.sort(key=lambda x: x['consecutive'], reverse=True)
+        
+        context['absentees'] = absentee_data
+        context['total_absent'] = len(absentee_data)
+        context['critical_count'] = sum(1 for a in absentee_data if a['consecutive'] >= 3)
+        
+        return context

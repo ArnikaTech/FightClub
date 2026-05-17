@@ -7,5 +7,7 @@
 <p>خوش آمدید {{ user.get_full_name }}</p>
 <a href="{% url 'students:student_list' %}">لیست هنرجویان</a>
  | 
+<a href="{% url 'students:absentees' %}">📋 پیگیری غیبت‌ها</a>
+ | 
 <a href="{% url 'accounts:logout' %}">خروج</a>
 {% endblock %}

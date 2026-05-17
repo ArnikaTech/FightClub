@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load jformat %}
+
+{% block title %}پیگیری غیبت‌ها | باشگاه ستاره‌ها{% endblock %}
+
+{% block content %}
+<h1>پیگیری غیبت‌ها</h1>
+
+{% if critical_count %}
+<p style="color: red; font-weight: bold;">
+    ⚠️ {{ critical_count }} هنرجو ۳ جلسه یا بیشتر غیبت متوالی دارند
+</p>
+{% endif %}
+
+<p>تعداد غایب‌ها: {{ total_absent }} نفر</p>
+
+{% for item in absentees %}
+    {% with s=item.student %}
+    <div style="border: 1px solid #ccc; margin: 10px; padding: 10px;">
+        <h3>
+            {{ s.user.get_full_name }}
+            <span style="color: red;">({{ item.consecutive }} جلسه غیبت)</span>
+        </h3>
+        
+        <p>
+            <strong>کمربند:</strong> {{ s.get_current_belt_display }} |
+            <strong>کد:</strong> {{ s.student_code }} |
+            <strong>باشگاه:</strong> {{ s.club.name }}
+        </p>
+        
+        {% if item.last_present_date %}
+        <p><strong>آخرین حضور:</strong> {{ item.last_present_date|jformat:"%Y/%m/%d" }}</p>
+        {% endif %}
+        
+        {% if item.recent_absences %}
+        <p>
+            <strong>تاریخ غیبت‌ها:</strong>
+            {% for date in item.recent_absences %}
+                {{ date|jformat:"%Y/%m/%d" }}{% if not forloop.last %} | {% endif %}
+            {% endfor %}
+        </p>
+        {% endif %}
+        
+        <!-- شماره تماس والدین -->
+        {% if item.contacts %}
+        <p>
+            <strong>📞 تماس با والدین:</strong>
+            {% for contact in item.contacts %}
+                <a href="tel:{{ contact.phone }}" style="margin: 0 5px; padding: 5px 10px; background: green; color: white; text-decoration: none; border-radius: 5px;">
+                    📞 {{ contact.label|default:contact.get_contact_type_display }}: {{ contact.phone }}
+                </a>
+            {% endfor %}
+        </p>
+        {% else %}
+        <p style="color: red;">⚠️ شماره تماس والدین ثبت نشده!</p>
+        {% endif %}
+    </div>
+    {% endwith %}
+{% empty %}
+    <p style="color: green;">🎉 هیچ هنرجوی غایبی وجود ندارد</p>
+{% endfor %}
+
+<a href="{% url 'accounts:dashboard' %}">بازگشت به داشبورد</a>
+{% endblock %}
