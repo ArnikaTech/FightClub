@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}ویرایش پروفایل{% endblock %}
+
+{% block content %}
+<h1>ویرایش پروفایل</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    {% if user.avatar %}
+    <p><img src="{{ user.avatar.url }}" width="80" height="80" style="border-radius:50%;"></p>
+    {% endif %}
+    <p><label>تصویر:</label><input type="file" name="avatar" accept="image/*"></p>
+    <p><label>نام:</label><input name="first_name" value="{{ user.first_name }}" required></p>
+    <p><label>نام خانوادگی:</label><input name="last_name" value="{{ user.last_name }}" required></p>
+    <p><label>کد ملی:</label><input name="national_code" value="{{ user.national_code|default:'' }}"></p>
+    <p><label>شماره موبایل:</label><input value="{{ user.phone }}" disabled></p>
+    
+    <button type="submit">ذخیره</button>
+    <a href="{% url 'accounts:profile' %}">انصراف</a>
+</form>
+{% endblock %}

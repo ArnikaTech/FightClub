@@ -5,16 +5,17 @@
 
 {% block content %}
 <h1>پیشخوان</h1>
-<p>خوش آمدید {{ user.get_full_name }}</p>
+<p>خوش آمدید {{ user.get_short_name }}</p>
 
 <h3>مدیریت</h3>
+<a href="{% url 'accounts:profile' %}">👤 پروفایل من</a>
 <a href="{% url 'clubs:province_list' %}">🏙️ استان‌ها</a> |
 <a href="{% url 'clubs:city_list' %}">🏘️ شهرها</a> |
 <a href="{% url 'clubs:club_list' %}">🏢 باشگاه‌ها</a> |
 <a href="{% url 'clubs:coach_list' %}">👥 مربیان</a>
 
 {% if user.is_super_manager and clubs %}
-<form method="get" style="margin-bottom: 20px;">
+<form method="get" style="margin: 20px 0 20px;">
     <select name="club_id" onchange="this.form.submit()">
         <option value="">همه باشگاه‌ها</option>
         {% for club in clubs %}

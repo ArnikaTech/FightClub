@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load jformat %}
+
+{% block title %}پروفایل من | باشگاه ستاره‌ها{% endblock %}
+
+{% block content %}
+<h1>پروفایل من</h1>
+
+{% if messages %}
+    {% for m in messages %}
+        <p style="color: {% if m.tags == 'success' %}green{% else %}red{% endif %};">{{ m }}</p>
+    {% endfor %}
+{% endif %}
+
+<p>
+    {% if user.avatar %}
+    <img src="{{ user.avatar.url }}" width="100" height="100" style="border-radius:50%;">
+    {% else %}
+    👤
+    {% endif %}
+</p>
+
+<h2>{{ user.get_full_name }}</h2>
+<p>📞 {{ user.phone }}</p>
+<p>کد ملی: {{ user.national_code|default:"-" }}</p>
+<p>نقش:
+    {% if user.is_super_manager %}مدیر کل{% endif %}
+    {% if user.is_club_manager %}مدیر باشگاه{% endif %}
+    {% if user.is_instructor %}مربی{% endif %}
+    {% if not user.is_super_manager and not user.is_club_manager and not user.is_instructor %}هنرجو{% endif %}
+</p>
+
+{% if student %}
+<h3>اطلاعات هنرجویی</h3>
+<p>کد: {{ student.student_code }} | کمربند: {{ student.get_current_belt_display }} | باشگاه: {{ student.club.name }}</p>
+{% if student.birth_date %}<p>تولد: {{ student.birth_date|jformat:"%Y/%m/%d" }} ({{ student.age }} سال)</p>{% endif %}
+{% if student.insurance_days_left is not None %}<p>🟢 بیمه: {{ student.insurance_days_left }} روز</p>{% else %}<p>🔴 بیمه: منقضی</p>{% endif %}
+{% endif %}
+
+{% if managed_clubs %}
+<h3>باشگاه‌های من</h3>
+{% for club in managed_clubs %}<p>{{ club.name }} - {{ club.city.name }}</p>{% endfor %}
+{% endif %}
+
+<a href="{% url 'accounts:profile_edit' %}">✏️ ویرایش پروفایل</a> |
+<a href="{% url 'accounts:password_change' %}">🔒 تغییر رمز</a> |
+<a href="{% url 'accounts:logout' %}">🚪 خروج</a>
+{% endblock %}

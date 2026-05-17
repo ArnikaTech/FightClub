@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, View
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+
 import jdatetime
 from apps.students.models import Student, Attendance
 from apps.clubs.models import Club
@@ -105,3 +106,84 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context['expiring_insurance'] = expiring or 0
         
         return context
+
+
+class ProfileView(LoginRequiredMixin, TemplateView):
+    """پروفایل کاربر"""
+    template_name = 'accounts/profile.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        try:
+            student = user.student_profile
+            context['student'] = student
+        except:
+            context['student'] = None
+        
+        if user.is_super_manager or user.is_club_manager:
+            context['managed_clubs'] = Club.objects.filter(memberships__user=user, is_active=True)
+        
+        return context
+
+
+class ProfileEditView(LoginRequiredMixin, View):
+    """ویرایش پروفایل"""
+    
+    def get(self, request):
+        return render(request, 'accounts/profile_edit.html')
+    
+    def post(self, request):
+        user = request.user
+        
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        
+        if not first_name or not last_name:
+            messages.error(request, 'نام و نام خانوادگی الزامی است')
+            return redirect('accounts:profile_edit')
+        
+        user.first_name = first_name
+        user.last_name = last_name
+        user.national_code = request.POST.get('national_code', '').strip() or None
+        
+        avatar = request.FILES.get('avatar')
+        if avatar:
+            user.avatar = avatar
+        
+        user.save()
+        messages.success(request, 'پروفایل بروزرسانی شد')
+        return redirect('accounts:profile')
+
+
+class PasswordChangeView(LoginRequiredMixin, View):
+    def get(self, request):
+        return render(request, 'accounts/password_change.html')
+    
+    def post(self, request):
+        user = request.user
+        current = request.POST.get('current_password', '')
+        new = request.POST.get('new_password', '')
+        confirm = request.POST.get('confirm_password', '')
+        
+        if not user.check_password(current):
+            messages.error(request, 'رمز عبور فعلی اشتباه است')
+            return redirect('accounts:password_change')
+        
+        if len(new) < 4:
+            messages.error(request, 'رمز عبور جدید باید حداقل ۴ کاراکتر باشد')
+            return redirect('accounts:password_change')
+        
+        if new != confirm:
+            messages.error(request, 'رمز عبور جدید با تکرار آن مطابقت ندارد')
+            return redirect('accounts:password_change')
+        
+        user.set_password(new)
+        user.save()
+        
+        # حفظ session - کاربر رو خارج نمی‌کنه
+        update_session_auth_hash(request, user)
+        
+        messages.success(request, 'رمز عبور با موفقیت تغییر کرد')
+        return redirect('accounts:profile')
