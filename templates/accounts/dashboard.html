@@ -23,10 +23,9 @@
         <div class="welcome-card animate__animated animate__fadeIn">
             {% if user.is_super_manager %}
             <div class="welcome-text">{{ user.get_short_name }} عزیز، خوش آمدید</div>
-            <div class="welcome-sub">مدیر کل مجموعه ورزشی</div>
+            <div class="welcome-sub">مدیر کل مجموعه {{ site_settings.gym_name }}</div>
             {% else %}
-            <div class="welcome-text">{{ user.get_short_name }} عزیز، به باشگاه <span>{{ site_settings.gym_name|default:"ستاره‌ها" }}</span> خوش آمدید</div>
-            <div class="welcome-sub">{{ site_settings.gym_type|default:"هاپکیدو" }}</div>
+            <div class="welcome-text">{{ user.get_short_name }} عزیز، به باشگاه <span>{{ site_settings.gym_name }}</span> خوش آمدید</div>
             {% endif %}
             <div class="belt-badge">
                 <span class="belt-dot" style="background: var(--accent);"></span>

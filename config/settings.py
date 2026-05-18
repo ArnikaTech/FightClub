@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'django_jalali',
 
     # Apps
+    'apps.core.apps.CoreConfig',
     'apps.clubs.apps.ClubsConfig',
     'apps.accounts.apps.AccountsConfig',
     'apps.students.apps.StudentsConfig',
@@ -57,6 +58,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                'apps.core.context_processors.site_settings',
             ],
         },
     },
