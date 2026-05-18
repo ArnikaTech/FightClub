@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from django_jalali.db import models as jmodels
 import jdatetime
-from apps.clubs.models import Club
+from apps.clubs.models import Club, Sport
 
 
 class Student(models.Model):
@@ -32,6 +32,7 @@ class Student(models.Model):
         related_name='students',
         verbose_name='باشگاه'
     )
+    sport = models.ForeignKey(Sport, on_delete=models.PROTECT, null=True, blank=True, related_name='students', verbose_name='رشته ورزشی')
     birth_date = jmodels.jDateField('تاریخ تولد', null=True, blank=True)
     student_code = models.CharField('کد هنرجویی', max_length=20, blank=True, unique=True)
     current_belt = models.CharField('کمربند فعلی', max_length=20, choices=BELTS, default='white')

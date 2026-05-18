@@ -15,7 +15,7 @@ class InsuranceInline(admin.TabularInline):
 class StudentAdmin(admin.ModelAdmin):
     list_display = ['student_code', 'user', 'club', 'current_belt', 'is_active']
     search_fields = ['student_code', 'user__first_name', 'user__last_name']
-    autocomplete_fields = ['user', 'club']
+    autocomplete_fields = ['user', 'club', 'sport']
     inlines = [ContactInline, InsuranceInline]
 
 

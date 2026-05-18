@@ -27,6 +27,7 @@ class City(models.Model):
 
 class Club(models.Model):
     name = models.CharField('نام باشگاه', max_length=200)
+    sports = models.ManyToManyField('Sport', related_name='clubs', verbose_name='رشته‌های ورزشی', blank=True)
     province = models.ForeignKey(Province, on_delete=models.PROTECT, related_name='clubs', verbose_name='استان')
     city = models.ForeignKey(City, on_delete=models.PROTECT, related_name='clubs', verbose_name='شهر')
     address = models.TextField('آدرس', blank=True, null=True)
@@ -62,3 +63,17 @@ class ClubMembership(models.Model):
     
     def __str__(self):
         return f"{self.user} - {self.club} ({self.get_role_display()})"
+
+
+class Sport(models.Model):
+    """رشته ورزشی"""
+    name = models.CharField('نام رشته', max_length=100)
+    description = models.TextField('توضیحات', blank=True, null=True)
+    
+    class Meta:
+        verbose_name = 'رشته ورزشی'
+        verbose_name_plural = 'رشته‌های ورزشی'
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name

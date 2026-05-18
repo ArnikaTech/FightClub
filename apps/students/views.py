@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 import jdatetime
 from .forms import StudentCreateForm
 from .models import Student, Insurance, StudentContact, Attendance
-from apps.clubs.models import Club
+from apps.clubs.models import Club, Sport
 
 
 class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
@@ -129,6 +129,7 @@ class StudentEditView(LoginRequiredMixin, View):
         
         student.birth_date = birth_date
         student.current_belt = request.POST.get('current_belt', student.current_belt)
+        student.sport_id = request.POST.get('sport')
         student.club_id = request.POST.get('club', student.club_id)
         student.notes = request.POST.get('notes', '').strip()
         student.save()

@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 
 from django_jalali.forms import jDateField
-from apps.clubs.models import Club
+from apps.clubs.models import Club, Sport
 from .models import Student
 import jdatetime
 
@@ -53,6 +53,12 @@ class StudentCreateForm(forms.Form):
     current_belt = forms.ChoiceField(
         label='کمربند فعلی',
         choices=Student.BELTS,
+        widget=forms.Select(attrs={'class': 'input-glass'})
+    )
+    sport = forms.ModelChoiceField(
+        label='رشته ورزشی',
+        queryset=Sport.objects.all(),
+        required=False,
         widget=forms.Select(attrs={'class': 'input-glass'})
     )
     
@@ -115,6 +121,15 @@ class StudentCreateForm(forms.Form):
             birth_date=self.cleaned_data.get('birth_date'),
             student_code=student_code,
             current_belt=self.cleaned_data['current_belt']
+        )
+
+        student = Student.objects.create(
+            user=user,
+            club=self.cleaned_data['club'],
+            birth_date=self.cleaned_data.get('birth_date'),
+            student_code=student_code,
+            current_belt=self.cleaned_data['current_belt'],
+            sport=self.cleaned_data.get('sport'),  # اینو اضافه کن
         )
         
         return student
