@@ -1,74 +1,100 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load jformat %}
 
-{% block title %}پیشخوان | باشگاه ستاره‌ها{% endblock %}
+{% block title %}پیشخوان | {{ site_settings.gym_name|default:"باشگاه ستاره‌ها" }}{% endblock %}
 
 {% block content %}
-<h1>پیشخوان</h1>
-<p>خوش آمدید {{ user.get_short_name }}</p>
-
-<h3>مدیریت</h3>
-<a href="{% url 'accounts:profile' %}">👤 پروفایل من</a> |
-<a href="{% url 'clubs:province_list' %}">🏙️ استان‌ها</a> |
-<a href="{% url 'clubs:city_list' %}">🏘️ شهرها</a> |
-<a href="{% url 'clubs:club_list' %}">🏢 باشگاه‌ها</a> |
-<a href="{% url 'clubs:coach_list' %}">👥 مربیان</a>
-
-{% if user.is_super_manager and clubs %}
-<form method="get" style="margin: 20px 0 20px;">
-    <select name="club_id" onchange="this.form.submit()">
-        <option value="">همه باشگاه‌ها</option>
-        {% for club in clubs %}
-        <option value="{{ club.id }}" {% if selected_club and selected_club.id == club.id %}selected{% endif %}>
-            {{ club.name }}
-        </option>
-        {% endfor %}
-    </select>
-</form>
-{% endif %}
-
-<!-- کارت‌های آمار -->
-<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-    <div style="border: 1px solid #ccc; padding: 15px; text-align: center;">
-        <h2>{{ total_students }}</h2>
-        <p>کل هنرجویان</p>
-    </div>
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}
+    {% include 'partials/_mobile_nav.html' %}
     
-    <div style="border: 1px solid #4caf50; padding: 15px; text-align: center;">
-        <h2 style="color: green;">{{ present_today }}</h2>
-        <p>حاضر امروز</p>
-    </div>
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="dashboard-topbar">
+            <div>
+                <h1 class="page-title">پیشخوان</h1>
+                <div class="topbar-date">{{ today|jformat:"%Y/%m/%d" }}</div>
+            </div>
+        </div>
+        
+        <!-- کارت خوش‌آمد -->
+        <div class="welcome-card animate__animated animate__fadeIn">
+            {% if user.is_super_manager %}
+            <div class="welcome-text">{{ user.get_short_name }} عزیز، خوش آمدید</div>
+            <div class="welcome-sub">مدیر کل مجموعه ورزشی</div>
+            {% else %}
+            <div class="welcome-text">{{ user.get_short_name }} عزیز، به باشگاه <span>{{ site_settings.gym_name|default:"ستاره‌ها" }}</span> خوش آمدید</div>
+            <div class="welcome-sub">{{ site_settings.gym_type|default:"هاپکیدو" }}</div>
+            {% endif %}
+            <div class="belt-badge">
+                <span class="belt-dot" style="background: var(--accent);"></span>
+                {% if user.is_super_manager %}مدیر کل
+                {% elif user.is_club_manager %}مدیر باشگاه
+                {% elif user.is_instructor %}مربی
+                {% else %}هنرجو{% endif %}
+            </div>
+        </div>
+        
+        <!-- فیلتر باشگاه -->
+        {% if user.is_super_manager and clubs %}
+        <form method="get" style="margin-bottom: 16px;">
+            <select name="club_id" class="input-glass" onchange="this.form.submit()" style="width:auto;">
+                <option value="">همه باشگاه‌ها</option>
+                {% for club in clubs %}
+                <option value="{{ club.id }}" {% if selected_club and selected_club.id == club.id %}selected{% endif %}>{{ club.name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        {% endif %}
+        
+        <!-- آمار -->
+        <div class="stats-grid">
+            <div class="stat-card animate__animated animate__fadeInUp">
+                <div class="stat-icon red"><i class="bi bi-people-fill"></i></div>
+                <div class="stat-value">{{ total_students }}</div>
+                <div class="stat-label">کل هنرجویان</div>
+            </div>
+            <div class="stat-card animate__animated animate__fadeInUp">
+                <div class="stat-icon green"><i class="bi bi-calendar-check-fill"></i></div>
+                <div class="stat-value">{{ present_today }}</div>
+                <div class="stat-label">حاضر امروز</div>
+            </div>
+            <div class="stat-card animate__animated animate__fadeInUp">
+                <div class="stat-icon gold"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                <div class="stat-value">{{ critical_absences }}</div>
+                <div class="stat-label">غیبت متوالی</div>
+            </div>
+            <div class="stat-card animate__animated animate__fadeInUp">
+                <div class="stat-icon blue"><i class="bi bi-shield-check"></i></div>
+                <div class="stat-value">{{ expiring_insurance }}</div>
+                <div class="stat-label">بیمه نزدیک انقضا</div>
+            </div>
+        </div>
+        
+        <!-- لینک‌های سریع -->
+        <div class="section-block animate__animated animate__fadeInUp">
+            <div class="section-head"><h3>دسترسی سریع</h3></div>
+            <div class="profile-actions">
+                <a href="{% url 'students:student_list' %}" class="profile-action-btn">
+                    <i class="bi bi-people-fill"></i><span>هنرجویان</span><i class="bi bi-chevron-left action-arrow"></i>
+                </a>
+                <a href="{% url 'students:attendance' %}" class="profile-action-btn">
+                    <i class="bi bi-calendar-check"></i><span>حضور و غیاب</span><i class="bi bi-chevron-left action-arrow"></i>
+                </a>
+                <a href="{% url 'students:absentees' %}" class="profile-action-btn">
+                    <i class="bi bi-exclamation-triangle"></i><span>غیبت‌ها</span><i class="bi bi-chevron-left action-arrow"></i>
+                </a>
+                <a href="{% url 'students:student_add' %}" class="profile-action-btn">
+                    <i class="bi bi-person-plus"></i><span>هنرجو جدید</span><i class="bi bi-chevron-left action-arrow"></i>
+                </a>
+            </div>
+        </div>
+    </main>
     
-    <div style="border: 1px solid #f44336; padding: 15px; text-align: center;">
-        <h2 style="color: red;">{{ absent_today }}</h2>
-        <p>غایب امروز</p>
-    </div>
-    
-    <div style="border: 1px solid #ff9800; padding: 15px; text-align: center;">
-        <h2>{{ birthdays_today }}</h2>
-        <p>🎂 تولد امروز</p>
-    </div>
+    {% include 'partials/_bottom_nav.html' %}
+    {% include 'partials/_bottom_sheet.html' %}
+    {% include 'partials/_toast.html' %}
 </div>
-
-<!-- هشدارها -->
-<div style="margin-top: 20px;">
-    {% if critical_absences %}
-    <p style="color: red;">⚠️ {{ critical_absences }} هنرجو ۳+ جلسه غیبت متوالی</p>
-    {% endif %}
-    
-    {% if expiring_insurance %}
-    <p style="color: orange;">⚠️ {{ expiring_insurance }} بیمه نزدیک به انقضا</p>
-    {% endif %}
-</div>
-
-<!-- لینک‌ها -->
-<div style="margin-top: 30px;">
-    <h3>دسترسی سریع</h3>
-    <a href="{% url 'students:student_list' %}">👥 لیست هنرجویان</a> |
-    <a href="{% url 'students:attendance' %}">📋 حضور و غیاب</a> |
-    <a href="{% url 'students:absentees' %}">⚠️ پیگیری غیبت‌ها</a> |
-    <a href="{% url 'students:student_add' %}">➕ ثبت هنرجو جدید</a>
-</div>
-
-<a href="{% url 'accounts:logout' %}">🚪 خروج</a>
 {% endblock %}

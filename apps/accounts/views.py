@@ -93,6 +93,10 @@ class LogoutView(View):
     def get(self, request):
         logout(request)
         return redirect('accounts:landing')
+    
+    def post(self, request):
+        logout(request)
+        return redirect('accounts:landing')
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):

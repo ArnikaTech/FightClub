@@ -1,0 +1,16 @@
+<div class="bottom-sheet-overlay" id="bottomSheetOverlay"></div>
+<div class="bottom-sheet" id="bottomSheet">
+    <div class="bottom-sheet-handle"></div>
+    <div class="bottom-sheet-title">بیشتر</div>
+    <div class="bottom-sheet-menu">
+        <a href="{% url 'clubs:club_list' %}" class="bs-menu-item"><div class="bs-icon"><i class="bi bi-building"></i></div><span>باشگاه‌ها</span><i class="bi bi-chevron-left bs-arrow"></i></a>
+        <a href="{% url 'clubs:coach_list' %}" class="bs-menu-item"><div class="bs-icon"><i class="bi bi-person-badge"></i></div><span>مربیان</span><i class="bi bi-chevron-left bs-arrow"></i></a>
+        <a href="{% url 'students:absentees' %}" class="bs-menu-item"><div class="bs-icon"><i class="bi bi-exclamation-triangle"></i></div><span>غیبت‌ها</span><i class="bi bi-chevron-left bs-arrow"></i></a>
+        <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="bs-menu-item" style="width:100%;border:none;background:none;">
+                <div class="bs-icon" style="color:var(--danger);"><i class="bi bi-box-arrow-right"></i></div><span>خروج</span>
+            </button>
+        </form>
+    </div>
+</div>

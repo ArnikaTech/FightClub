@@ -1,0 +1,14 @@
+<div class="notif-bar-wrapper">
+    <div class="notif-bar">
+        <a href="{% url 'students:absentees' %}" class="notif-item warning" data-label="غایب‌ها">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            {% if critical_absences %}<span class="notif-badge">{{ critical_absences }}</span>{% endif %}
+        </a>
+        <span class="notif-divider"></span>
+        <button class="theme-toggle" id="themeToggle" title="تغییر حالت">
+            <i class="bi bi-moon-fill icon-moon"></i><i class="bi bi-sun-fill icon-sun"></i>
+        </button>
+        <span class="notif-divider"></span>
+        <button class="hamburger-btn" id="hamburgerBtn"><i class="bi bi-list"></i></button>
+    </div>
+</div>
