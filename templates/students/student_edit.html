@@ -99,3 +99,18 @@
     {% include 'partials/_toast.html' %}
 </div>
 {% endblock %}
+
+{% block extra_js %}
+document.addEventListener('DOMContentLoaded', function() {
+    {% if messages %}
+        {% for m in messages %}
+            if (typeof showToast === 'function') {
+                var icon = '{% if m.tags == "success" %}bi-check-circle-fill{% elif m.tags == "error" %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %}';
+                var color = '{% if m.tags == "success" %}green{% elif m.tags == "error" %}red{% else %}blue{% endif %}';
+                var title = '{% if m.tags == "success" %}موفق{% elif m.tags == "error" %}خطا{% else %}توجه{% endif %}';
+                showToast(icon, color, title, '{{ m|escapejs }}');
+            }
+        {% endfor %}
+    {% endif %}
+});
+{% endblock %}

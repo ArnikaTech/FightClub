@@ -22,7 +22,12 @@
                     {% endif %}
                 </div>
             </div>
-            <div class="profile-name">{{ student.user.get_full_name }}</div>
+            <div class="profile-name">
+                {{ student.user.get_full_name }}
+                {% if student.is_birthday_today %}
+                <span class="birthday-icon"><i class="bi bi-gift-fill"></i></span>
+                {% endif %}
+            </div>
             <div class="profile-role">{{ student.get_current_belt_display }}</div>
             <div class="profile-phone"><i class="bi bi-phone"></i> {{ student.user.phone }}</div>
         </div>
@@ -35,12 +40,12 @@
         {% endif %}
         
         {% if messages %}
-            {% for m in messages %}
-            <div class="alert-card" style="margin-bottom:12px;">
-                <div class="alert-icon"><i class="bi bi-check-circle-fill"></i></div>
-                <div class="alert-text">{{ m }}</div>
-            </div>
-            {% endfor %}
+        {% for m in messages %}
+        <div class="alert-card" style="margin-bottom:12px;">
+            <div class="alert-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="alert-text">{{ m }}</div>
+        </div>
+        {% endfor %}
         {% endif %}
         
         <div class="info-card animate__animated animate__fadeInUp">
@@ -48,7 +53,15 @@
             <div class="info-row"><span class="info-label">کد هنرجویی</span><span class="info-value">{{ student.student_code }}</span></div>
             <div class="info-row"><span class="info-label">باشگاه</span><span class="info-value">{{ student.club.name }} - {{ student.club.city.name }}، {{ student.club.province.name }}</span></div>
             {% if student.sport %}<div class="info-row"><span class="info-label">رشته</span><span class="info-value">{{ student.sport.name }}</span></div>{% endif %}
-            <div class="info-row"><span class="info-label">تاریخ تولد</span><span class="info-value">{{ student.birth_date|jformat:"%Y/%m/%d"|default:"-" }} ({{ student.age|default:"-" }} سال)</span></div>
+            <div class="info-row">
+                <span class="info-label">تاریخ تولد</span>
+                <span class="info-value">
+                    {% if student.is_birthday_today %}
+                    <span class="birthday-icon"><i class="bi bi-gift-fill"></i></span> امروز | 
+                    {% endif %}
+                    {{ student.birth_date|jformat:"%Y/%m/%d"|default:"-" }} ({{ student.age|default:"-" }} سال)
+                </span>
+            </div>
             <div class="info-row"><span class="info-label">کمربند</span><span class="info-value"><span class="belt-dot" style="background:{{ student.belt_color }};"></span> {{ student.get_current_belt_display }}</span></div>
             <div class="info-row"><span class="info-label">تاریخ عضویت</span><span class="info-value">{{ student.joined_at|jformat:"%Y/%m/%d" }}</span></div>
             <div class="info-row"><span class="info-label">کد ملی</span><span class="info-value">{{ student.user.national_code|default:"-" }}</span></div>
@@ -62,8 +75,8 @@
             <div class="info-row"><span class="info-label">وضعیت بیمه</span><span class="info-value">
                 {% with days=student.insurance_days_left %}
                 {% if days is not None %}
-                    {% if days <= 7 %}<span style="color:#ff9800;">🟠 {{ days }} روز</span>
-                    {% else %}<span style="color:#34c759;">🟢 {{ days }} روز</span>{% endif %}
+                {% if days <= 7 %}<span style="color:#ff9800;">🟠 {{ days }} روز</span>
+                {% else %}<span style="color:#34c759;">🟢 {{ days }} روز</span>{% endif %}
                 {% else %}<span style="color:var(--primary);">🔴 منقضی</span>{% endif %}
                 {% endwith %}
             </span></div>
@@ -171,13 +184,26 @@
 
 {% block extra_js %}
 <script>
-function openInsuranceModal(){document.getElementById('insuranceModalOverlay').classList.add('show');document.getElementById('insuranceModal').classList.add('show');}
-function closeInsuranceModal(){document.getElementById('insuranceModalOverlay').classList.remove('show');document.getElementById('insuranceModal').classList.remove('show');}
-function openContactModal(){document.getElementById('contactModalOverlay').classList.add('show');document.getElementById('contactModal').classList.add('show');}
-function closeContactModal(){document.getElementById('contactModalOverlay').classList.remove('show');document.getElementById('contactModal').classList.remove('show');}
-function openEditContactModal(pk,phone,type,label){document.getElementById('editContactForm').action='/students/contact/'+pk+'/edit/';document.getElementById('editContactPhone').value=phone;document.getElementById('editContactType').value=type;document.getElementById('editContactLabel').value=label||'';document.getElementById('editContactModalOverlay').classList.add('show');document.getElementById('editContactModal').classList.add('show');}
-function closeEditContactModal(){document.getElementById('editContactModalOverlay').classList.remove('show');document.getElementById('editContactModal').classList.remove('show');}
-function openDeleteContactModal(pk,name){document.getElementById('deleteContactName').textContent=name;document.getElementById('deleteContactForm').action='/students/contact/'+pk+'/delete/';document.getElementById('deleteContactModalOverlay').classList.add('show');document.getElementById('deleteContactModal').classList.add('show');}
-function closeDeleteContactModal(){document.getElementById('deleteContactModalOverlay').classList.remove('show');document.getElementById('deleteContactModal').classList.remove('show');}
+    function openInsuranceModal(){document.getElementById('insuranceModalOverlay').classList.add('show');document.getElementById('insuranceModal').classList.add('show');}
+    function closeInsuranceModal(){document.getElementById('insuranceModalOverlay').classList.remove('show');document.getElementById('insuranceModal').classList.remove('show');}
+    function openContactModal(){document.getElementById('contactModalOverlay').classList.add('show');document.getElementById('contactModal').classList.add('show');}
+    function closeContactModal(){document.getElementById('contactModalOverlay').classList.remove('show');document.getElementById('contactModal').classList.remove('show');}
+    function openEditContactModal(pk,phone,type,label){document.getElementById('editContactForm').action='/students/contact/'+pk+'/edit/';document.getElementById('editContactPhone').value=phone;document.getElementById('editContactType').value=type;document.getElementById('editContactLabel').value=label||'';document.getElementById('editContactModalOverlay').classList.add('show');document.getElementById('editContactModal').classList.add('show');}
+    function closeEditContactModal(){document.getElementById('editContactModalOverlay').classList.remove('show');document.getElementById('editContactModal').classList.remove('show');}
+    function openDeleteContactModal(pk,name){document.getElementById('deleteContactName').textContent=name;document.getElementById('deleteContactForm').action='/students/contact/'+pk+'/delete/';document.getElementById('deleteContactModalOverlay').classList.add('show');document.getElementById('deleteContactModal').classList.add('show');}
+    function closeDeleteContactModal(){document.getElementById('deleteContactModalOverlay').classList.remove('show');document.getElementById('deleteContactModal').classList.remove('show');}
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if messages %}
+        {% for m in messages %}
+        if (typeof showToast === 'function') {
+            var icon = '{% if m.tags == "success" %}bi-check-circle-fill{% elif m.tags == "error" %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %}';
+            var color = '{% if m.tags == "success" %}green{% elif m.tags == "error" %}red{% else %}blue{% endif %}';
+            var title = '{% if m.tags == "success" %}موفق{% elif m.tags == "error" %}خطا{% else %}توجه{% endif %}';
+            showToast(icon, color, title, '{{ m|escapejs }}');
+        }
+        {% endfor %}
+        {% endif %}
+    });
 </script>
 {% endblock %}
