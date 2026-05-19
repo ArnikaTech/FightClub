@@ -91,18 +91,14 @@ class StudentCreateForm(forms.Form):
             raise forms.ValidationError('تاریخ معتبر وارد کنید (مثال: ۱۳۸۰/۰۱/۰۱)')
     
     def save(self):
-        """ایجاد User و Student همزمان"""
-        # ۱. ساخت User
         user = User.objects.create_user(
             phone=self.cleaned_data['phone'],
             password=self.cleaned_data['password'],
             first_name=self.cleaned_data['first_name'],
             last_name=self.cleaned_data['last_name'],
-            national_code=self.cleaned_data.get('national_code', ''),
-            birth_date=self.cleaned_data.get('birth_date')
+            national_code=self.cleaned_data.get('national_code') or None
         )
         
-        # ۲. تولید کد هنرجویی
         last_student = Student.objects.order_by('-id').first()
         if last_student:
             try:
@@ -114,22 +110,17 @@ class StudentCreateForm(forms.Form):
             new_number = 1
         student_code = f"ST-{str(new_number).zfill(5)}"
         
-        # ۳. ساخت Student
-        student = Student.objects.create(
-            user=user,
-            club=self.cleaned_data['club'],
-            birth_date=self.cleaned_data.get('birth_date'),
-            student_code=student_code,
-            current_belt=self.cleaned_data['current_belt']
-        )
-
+        # چک student_code یکتا باشه
+        while Student.objects.filter(student_code=student_code).exists():
+            new_number += 1
+            student_code = f"ST-{str(new_number).zfill(5)}"
+        
         student = Student.objects.create(
             user=user,
             club=self.cleaned_data['club'],
             birth_date=self.cleaned_data.get('birth_date'),
             student_code=student_code,
             current_belt=self.cleaned_data['current_belt'],
-            sport=self.cleaned_data.get('sport'),  # اینو اضافه کن
+            sport=self.cleaned_data.get('sport')
         )
-        
         return student

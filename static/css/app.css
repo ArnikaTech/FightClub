@@ -753,3 +753,22 @@ body.light-mode select.input-glass option:checked {
     color: var(--text-muted);
     font-size: 0.6rem;
 }
+
+/* خطاهای فرم */
+.form-group .errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0 0;
+}
+
+.form-group .errorlist li {
+    color: var(--primary);
+    font-size: var(--font-size-xs);
+    margin-top: 2px;
+}
+
+/* یا اگر از text-danger استفاده می‌کنی */
+.text-danger {
+    color: var(--primary) !important;
+    font-size: var(--font-size-xs) !important;
+}

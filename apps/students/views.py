@@ -14,6 +14,7 @@ from apps.clubs.models import Club, Sport
 class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     template_name = 'students/student_list.html'
     context_object_name = 'students'
+    paginate_by = 20
     
     def test_func(self):
         user = self.request.user
@@ -78,24 +79,23 @@ class StudentDetailView(LoginRequiredMixin, DetailView):
 
 
 class StudentCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
-    """ثبت هنرجوی جدید"""
     template_name = 'students/student_add.html'
     form_class = StudentCreateForm
     success_url = reverse_lazy('students:student_list')
     
     def test_func(self):
-        """فقط مدیر کل و مدیر باشگاه"""
         user = self.request.user
         return user.is_super_manager or user.is_club_manager
     
     def form_valid(self, form):
-        student = form.save()
-        messages.success(self.request, f'{student.user.get_full_name()} با موفقیت ثبت شد')
+        form.save()
+        messages.success(self.request, 'هنرجو با موفقیت ثبت شد')
         return super().form_valid(form)
     
-    def form_invalid(self, form):
-        messages.error(self.request, 'لطفاً خطاهای فرم را بررسی کنید')
-        return super().form_invalid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['today'] = jdatetime.date.today()
+        return context
 
 
 class ContactDeleteView(LoginRequiredMixin, View):
