@@ -3,6 +3,7 @@ from django.views.generic import View, ListView, DetailView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
+from django.db import models
 
 import jdatetime
 from .forms import StudentCreateForm
@@ -11,24 +12,58 @@ from apps.clubs.models import Club, Sport
 
 
 class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
-    """لیست هنرجویان"""
     template_name = 'students/student_list.html'
     context_object_name = 'students'
     
     def test_func(self):
         user = self.request.user
-        return user.is_super_manager or user.is_club_manager
+        return user.is_super_manager or user.is_club_manager or user.is_instructor
     
     def get_queryset(self):
         user = self.request.user
         if user.is_super_manager:
-            return Student.objects.select_related('user', 'club').filter(is_active=True)
-        # مدیر باشگاه فقط هنرجویان باشگاه خودش
-        return Student.objects.select_related('user', 'club').filter(
-            club__memberships__user=user,
-            club__memberships__is_active=True,
-            is_active=True
-        )
+            qs = Student.objects.filter(is_active=True).select_related('user', 'club', 'sport').prefetch_related('insurances')
+        else:
+            qs = Student.objects.filter(
+                club__memberships__user=user,
+                is_active=True
+            ).select_related('user', 'club', 'sport').prefetch_related('insurances')
+        
+        # فیلترها
+        club_id = self.request.GET.get('club')
+        belt = self.request.GET.get('belt')
+        sport_id = self.request.GET.get('sport')
+        search = self.request.GET.get('search')
+        insurance = self.request.GET.get('insurance')
+        
+        if club_id:
+            qs = qs.filter(club_id=club_id)
+        if belt:
+            qs = qs.filter(current_belt=belt)
+        if sport_id:
+            qs = qs.filter(sport_id=sport_id)
+        if search:
+            qs = qs.filter(
+                models.Q(user__first_name__icontains=search) |
+                models.Q(user__last_name__icontains=search) |
+                models.Q(user__phone__icontains=search) |
+                models.Q(student_code__icontains=search)
+            )
+        if insurance == 'active':
+            qs = qs.filter(insurances__expiry_date__gte=jdatetime.date.today())
+        elif insurance == 'expired':
+            qs = qs.exclude(insurances__expiry_date__gte=jdatetime.date.today())
+        
+        qs = qs.distinct()
+        return qs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['today'] = jdatetime.date.today()
+        context['clubs'] = Club.objects.filter(is_active=True)
+        context['sports'] = Sport.objects.all()
+        context['belt_choices'] = Student.BELTS
+        return context
 
 
 class StudentDetailView(LoginRequiredMixin, DetailView):

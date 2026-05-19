@@ -6,33 +6,33 @@
     </div>
     <div class="sidebar-menu-wrapper">
         <ul class="sidebar-nav">
-    <li><a href="{% url 'accounts:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="bi bi-grid-fill"></i> پیشخوان</a></li>
-    <li><a href="{% url 'accounts:profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}"><i class="bi bi-person-circle"></i> پروفایل</a></li>
-</ul>
-
-{% if user.is_super_manager or user.is_club_manager or user.is_instructor %}
-<div class="sidebar-category">باشگاه</div>
-<ul class="sidebar-nav">
-    {% if user.is_super_manager %}
-    <li><a href="{% url 'clubs:province_list' %}" class="{% if 'province' in request.path %}active{% endif %}"><i class="bi bi-map-fill"></i> استان‌ها</a></li>
-    <li><a href="{% url 'clubs:city_list' %}" class="{% if 'city' in request.path %}active{% endif %}"><i class="bi bi-geo-alt-fill"></i> شهرها</a></li>
-    {% endif %}
-    <li><a href="{% url 'clubs:club_list' %}" class="{% if 'club' in request.path %}active{% endif %}"><i class="bi bi-building"></i> باشگاه‌ها</a></li>
-    <li><a href="{% url 'clubs:coach_list' %}" class="{% if 'coach' in request.path %}active{% endif %}"><i class="bi bi-person-badge-fill"></i> مربیان</a></li>
-</ul>
-
-<div class="sidebar-category">هنرجوها</div>
-<ul class="sidebar-nav">
-    <li><a href="{% url 'students:student_list' %}" class="{% if 'student_list' in request.path %}active{% endif %}"><i class="bi bi-people-fill"></i> لیست هنرجوها</a></li>
-    <li><a href="{% url 'students:student_add' %}" class="{% if 'student_add' in request.path %}active{% endif %}"><i class="bi bi-person-plus-fill"></i> ثبت هنرجو جدید</a></li>
-</ul>
-
-<div class="sidebar-category">حضور و غیاب</div>
-<ul class="sidebar-nav">
-    <li><a href="{% url 'students:attendance' %}" class="{% if 'attendance' in request.path %}active{% endif %}"><i class="bi bi-calendar-check-fill"></i> ثبت حضور</a></li>
-    <li><a href="{% url 'students:absentees' %}" class="{% if 'absentees' in request.path %}active{% endif %}"><i class="bi bi-exclamation-triangle-fill"></i> پیگیری غیبت‌ها</a></li>
-</ul>
-{% endif %}
+            <li><a href="{% url 'accounts:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="bi bi-grid-fill"></i> پیشخوان</a></li>
+            <li><a href="{% url 'accounts:profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}"><i class="bi bi-person-circle"></i> پروفایل</a></li>
+        </ul>
+        
+        {% if user.is_super_manager or user.is_club_manager or user.is_instructor %}
+        <div class="sidebar-category">باشگاه</div>
+        <ul class="sidebar-nav">
+            {% if user.is_super_manager %}
+            <li><a href="{% url 'clubs:province_list' %}" class="{% if 'province' in request.path %}active{% endif %}"><i class="bi bi-map-fill"></i> استان‌ها</a></li>
+            <li><a href="{% url 'clubs:city_list' %}" class="{% if 'city' in request.path %}active{% endif %}"><i class="bi bi-geo-alt-fill"></i> شهرها</a></li>
+            {% endif %}
+            <li><a href="{% url 'clubs:club_list' %}" class="{% if 'club' in request.path %}active{% endif %}"><i class="bi bi-building"></i> باشگاه‌ها</a></li>
+            <li><a href="{% url 'clubs:coach_list' %}" class="{% if 'coach' in request.path %}active{% endif %}"><i class="bi bi-person-badge-fill"></i> مربیان</a></li>
+        </ul>
+        
+        <div class="sidebar-category">هنرجوها</div>
+        <ul class="sidebar-nav">
+            <li><a href="{% url 'students:student_list' %}" class="{% if 'student_list' in request.path %}active{% endif %}"><i class="bi bi-people-fill"></i> لیست هنرجوها</a></li>
+            <li><a href="{% url 'students:student_add' %}" class="{% if 'student_add' in request.path %}active{% endif %}"><i class="bi bi-person-plus-fill"></i> ثبت هنرجو جدید</a></li>
+        </ul>
+        
+        <div class="sidebar-category">حضور و غیاب</div>
+        <ul class="sidebar-nav">
+            <li><a href="{% url 'students:attendance' %}" class="{% if 'attendance' in request.path %}active{% endif %}"><i class="bi bi-calendar-check-fill"></i> ثبت حضور</a></li>
+            <li><a href="{% url 'students:absentees' %}" class="{% if 'absentees' in request.path %}active{% endif %}"><i class="bi bi-exclamation-triangle-fill"></i> پیگیری غیبت‌ها</a></li>
+        </ul>
+        {% endif %}
     </div>
     <div class="sidebar-user">
         <div class="user-avatar">

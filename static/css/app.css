@@ -1,6 +1,6 @@
 /* ============================================================
-   APP.CSS
-   ============================================================ */
+APP.CSS
+============================================================ */
 
 @import url(fonts.css);
 
@@ -49,8 +49,8 @@ body {
 .d-none { display: none !important; }
 
 /* ============================================================
-   کلاس‌های کمکی
-   ============================================================ */
+کلاس‌های کمکی
+============================================================ */
 .card-glass {
     background: var(--card-bg); border: 1px solid var(--border-glass);
     backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
@@ -96,8 +96,8 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ============================================================
-   LANDING
-   ============================================================ */
+LANDING
+============================================================ */
 .landing-screen {
     position: fixed; inset: 0; width: 100%; height: 100%; height: 100dvh;
     background: var(--bg-dark); display: flex; align-items: center; justify-content: center; overflow: hidden;
@@ -149,8 +149,8 @@ body {
 @media (min-width: 768px) { .landing-content { max-width: 440px; } .landing-logo .gym-name { font-size: 2.8rem; } }
 
 /* ============================================================
-   LOGIN
-   ============================================================ */
+LOGIN
+============================================================ */
 .login-page { position: relative; display: flex; align-items: center; justify-content: center; min-height: 100vh; min-height: 100dvh; padding: 16px; }
 .login-page .bg-orb-1 { width: 200px; height: 200px; background: var(--primary); top: -60px; right: -50px; }
 .login-page .bg-orb-2 { width: 160px; height: 160px; background: var(--accent); bottom: -40px; left: -30px; }
@@ -182,8 +182,8 @@ body {
 @media (min-width: 768px) { .login-page { padding: 24px; } .login-card { max-width: 420px; padding: 32px 26px; border-radius: 28px; } .login-header h2 { font-size: 1.45rem; } }
 
 /* ============================================================
-   نوار اعلان + تم + همبرگر
-   ============================================================ */
+نوار اعلان + تم + همبرگر
+============================================================ */
 .notif-bar-wrapper { background: var(--card-bg); border: 1px solid var(--border-glass); border-radius: 16px; padding: 6px 10px; margin-bottom: 16px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
 .notif-bar { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x; justify-content: flex-end; }
 .notif-bar::-webkit-scrollbar { display: none; }
@@ -212,8 +212,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 @media (min-width: 768px) { .notif-bar-wrapper { padding: 8px 16px; } .notif-item { width: auto; height: auto; border-radius: 10px; padding: 7px 12px; gap: 6px; } .notif-item::after { content: attr(data-label); font-size: var(--font-size-xs); color: var(--text-secondary); font-weight: 500; } .notif-badge { top: -2px; right: -2px; } }
 
 /* ============================================================
-   منوی همبرگر موبایل
-   ============================================================ */
+منوی همبرگر موبایل
+============================================================ */
 .mobile-nav-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 .mobile-nav-overlay.show { opacity: 1; pointer-events: auto; }
 .mobile-nav { position: fixed; top: 0; right: 0; bottom: 0; width: 280px; max-width: 85vw; background: #13151a; z-index: 501; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; border-left: 1px solid var(--border-glass); }
@@ -241,8 +241,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 @media (max-width: 767px) { .hamburger-btn { display: flex; } .dashboard-sidebar { display: none; } .dashboard-main { margin-right: 0; } }
 
 /* ============================================================
-   Bottom Sheet
-   ============================================================ */
+Bottom Sheet
+============================================================ */
 .bottom-sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
 .bottom-sheet-overlay.show { opacity: 1; pointer-events: auto; }
 .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #1a1d25; border-radius: 24px 24px 0 0; padding: 16px 20px 28px; z-index: 201; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
@@ -256,8 +256,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 .bs-arrow { margin-right: auto; color: var(--text-muted); font-size: 0.8rem; }
 
 /* ============================================================
-   Toast
-   ============================================================ */
+Toast
+============================================================ */
 .custom-toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); background: var(--card-bg); border: 1px solid var(--border-glass); border-radius: 16px; padding: 28px 24px; text-align: center; z-index: 9999; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); min-width: 220px; }
 .custom-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 .custom-toast .toast-icon { font-size: 2.5rem; margin-bottom: 10px; }
@@ -267,8 +267,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 .custom-toast .toast-sub { font-size: var(--font-size-xs); color: var(--text-muted); }
 
 /* ============================================================
-   Modal
-   ============================================================ */
+Modal
+============================================================ */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 .modal-overlay.show { opacity: 1; pointer-events: auto; }
 .modal-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #1a1d25; border-radius: 24px 24px 0 0; padding: 16px 20px 28px; z-index: 301; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); padding-bottom: calc(28px + env(safe-area-inset-bottom)); max-height: 85vh; overflow-y: auto; opacity: 0; pointer-events: none; }
@@ -286,8 +286,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 @media (min-width: 768px) { .modal-sheet { bottom: auto; top: 50%; left: 50%; right: auto; transform: translate(-50%, -50%) scale(0.9); border-radius: 20px; width: 460px; max-width: 90vw; padding: 24px 24px 20px; max-height: 80vh; padding-bottom: 24px; opacity: 0; pointer-events: none; } .modal-sheet.show { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; } .modal-handle { display: none; } .modal-title { text-align: right; margin-bottom: 16px; } }
 
 /* ============================================================
-   سایدبار + داشبورد
-   ============================================================ */
+سایدبار + داشبورد
+============================================================ */
 .dashboard-layout { display: flex; min-height: 100vh; min-height: 100dvh; background: var(--bg-dark); padding-bottom: 70px; }
 .dashboard-sidebar { display: none; position: fixed; top: 0; right: 0; bottom: 0; width: 250px; background: var(--card-bg); border-left: 1px solid var(--border-glass); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); z-index: 100; flex-direction: column; overflow: hidden; padding: 0; }
 .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 20px 16px 16px; border-bottom: 1px solid var(--border-glass); flex-shrink: 0; }
@@ -350,8 +350,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 @media (min-width: 1024px) { .dashboard-sidebar { width: 260px; } .dashboard-main { margin-right: 260px; padding: 32px 32px; } .sidebar-logo { padding: 22px 18px 16px; } .sidebar-nav { padding: 0 14px; } .sidebar-user { padding: 14px 18px; } }
 
 /* ============================================================
-   PROFILE
-   ============================================================ */
+PROFILE
+============================================================ */
 .profile-header { position: relative; background: linear-gradient(135deg, rgba(255,77,46,0.2), rgba(255,184,0,0.08)); border: 1px solid var(--border-glass); border-radius: 20px; padding: 28px 20px 22px; text-align: center; margin-bottom: 18px; overflow: hidden; }
 .profile-avatar-wrapper { position: relative; width: 88px; height: 88px; margin: 0 auto 12px; }
 .profile-avatar { width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; border: 3px solid rgba(255,255,255,0.2); overflow: hidden; transition: transform 0.3s ease; }
@@ -384,8 +384,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 @media (min-width: 768px) { .profile-header { padding: 32px 28px 24px; } .profile-avatar-wrapper { width: 96px; height: 96px; } .profile-avatar i { font-size: 42px; } .info-card { padding: 18px; } .profile-actions { grid-template-columns: repeat(4, 1fr); gap: 8px; } .profile-action-btn.logout { grid-column: auto; } }
 
 /* ============================================================
-   MEMBERS
-   ============================================================ */
+MEMBERS
+============================================================ */
 .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
 .page-header .page-title { font-size: var(--font-size-xl); font-weight: 800; }
 .page-header .page-title span { color: var(--text-muted); font-size: var(--font-size-sm); font-weight: 400; margin-right: 6px; }
@@ -411,8 +411,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 .dataTables_length select, .dataTables_filter input { background: var(--input-bg) !important; border: 1px solid var(--border-glass) !important; border-radius: 8px !important; color: var(--text-primary) !important; padding: 6px 10px !important; font-size: var(--font-size-sm) !important; }
 
 /* ============================================================
-   ATTENDANCE
-   ============================================================ */
+ATTENDANCE
+============================================================ */
 .date-card { background: var(--card-bg); border: 1px solid var(--border-glass); border-radius: 16px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
 .date-card .date-icon { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,77,46,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--primary); }
 .date-card .date-text { font-size: var(--font-size-base); font-weight: 700; }
@@ -446,8 +446,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 @media (min-width: 768px) { .attendance-list { display: grid; grid-template-columns: repeat(2, 1fr); } }
 
 /* ============================================================
-   ABSENTEES
-   ============================================================ */
+ABSENTEES
+============================================================ */
 .alert-card { background: rgba(255,77,46,0.08); border: 1px solid rgba(255,77,46,0.2); border-radius: 14px; padding: 14px 16px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
 .alert-card .alert-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(255,77,46,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: var(--primary); flex-shrink: 0; }
 .alert-card .alert-text { font-size: var(--font-size-sm); font-weight: 600; }
@@ -467,8 +467,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 @media (min-width: 768px) { .absentee-list { display: grid; grid-template-columns: repeat(2, 1fr); } }
 
 /* ============================================================
-   GYM INFO
-   ============================================================ */
+GYM INFO
+============================================================ */
 .gym-header { position: relative; border-radius: 20px; padding: 28px 20px 22px; text-align: center; margin-bottom: 18px; background: linear-gradient(135deg, rgba(255,77,46,0.2), rgba(255,184,0,0.08)); border: 1px solid var(--border-glass); overflow: hidden; }
 .gym-header .gym-logo { width: 88px; height: 88px; margin: 0 auto 12px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; border: 3px solid rgba(255,255,255,0.2); overflow: hidden; }
 .gym-header .gym-logo i { font-size: 38px; color: #fff; }
@@ -487,8 +487,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 @media (min-width: 768px) { .coach-list { display: grid; grid-template-columns: repeat(2, 1fr); } }
 
 /* ============================================================
-   SMS SEND
-   ============================================================ */
+SMS SEND
+============================================================ */
 .section-card { background: var(--card-bg); border: 1px solid var(--border-glass); border-radius: 16px; padding: 18px; margin-bottom: 16px; }
 .section-card .section-title { font-size: var(--font-size-md); font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 .section-card .section-title i { color: var(--primary); }
@@ -518,8 +518,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 .btn-send:active { transform: scale(0.97); }
 
 /* ============================================================
-   SMS TEMPLATES
-   ============================================================ */
+SMS TEMPLATES
+============================================================ */
 .template-grid { display: flex; flex-direction: column; gap: 12px; }
 .template-card { background: var(--card-bg); border: 1px solid var(--border-glass); border-radius: 16px; padding: 16px; transition: all 0.2s; }
 .template-card:hover { border-color: rgba(255,255,255,0.15); }
@@ -546,8 +546,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 @media (min-width: 768px) { .template-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; } }
 
 /* ============================================================
-   BELTS PROGRESS
-   ============================================================ */
+BELTS PROGRESS
+============================================================ */
 .belt-progress-bar { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); border: 1px solid var(--border-glass); border-radius: 16px; padding: 16px 10px; margin-bottom: 18px; overflow-x: auto; gap: 2px; }
 .belt-step { display: flex; flex-direction: column; align-items: center; gap: 5px; flex-shrink: 0; transition: transform 0.2s; }
 .belt-step:hover { transform: translateY(-2px); }
@@ -587,8 +587,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 @media (max-width: 480px) { .dan-row { gap: 18px; } .dan-item i { font-size: 1.8rem; } .dan-item.current i { font-size: 2.4rem; } }
 
 /* ============================================================
-   BELTS PROMOTION
-   ============================================================ */
+BELTS PROMOTION
+============================================================ */
 .promotion-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
 .promotion-card { display: flex; align-items: center; gap: 12px; background: var(--card-bg); border: 1px solid var(--border-glass); border-radius: 14px; padding: 14px; cursor: pointer; transition: all 0.25s; }
 .promotion-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-1px); }
@@ -610,8 +610,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 @media (min-width: 768px) { .promotion-list { display: grid; grid-template-columns: repeat(2, 1fr); } }
 
 /* ============================================================
-   MEMBER ADD
-   ============================================================ */
+MEMBER ADD
+============================================================ */
 .form-section { background: var(--card-bg); border: 1px solid var(--border-glass); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
 .form-section-title { font-size: var(--font-size-md); font-weight: 700; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border-glass); display: flex; align-items: center; gap: 8px; }
 .form-section-title i { color: var(--primary); }
@@ -627,8 +627,8 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } .form-actions { flex-direction: column; } .btn-cancel-form { justify-content: center; } }
 
 /* ============================================================
-   COACHES
-   ============================================================ */
+COACHES
+============================================================ */
 .coach-list-page { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
 .coach-card-page { display: flex; align-items: center; gap: 12px; background: var(--card-bg); border: 1px solid var(--border-glass); border-radius: 14px; padding: 14px; transition: all 0.2s; }
 .coach-card-page:hover { border-color: rgba(255,255,255,0.12); }
@@ -647,7 +647,7 @@ body.light-mode .notif-divider { background: rgba(0,0,0,0.06); }
 
 /* Overwrite */
 [type="email"], [type="number"], [type="tel"], [type="url"] {
-	direction: rtl;
+    direction: rtl;
 }
 
 /* Select */
@@ -700,17 +700,17 @@ body.light-mode select.input-glass option:checked {
 }
 
 .btn-remove {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 32px;
-	height: 32px;
-	border-radius: 50%;
-	background: rgba(199, 52, 52, 0.15);
-	font-size: 0.85rem;
-	flex-shrink: 0;
-	cursor: pointer;
-	text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(199, 52, 52, 0.15);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    cursor: pointer;
+    text-decoration: none;
 }
 
 /* اصلاح عرض coach-list */
@@ -736,4 +736,20 @@ body.light-mode select.input-glass option:checked {
 .coach-list-page > div[style*="text-align:center"] {
     width: 100% !important;
     grid-column: 1 / -1;
+}
+
+/* عکس پروفایل در لیست */
+.coach-avatar-page img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+/* جداکننده بین آیتم‌های meta */
+.coach-meta-page span + span::before {
+    content: "•";
+    margin: 0 8px;
+    color: var(--text-muted);
+    font-size: 0.6rem;
 }
