@@ -22,15 +22,6 @@
             </a>
         </div>
         
-        {% if messages %}
-            {% for m in messages %}
-            <div class="alert-card" style="margin-bottom:12px;">
-                <div class="alert-icon"><i class="bi bi-{% if m.tags == 'error' %}exclamation-triangle{% else %}check-circle{% endif %}-fill"></i></div>
-                <div class="alert-text">{{ m }}</div>
-            </div>
-            {% endfor %}
-        {% endif %}
-        
         <form method="post">
             {% csrf_token %}
             
@@ -101,16 +92,20 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
 document.addEventListener('DOMContentLoaded', function() {
     {% if messages %}
         {% for m in messages %}
             if (typeof showToast === 'function') {
-                var icon = '{% if m.tags == "success" %}bi-check-circle-fill{% elif m.tags == "error" %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %}';
-                var color = '{% if m.tags == "success" %}green{% elif m.tags == "error" %}red{% else %}blue{% endif %}';
-                var title = '{% if m.tags == "success" %}موفق{% elif m.tags == "error" %}خطا{% else %}توجه{% endif %}';
-                showToast(icon, color, title, '{{ m|escapejs }}');
+                showToast(
+                    '{% if m.tags == "success" %}bi-check-circle-fill{% elif m.tags == "error" %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %}',
+                    '{% if m.tags == "success" %}green{% elif m.tags == "error" %}red{% else %}blue{% endif %}',
+                    '{% if m.tags == "success" %}موفق{% elif m.tags == "error" %}خطا{% else %}توجه{% endif %}',
+                    '{{ m|escapejs }}'
+                );
             }
         {% endfor %}
     {% endif %}
 });
+</script>
 {% endblock %}

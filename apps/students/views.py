@@ -22,12 +22,14 @@ class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     
     def get_queryset(self):
         user = self.request.user
+        show = self.request.GET.get('show', 'active')
+        
         if user.is_super_manager:
-            qs = Student.objects.filter(is_active=True).select_related('user', 'club', 'sport').prefetch_related('insurances')
+            qs = Student.objects.filter(is_active=(show == 'active')).select_related('user', 'club', 'sport').prefetch_related('insurances')
         else:
             qs = Student.objects.filter(
                 club__memberships__user=user,
-                is_active=True
+                is_active=(show == 'active')
             ).select_related('user', 'club', 'sport').prefetch_related('insurances')
         
         # فیلترها
@@ -65,6 +67,15 @@ class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context['sports'] = Sport.objects.all()
         context['belt_choices'] = Student.BELTS
         return context
+
+
+class StudentActivateView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        student = get_object_or_404(Student, pk=pk)
+        student.is_active = True
+        student.save()
+        messages.success(request, f'{student.user.get_full_name()} فعال شد')
+        return redirect('students:student_list')
 
 
 class StudentDetailView(LoginRequiredMixin, DetailView):
@@ -409,3 +420,12 @@ class ContactEditView(LoginRequiredMixin, View):
         
         messages.success(request, 'شماره تماس بروزرسانی شد')
         return redirect('students:student_detail', pk=contact.student.pk)
+
+
+class StudentDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        student = get_object_or_404(Student, pk=pk)
+        student.is_active = False
+        student.save()
+        messages.success(request, f'{student.user.get_full_name()} غیرفعال شد')
+        return redirect('students:student_list')

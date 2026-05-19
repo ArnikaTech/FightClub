@@ -17,20 +17,21 @@
                 <h1 class="page-title">هنرجویان <span>{{ students.count }} نفر</span></h1>
                 <div class="page-subtitle">{{ today|jformat:"%Y/%m/%d" }}</div>
             </div>
-            <a href="{% url 'students:student_add' %}" class="btn-add">
-                <i class="bi bi-plus-lg"></i>
-                <span class="btn-add-text">هنرجو جدید</span>
-            </a>
+            <div style="display:flex;gap:8px;">
+                {% if request.GET.show == 'inactive' %}
+                <a href="{% url 'students:student_list' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                    <i class="bi bi-eye"></i><span class="btn-add-text">فعال‌ها</span>
+                </a>
+                {% else %}
+                <a href="?show=inactive" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                    <i class="bi bi-eye-slash"></i><span class="btn-add-text">غیرفعال‌ها</span>
+                </a>
+                {% endif %}
+                <a href="{% url 'students:student_add' %}" class="btn-add">
+                    <i class="bi bi-plus-lg"></i><span class="btn-add-text">هنرجو جدید</span>
+                </a>
+            </div>
         </div>
-        
-        {% if messages %}
-        {% for m in messages %}
-        <div class="alert-card" style="margin-bottom:12px;">
-            <div class="alert-icon"><i class="bi bi-check-circle-fill"></i></div>
-            <div class="alert-text">{{ m }}</div>
-        </div>
-        {% endfor %}
-        {% endif %}
         
         <!-- فیلترها -->
         <div class="date-card animate__animated animate__fadeIn" style="margin-bottom:16px;">
@@ -38,109 +39,66 @@
                 <input type="text" name="search" class="input-glass" placeholder="جستجو..." value="{{ request.GET.search }}" style="flex:1;min-width:120px;">
                 <select name="club" class="input-glass" style="width:auto;" onchange="this.form.submit()">
                     <option value="">همه باشگاه‌ها</option>
-                    {% for c in clubs %}
-                    <option value="{{ c.id }}" {% if request.GET.club == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
-                    {% endfor %}
+                    {% for c in clubs %}<option value="{{ c.id }}" {% if request.GET.club == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
                 </select>
                 <select name="sport" class="input-glass" style="width:auto;" onchange="this.form.submit()">
                     <option value="">همه رشته‌ها</option>
-                    {% for sp in sports %}
-                    <option value="{{ sp.id }}" {% if request.GET.sport == sp.id|stringformat:'s' %}selected{% endif %}>{{ sp.name }}</option>
-                    {% endfor %}
+                    {% for sp in sports %}<option value="{{ sp.id }}" {% if request.GET.sport == sp.id|stringformat:'s' %}selected{% endif %}>{{ sp.name }}</option>{% endfor %}
                 </select>
                 <select name="belt" class="input-glass" style="width:auto;" onchange="this.form.submit()">
                     <option value="">همه کمربندها</option>
-                    {% for value, label in belt_choices %}
-                    <option value="{{ value }}" {% if request.GET.belt == value %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
+                    {% for value, label in belt_choices %}<option value="{{ value }}" {% if request.GET.belt == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
                 </select>
                 <select name="insurance" class="input-glass" style="width:auto;" onchange="this.form.submit()">
-                    <option value="">همه بیمه‌ها</option>
+                    <option value="">همه وضعیت‌ها</option>
                     <option value="active" {% if request.GET.insurance == 'active' %}selected{% endif %}>بیمه فعال</option>
                     <option value="expired" {% if request.GET.insurance == 'expired' %}selected{% endif %}>بیمه منقضی</option>
                 </select>
+                {% if request.GET %}<a href="{% url 'students:student_list' %}" style="color:var(--text-muted);font-size:0.8rem;white-space:nowrap;"><i class="bi bi-x-circle"></i> حذف فیلترها</a>{% endif %}
             </form>
-            {% if request.GET %}
-            <a href="{% url 'students:student_list' %}" style="color:var(--text-muted);font-size:0.8rem;white-space:nowrap;">
-                <i class="bi bi-x-circle"></i> حذف فیلترها
-            </a>
-            {% endif %}
         </div>
         
         {% if students %}
         <div class="coach-list-page">
             {% for s in students %}
             <a href="{% url 'students:student_detail' s.pk %}" style="text-decoration:none;color:inherit;">
-                <div class="coach-card-page animate__animated animate__fadeInUp">
+                <div class="coach-card-page animate__animated animate__fadeInUp" style="{% if not s.is_active %}opacity:0.5;{% endif %}">
                     <div class="coach-avatar-page">
-                        {% if s.user.avatar %}
-                        <img src="{{ s.user.avatar.url }}" alt="{{ s.user.get_full_name }}">
-                        {% else %}
-                        <i class="bi bi-person-fill"></i>
-                        {% endif %}
+                        {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}" alt="">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
                     </div>
                     <div class="coach-info-page">
-                        <div class="coach-name-page">
-                            {{ s.user.get_full_name }}
-                            {% if s.is_birthday_today %}
-                            <span class="badge-birthday"><i class="bi bi-gift-fill"></i></span>
-                            {% endif %}
-                        </div>
+                        <div class="coach-name-page">{{ s.user.get_full_name }}{% if s.is_birthday_today %}<span class="badge-birthday"><i class="bi bi-gift-fill"></i></span>{% endif %}</div>
                         <div class="coach-meta-page">
-                            <span>{{ s.student_code }}</span>
-                            <span>{{ s.get_current_belt_display }}</span>
-                            <span>{{ s.club.name }}</span>
-                            {% if s.sport %}<span>{{ s.sport.name }}</span>{% endif %}
+                            <span>{{ s.student_code }}</span><span>{{ s.get_current_belt_display }}</span><span>{{ s.club.name }}</span>{% if s.sport %}<span>{{ s.sport.name }}</span>{% endif %}
                         </div>
                         <div class="coach-meta-page" style="margin-top:4px;">
                             {% with days=s.insurance_days_left %}
                             {% if days is not None %}
-                            {% if days <= 7 %}
-                            <span style="color:#ff9800;"><span class="status-dot" style="background:#ff9800;"></span> بیمه {{ days }} روز</span>
-                            {% else %}
-                            <span style="color:#34c759;"><span class="status-dot active"></span> بیمه {{ days }} روز</span>
-                            {% endif %}
-                            {% else %}
-                            <span style="color:var(--primary);"><span class="status-dot" style="background:var(--primary);"></span> بیمه منقضی</span>
-                            {% endif %}
+                                {% if days <= 7 %}<span style="color:#ff9800;"><span class="status-dot" style="background:#ff9800;"></span> بیمه {{ days }} روز</span>
+                                {% else %}<span style="color:#34c759;"><span class="status-dot active"></span> بیمه {{ days }} روز</span>{% endif %}
+                            {% else %}<span style="color:var(--primary);"><span class="status-dot" style="background:var(--primary);"></span> بیمه منقضی</span>{% endif %}
                             {% endwith %}
                             {% if s.age %}<span>{{ s.age }} سال</span>{% endif %}
                         </div>
                     </div>
-                    <div class="coach-actions">
-                        <span class="coach-action-btn"><i class="bi bi-chevron-left"></i></span>
-                    </div>
+                    <div class="coach-actions"><span class="coach-action-btn"><i class="bi bi-chevron-left"></i></span></div>
                 </div>
             </a>
             {% endfor %}
         </div>
-        {% if is_paginated %}
-        <div class="animate__animated animate__fadeInUp" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:24px;padding:12px;background:var(--card-bg);border:1px solid var(--border-glass);border-radius:14px;">
-            {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;">
-                <i class="bi bi-chevron-right"></i> قبلی
-            </a>
-            {% endif %}
-            
-            <span style="color:var(--text-secondary);font-size:0.85rem;">
-                {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}
-            </span>
-            
-            {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;">
-                بعدی <i class="bi bi-chevron-left"></i>
-            </a>
-            {% endif %}
-        </div>
-        {% endif %}
         {% else %}
         <div class="text-center py-5">
             <i class="bi bi-people" style="font-size: 3rem; color: var(--text-muted);"></i>
             <p class="mt-3" style="color: var(--text-secondary);">هیچ هنرجویی ثبت نشده است</p>
-            <a href="{% url 'students:student_add' %}" class="btn-add mt-2">
-                <i class="bi bi-plus-lg"></i>
-                <span>ثبت اولین هنرجو</span>
-            </a>
+            <a href="{% url 'students:student_add' %}" class="btn-add mt-2"><i class="bi bi-plus-lg"></i><span>ثبت اولین هنرجو</span></a>
+        </div>
+        {% endif %}
+        
+        {% if is_paginated %}
+        <div class="animate__animated animate__fadeInUp" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:24px;padding:12px;background:var(--card-bg);border:1px solid var(--border-glass);border-radius:14px;">
+            {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;"><i class="bi bi-chevron-right"></i> قبلی</a>{% endif %}
+            <span style="color:var(--text-secondary);font-size:0.85rem;">{{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;">بعدی <i class="bi bi-chevron-left"></i></a>{% endif %}
         </div>
         {% endif %}
     </main>
@@ -149,4 +107,23 @@
     {% include 'partials/_bottom_sheet.html' %}
     {% include 'partials/_toast.html' %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if messages %}
+        {% for m in messages %}
+            if (typeof showToast === 'function') {
+                showToast(
+                    '{% if m.tags == "success" %}bi-check-circle-fill{% elif m.tags == "error" %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %}',
+                    '{% if m.tags == "success" %}green{% elif m.tags == "error" %}red{% else %}blue{% endif %}',
+                    '{% if m.tags == "success" %}موفق{% elif m.tags == "error" %}خطا{% else %}توجه{% endif %}',
+                    '{{ m|escapejs }}'
+                );
+            }
+        {% endfor %}
+    {% endif %}
+});
+</script>
 {% endblock %}
