@@ -777,3 +777,10 @@ input[readonly] {
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+.att-item-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}

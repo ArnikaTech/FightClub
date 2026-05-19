@@ -1,0 +1,33 @@
+<div class="attendance-item {% if status == 'present' %}checked{% endif %}"
+     hx-post="{% url 'students:attendance_toggle' student.id %}"
+     hx-trigger="click"
+     hx-swap="outerHTML"
+     hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <div class="att-item-avatar">
+        {% if student.user.avatar %}<img src="{{ student.user.avatar.url }}" alt="">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
+    </div>
+    <div class="att-item-info">
+        <div class="att-name">{{ student.user.get_full_name }}{% if student.is_birthday_today %}<span class="badge-birthday"><i class="bi bi-gift-fill"></i></span>{% endif %}</div>
+        <div class="att-meta"><span>{{ student.get_current_belt_display }}</span><span>{{ student.student_code }}</span></div>
+    </div>
+    <div class="att-check"><i class="bi bi-check-lg"></i></div>
+</div>
+
+<div hx-swap-oob="true" id="toast-container">
+<script>
+showToast(
+    '{% if status == "present" %}bi-check-circle-fill{% else %}bi-x-circle-fill{% endif %}',
+    '{% if status == "present" %}green{% else %}red{% endif %}',
+    '{{ student.user.get_full_name|escapejs }}',
+    '{% if status == "present" %}حاضر شد{% else %}غایب شد{% endif %}'
+);
+</script>
+</div>
+
+<div hx-swap-oob="true" id="attendanceStats">
+    <div class="stats-bar">
+        <div class="stat-mini"><div class="stat-num green">{{ present_count }}</div><div class="stat-lbl">حاضر</div></div>
+        <div class="stat-mini"><div class="stat-num red">{{ absent_count }}</div><div class="stat-lbl">غایب</div></div>
+        <div class="stat-mini"><div class="stat-num yellow">{{ total_count }}</div><div class="stat-lbl">کل</div></div>
+    </div>
+</div>

@@ -280,63 +280,43 @@ class AttendanceView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = jdatetime.date.today()
-        context['today'] = today
-        
-        # هنرجویانی که امروز حاضر ثبت شدن
-        attended_ids = Attendance.objects.filter(
-            date=today,
-            status='present'
-        ).values_list('student_id', flat=True)
+        attended_ids = Attendance.objects.filter(date=today, status='present').values_list('student_id', flat=True)
         context['attended_today'] = set(attended_ids)
+        context['today'] = today
         context['present_count'] = len(attended_ids)
         context['total_count'] = self.get_queryset().count()
         context['absent_count'] = context['total_count'] - context['present_count']
-        
         return context
 
 
-class AttendanceSaveView(LoginRequiredMixin, View):
-    def post(self, request):
-        student_ids = request.POST.getlist('student_ids')
+class AttendanceToggleView(LoginRequiredMixin, View):
+    def post(self, request, student_id):
+        student = get_object_or_404(Student, pk=student_id)
+        today = jdatetime.date.today()
         
-        if not student_ids:
-            messages.warning(request, 'هیچ هنرجویی انتخاب نشده است')
-            return redirect('students:attendance')
+        att, created = Attendance.objects.get_or_create(
+            student=student, date=today,
+            defaults={'status': 'absent'}
+        )
+        att.status = 'absent' if att.status == 'present' else 'present'
+        att.save()
         
-        try:
-            date = jdatetime.date.today()
-            
-            user = request.user
-            if user.is_super_manager:
-                students = Student.objects.filter(is_active=True)
-            else:
-                students = Student.objects.filter(
-                    club__memberships__user=user,
-                    club__memberships__is_active=True,
-                    is_active=True
-                )
-            
-            if not students.exists():
-                messages.warning(request, 'هیچ هنرجوی فعالی یافت نشد')
-                return redirect('students:attendance')
-            
-            present_count = 0
-            for student in students:
-                status = 'present' if str(student.id) in student_ids else 'absent'
-                Attendance.objects.update_or_create(
-                    student=student,
-                    date=date,
-                    defaults={'status': status}
-                )
-                if status == 'present':
-                    present_count += 1
-            
-            messages.success(request, f'{present_count} هنرجو حاضر، {students.count() - present_count} غایب')
-            
-        except Exception as e:
-            messages.error(request, f'خطا در ثبت حضور و غیاب: {str(e)}')
+        # آمار جدید
+        user = request.user
+        if user.is_super_manager:
+            total = Student.objects.filter(is_active=True).count()
+        else:
+            total = Student.objects.filter(club__memberships__user=user, is_active=True).distinct().count()
+        present = Attendance.objects.filter(date=today, status='present').count()
+        absent = total - present
         
-        return redirect('students:attendance')
+        return render(request, 'students/_attendance_item.html', {
+            'student': student,
+            'status': att.status,
+            'present_count': present,
+            'absent_count': absent,
+            'total_count': total,
+        })
 
 
 class AbsenteeListView(LoginRequiredMixin, UserPassesTestMixin, ListView):

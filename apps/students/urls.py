@@ -13,8 +13,8 @@ urlpatterns = [
     path('contact/<int:contact_pk>/edit/', views.ContactEditView.as_view(), name='contact_edit'),
     path('contact/<int:contact_pk>/delete/', views.ContactDeleteView.as_view(), name='contact_delete'),
     path('attendance/', views.AttendanceView.as_view(), name='attendance'),
-    path('attendance/save/', views.AttendanceSaveView.as_view(), name='attendance_save'),
     path('absentees/', views.AbsenteeListView.as_view(), name='absentees'),
     path('<int:pk>/delete/', views.StudentDeleteView.as_view(), name='student_delete'),
     path('<int:pk>/activate/', views.StudentActivateView.as_view(), name='student_activate'),
+    path('attendance/toggle/<int:student_id>/', views.AttendanceToggleView.as_view(), name='attendance_toggle'),
 ]

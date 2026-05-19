@@ -1,53 +1,63 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load jformat %}
 
-{% block title %}حضور و غیاب | باشگاه ستاره‌ها{% endblock %}
+{% block title %}ثبت حضور | {{ site_settings.gym_name }}{% endblock %}
 
 {% block content %}
-<h1>ثبت حضور و غیاب</h1>
-<p>{{ today|jformat:"%Y/%m/%d" }} - {{ today|jformat:"l" }}</p>
-
-<p>
-    حاضر: {{ present_count }} | غایب: {{ absent_count }} | کل: {{ total_count }}
-</p>
-
-{% if messages %}
-    {% for m in messages %}
-        <p style="color: green;">{{ m }}</p>
-    {% endfor %}
-{% endif %}
-
-<form method="post" action="{% url 'students:attendance_save' %}">
-    {% csrf_token %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}
+    {% include 'partials/_mobile_nav.html' %}
     
-    <table border="1">
-        <thead>
-            <tr>
-                <th>حاضر</th>
-                <th>نام</th>
-                <th>کمربند</th>
-                <th>کد</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for s in students %}
-            <tr>
-                <td>
-                    <input type="checkbox" name="student_ids" value="{{ s.id }}"
-                    {% if s.id in attended_today %}checked{% endif %}>
-                </td>
-                <td>{{ s.user.get_full_name }}</td>
-                <td>{{ s.get_current_belt_display }}</td>
-                <td>{{ s.student_code }}</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="4">هیچ هنرجویی یافت نشد</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div>
+                <h1 class="page-title">ثبت حضور و غیاب</h1>
+                <div class="page-subtitle">{{ today|jformat:"%Y/%m/%d" }}</div>
+            </div>
+        </div>
+        
+        <div class="date-card animate__animated animate__fadeIn">
+            <div class="date-icon"><i class="bi bi-calendar-check"></i></div>
+            <div class="date-text">{{ today|jformat:"%Y/%m/%d" }}<small>تاریخ امروز</small></div>
+        </div>
+        
+        <div id="attendanceStats" hx-swap-oob="true">
+            {% include 'students/_attendance_stats.html' %}
+        </div>
+        
+        <div class="section-block animate__animated animate__fadeInUp">
+            <div class="section-head"><h3>هنرجویان</h3><span style="font-size:0.75rem;color:var(--accent);">کلیک = تغییر وضعیت</span></div>
+            
+            <div class="attendance-list" id="attendanceList">
+                {% for s in students %}
+                <div class="attendance-item {% if s.id in attended_today %}checked{% endif %}"
+                     hx-post="{% url 'students:attendance_toggle' s.id %}"
+                     hx-trigger="click"
+                     hx-swap="outerHTML"
+                     hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+                    <div class="att-item-avatar">
+                        {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}" alt="">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
+                    </div>
+                    <div class="att-item-info">
+                        <div class="att-name">{{ s.user.get_full_name }}{% if s.is_birthday_today %}<span class="badge-birthday"><i class="bi bi-gift-fill"></i></span>{% endif %}</div>
+                        <div class="att-meta"><span>{{ s.get_current_belt_display }}</span><span>{{ s.student_code }}</span></div>
+                    </div>
+                    <div class="att-check"><i class="bi bi-check-lg"></i></div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted">هیچ هنرجویی یافت نشد</div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div id="toast-container"></div>
+    </main>
     
-    <button type="submit">💾 ذخیره حضور و غیاب</button>
-</form>
-
-<a href="{% url 'accounts:dashboard' %}">بازگشت</a>
+    {% include 'partials/_bottom_nav.html' %}
+    {% include 'partials/_bottom_sheet.html' %}
+    {% include 'partials/_toast.html' %}
+</div>
 {% endblock %}

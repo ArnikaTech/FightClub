@@ -1,64 +1,78 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load jformat %}
 
-{% block title %}پیگیری غیبت‌ها | باشگاه ستاره‌ها{% endblock %}
+{% block title %}پیگیری غیبت‌ها | {{ site_settings.gym_name }}{% endblock %}
 
 {% block content %}
-<h1>پیگیری غیبت‌ها</h1>
-
-{% if critical_count %}
-<p style="color: red; font-weight: bold;">
-    ⚠️ {{ critical_count }} هنرجو ۳ جلسه یا بیشتر غیبت متوالی دارند
-</p>
-{% endif %}
-
-<p>تعداد غایب‌ها: {{ total_absent }} نفر</p>
-
-{% for item in absentees %}
-    {% with s=item.student %}
-    <div style="border: 1px solid #ccc; margin: 10px; padding: 10px;">
-        <h3>
-            {{ s.user.get_full_name }}
-            <span style="color: red;">({{ item.consecutive }} جلسه غیبت)</span>
-        </h3>
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}
+    {% include 'partials/_mobile_nav.html' %}
+    
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
         
-        <p>
-            <strong>کمربند:</strong> {{ s.get_current_belt_display }} |
-            <strong>کد:</strong> {{ s.student_code }} |
-            <strong>باشگاه:</strong> {{ s.club.name }}
-        </p>
+        <div class="page-header animate__animated animate__fadeIn">
+            <div>
+                <h1 class="page-title">پیگیری غیبت‌ها</h1>
+                <div class="page-subtitle">{{ today|jformat:"%Y/%m/%d" }}</div>
+            </div>
+        </div>
         
-        {% if item.last_present_date %}
-        <p><strong>آخرین حضور:</strong> {{ item.last_present_date|jformat:"%Y/%m/%d" }}</p>
+        {% if critical_count %}
+        <div class="alert-card animate__animated animate__fadeIn">
+            <div class="alert-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div class="alert-text">{{ critical_count }} هنرجو ۳ جلسه یا بیشتر غیبت متوالی دارند - نیاز به تماس</div>
+        </div>
         {% endif %}
         
-        {% if item.recent_absences %}
-        <p>
-            <strong>تاریخ غیبت‌ها:</strong>
-            {% for date in item.recent_absences %}
-                {{ date|jformat:"%Y/%m/%d" }}{% if not forloop.last %} | {% endif %}
-            {% endfor %}
-        </p>
-        {% endif %}
-        
-        <!-- شماره تماس والدین -->
-        {% if item.contacts %}
-        <p>
-            <strong>📞 تماس با والدین:</strong>
-            {% for contact in item.contacts %}
-                <a href="tel:{{ contact.phone }}" style="margin: 0 5px; padding: 5px 10px; background: green; color: white; text-decoration: none; border-radius: 5px;">
-                    📞 {{ contact.label|default:contact.get_contact_type_display }}: {{ contact.phone }}
-                </a>
-            {% endfor %}
-        </p>
+        {% if total_absent == 0 %}
+        <div class="text-center py-5 animate__animated animate__fadeIn">
+            <i class="bi bi-emoji-smile" style="font-size: 4rem; color: #34c759;"></i>
+            <p class="mt-3" style="color: var(--text-secondary);">🎉 هیچ غایبی وجود ندارد</p>
+        </div>
         {% else %}
-        <p style="color: red;">⚠️ شماره تماس والدین ثبت نشده!</p>
+        <div class="absentee-list">
+            {% for item in absentees %}
+            {% with s=item.student %}
+            <div class="absentee-card animate__animated animate__fadeInUp">
+                <div class="abs-avatar">
+                    {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}" alt="">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
+                </div>
+                <div class="abs-info">
+                    <div class="abs-name">
+                        {{ s.user.get_full_name }}
+                        {% if s.is_birthday_today %}<span class="badge-birthday"><i class="bi bi-gift-fill"></i></span>{% endif %}
+                    </div>
+                    <div class="abs-meta"><span>{{ s.get_current_belt_display }}</span><span>{{ s.student_code }}</span><span>{{ s.club.name }}</span></div>
+                    {% if item.recent_absences %}
+                    <div class="abs-history">
+                        {% for date in item.recent_absences %}
+                        <span class="abs-history-item"><i class="bi bi-x-circle"></i> {{ date|jformat:"%Y/%m/%d" }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if item.last_present_date %}
+                    <span class="abs-last-seen"><i class="bi bi-check-circle"></i> آخرین حضور: {{ item.last_present_date|jformat:"%Y/%m/%d" }}</span>
+                    {% endif %}
+                </div>
+                <div class="abs-count"><span>{{ item.consecutive }}</span><small>جلسه</small></div>
+                {% if item.contacts %}
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                    {% for contact in item.contacts %}
+                    <a href="tel:{{ contact.phone }}" class="abs-call" title="{{ contact.label|default:'والدین' }}"><i class="bi bi-telephone-fill"></i></a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endwith %}
+            {% endfor %}
+        </div>
         {% endif %}
-    </div>
-    {% endwith %}
-{% empty %}
-    <p style="color: green;">🎉 هیچ هنرجوی غایبی وجود ندارد</p>
-{% endfor %}
-
-<a href="{% url 'accounts:dashboard' %}">بازگشت به داشبورد</a>
+    </main>
+    
+    {% include 'partials/_bottom_nav.html' %}
+    {% include 'partials/_bottom_sheet.html' %}
+    {% include 'partials/_toast.html' %}
+</div>
 {% endblock %}
