@@ -1,41 +1,101 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load jformat %}
 
-{% block title %}ویرایش {{ student.user.get_full_name }}{% endblock %}
+{% block title %}ویرایش {{ student.user.get_full_name }} | {{ site_settings.gym_name }}{% endblock %}
 
 {% block content %}
-<h1>ویرایش هنرجو</h1>
-
-<form method="post">
-    {% csrf_token %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}
+    {% include 'partials/_mobile_nav.html' %}
     
-    <fieldset>
-        <legend>اطلاعات کاربری</legend>
-        <p><label>نام:</label><input type="text" name="first_name" value="{{ student.user.first_name }}"></p>
-        <p><label>نام خانوادگی:</label><input type="text" name="last_name" value="{{ student.user.last_name }}"></p>
-        <p><label>کد ملی:</label><input type="text" name="national_code" value="{{ student.user.national_code|default:'' }}"></p>
-    </fieldset>
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div>
+                <h1 class="page-title">ویرایش هنرجو</h1>
+                <div class="page-subtitle">{{ student.user.get_full_name }} - {{ student.student_code }}</div>
+            </div>
+            <a href="{% url 'students:student_detail' student.pk %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                <i class="bi bi-arrow-right"></i><span class="btn-add-text">بازگشت</span>
+            </a>
+        </div>
+        
+        {% if messages %}
+            {% for m in messages %}
+            <div class="alert-card" style="margin-bottom:12px;">
+                <div class="alert-icon"><i class="bi bi-{% if m.tags == 'error' %}exclamation-triangle{% else %}check-circle{% endif %}-fill"></i></div>
+                <div class="alert-text">{{ m }}</div>
+            </div>
+            {% endfor %}
+        {% endif %}
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-section animate__animated animate__fadeInUp">
+                <div class="form-section-title"><i class="bi bi-person-fill"></i> اطلاعات کاربری</div>
+                <div class="form-row">
+                    <div class="form-group"><label>نام *</label><input type="text" name="first_name" class="input-glass" value="{{ student.user.first_name }}" required></div>
+                    <div class="form-group"><label>نام خانوادگی *</label><input type="text" name="last_name" class="input-glass" value="{{ student.user.last_name }}" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>کد ملی</label><input type="text" name="national_code" class="input-glass" value="{{ student.user.national_code|default:'' }}"></div>
+                    <div class="form-group"><label>شماره موبایل</label><input type="text" class="input-glass" value="{{ student.user.phone }}" disabled style="opacity:0.6;"></div>
+                </div>
+            </div>
+            
+            <div class="form-section animate__animated animate__fadeInUp">
+                <div class="form-section-title"><i class="bi bi-person-badge-fill"></i> اطلاعات هنرجو</div>
+                <div class="form-group"><label>باشگاه *</label>
+                    <select name="club" class="input-glass" hx-get="{% url 'clubs:club_info_partial' %}" hx-trigger="change" hx-target="#provinceCityInfo" hx-swap="innerHTML" hx-include="this">
+                        {% for c in clubs %}<option value="{{ c.id }}" {% if c.id == selected_club.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div id="provinceCityInfo" class="form-row">
+                    <div class="form-group"><label>استان</label><input type="text" class="input-glass" value="{{ selected_club.province.name }}" readonly></div>
+                    <div class="form-group"><label>شهر</label><input type="text" class="input-glass" value="{{ selected_club.city.name }}" readonly></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>رشته ورزشی</label>
+                        <select name="sport" class="input-glass">
+                            <option value="">-- بدون رشته --</option>
+                            {% for sp in sports %}<option value="{{ sp.id }}" {% if student.sport_id == sp.id %}selected{% endif %}>{{ sp.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group"><label>تاریخ تولد</label><input type="text" name="birth_date" class="input-glass" value="{{ student.birth_date|jformat:'%Y/%m/%d'|default:'' }}" placeholder="۱۳۸۰/۰۱/۰۱"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>کمربند فعلی</label>
+                        <select name="current_belt" class="input-glass">
+                            {% for value, label in belts %}<option value="{{ value }}" {% if student.current_belt == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group"><label>تاریخ عضویت</label><input type="text" class="input-glass" value="{{ student.joined_at|jformat:'%Y/%m/%d' }}" disabled style="opacity:0.6;"></div>
+                </div>
+                <div class="form-group"><label>یادداشت</label><textarea name="notes" class="input-glass" rows="2">{{ student.notes|default:'' }}</textarea></div>
+            </div>
+            
+            {% if user.is_super_manager %}
+            <div class="form-section animate__animated animate__fadeInUp">
+                <div class="form-section-title"><i class="bi bi-shield-lock-fill"></i> نقش‌ها و دسترسی</div>
+                <div class="form-row">
+                    <div class="form-group"><label class="checkbox-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" name="is_instructor" class="checkbox-custom" {% if student.user.is_instructor %}checked{% endif %}><span>مربی</span></label></div>
+                    <div class="form-group"><label class="checkbox-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" name="is_club_manager" class="checkbox-custom" {% if student.user.is_club_manager %}checked{% endif %}><span>مدیر باشگاه</span></label></div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="form-actions animate__animated animate__fadeInUp">
+                <button type="submit" class="btn-submit-form"><i class="bi bi-check-lg"></i> ذخیره تغییرات</button>
+                <a href="{% url 'students:student_detail' student.pk %}" class="btn-cancel-form">انصراف</a>
+            </div>
+        </form>
+    </main>
     
-    <fieldset>
-        <legend>اطلاعات هنرجویی</legend>
-        <p><label>باشگاه:</label>
-            <select name="club">
-                {% for c in clubs %}
-                <option value="{{ c.id }}" {% if c.id == student.club_id %}selected{% endif %}>{{ c.name }}</option>
-                {% endfor %}
-            </select>
-        </p>
-        <p><label>تاریخ تولد:</label><input type="text" name="birth_date" value="{{ student.birth_date|default:'' }}"></p>
-        <p><label>کمربند:</label>
-            <select name="current_belt">
-                {% for value, label in student.BELTS %}
-                <option value="{{ value }}" {% if value == student.current_belt %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-        </p>
-        <p><label>یادداشت:</label><textarea name="notes">{{ student.notes|default:'' }}</textarea></p>
-    </fieldset>
-    
-    <button type="submit">ذخیره</button>
-    <a href="{% url 'students:student_detail' student.pk %}">انصراف</a>
-</form>
+    {% include 'partials/_bottom_nav.html' %}
+    {% include 'partials/_bottom_sheet.html' %}
+    {% include 'partials/_toast.html' %}
+</div>
 {% endblock %}

@@ -78,6 +78,63 @@ class StudentDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
+class StudentEditView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        student = get_object_or_404(Student, pk=pk)
+        club_id = request.GET.get('club', student.club_id)
+        selected_club = Club.objects.get(pk=club_id) if Club.objects.filter(pk=club_id).exists() else student.club
+        
+        clubs = Club.objects.filter(is_active=True)
+        sports = Sport.objects.all()
+        belts = Student.BELTS
+        
+        return render(request, 'students/student_edit.html', {
+            'student': student,
+            'clubs': clubs,
+            'sports': sports,
+            'belts': belts,
+            'selected_club': selected_club,
+        })
+    
+    def post(self, request, pk):
+        student = get_object_or_404(Student, pk=pk)
+        user = student.user
+        
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        
+        if not first_name or not last_name:
+            messages.error(request, 'نام و نام خانوادگی الزامی است')
+            return redirect('students:student_edit', pk=pk)
+        
+        user.first_name = first_name
+        user.last_name = last_name
+        user.national_code = request.POST.get('national_code', '').strip() or None
+        
+        birth_date_str = request.POST.get('birth_date', '').strip()
+        if birth_date_str:
+            try:
+                parts = list(map(int, birth_date_str.replace('/', '-').split('-')))
+                student.birth_date = jdatetime.date(*parts)
+            except:
+                messages.error(request, 'تاریخ تولد نامعتبر است')
+                return redirect('students:student_edit', pk=pk)
+        
+        student.club_id = request.POST.get('club', student.club_id)
+        student.sport_id = request.POST.get('sport') or None
+        student.current_belt = request.POST.get('current_belt', student.current_belt)
+        student.notes = request.POST.get('notes', '').strip()
+        
+        if request.user.is_super_manager:
+            user.is_instructor = request.POST.get('is_instructor') == 'on'
+            user.is_club_manager = request.POST.get('is_club_manager') == 'on'
+        
+        user.save()
+        student.save()
+        messages.success(request, 'اطلاعات با موفقیت بروزرسانی شد')
+        return redirect('students:student_detail', pk=pk)
+
+
 class StudentCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     template_name = 'students/student_add.html'
     form_class = StudentCreateForm
@@ -110,67 +167,6 @@ class ContactDeleteView(LoginRequiredMixin, View):
             student_pk = request.POST.get('student_pk', 0)
         
         return redirect('students:student_detail', pk=student_pk)
-
-
-class StudentEditView(LoginRequiredMixin, View):
-    def get(self, request, pk):
-        student = get_object_or_404(Student, pk=pk)
-        clubs = Club.objects.filter(is_active=True)
-        return render(request, 'students/student_edit.html', {
-            'student': student,
-            'clubs': clubs
-        })
-    
-    def post(self, request, pk):
-        student = get_object_or_404(Student, pk=pk)
-        user = student.user
-        
-        first_name = request.POST.get('first_name', '').strip()
-        last_name = request.POST.get('last_name', '').strip()
-        
-        # اعتبارسنجی نام
-        if not first_name or not last_name:
-            messages.error(request, 'نام و نام خانوادگی الزامی است')
-            return redirect('students:student_edit', pk=pk)
-        
-        if len(first_name) < 2 or len(last_name) < 2:
-            messages.error(request, 'نام و نام خانوادگی باید حداقل ۲ کاراکتر باشد')
-            return redirect('students:student_edit', pk=pk)
-        
-        # اعتبارسنجی تاریخ تولد
-        birth_date_str = request.POST.get('birth_date', '').strip()
-        if birth_date_str:
-            try:
-                parts = list(map(int, birth_date_str.replace('/', '-').split('-')))
-                birth_date = jdatetime.date(*parts)
-                today = jdatetime.date.today()
-                if birth_date > today:
-                    messages.error(request, 'تاریخ تولد نمی‌تواند در آینده باشد')
-                    return redirect('students:student_edit', pk=pk)
-                if today.year - birth_date.year > 100:
-                    messages.error(request, 'تاریخ تولد نامعتبر است')
-                    return redirect('students:student_edit', pk=pk)
-            except:
-                messages.error(request, 'فرمت تاریخ تولد نامعتبر است (مثال: ۱۳۸۰/۰۱/۰۱)')
-                return redirect('students:student_edit', pk=pk)
-        else:
-            birth_date = student.birth_date
-        
-        # ذخیره
-        user.first_name = first_name
-        user.last_name = last_name
-        user.national_code = request.POST.get('national_code', '').strip() or None
-        user.save()
-        
-        student.birth_date = birth_date
-        student.current_belt = request.POST.get('current_belt', student.current_belt)
-        student.sport_id = request.POST.get('sport')
-        student.club_id = request.POST.get('club', student.club_id)
-        student.notes = request.POST.get('notes', '').strip()
-        student.save()
-        
-        messages.success(request, 'اطلاعات با موفقیت بروزرسانی شد')
-        return redirect('students:student_detail', pk=pk)
 
 
 class InsuranceCreateView(LoginRequiredMixin, View):

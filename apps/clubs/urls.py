@@ -26,4 +26,6 @@ urlpatterns = [
     path('cities/', views.CityListView.as_view(), name='city_list'),
     path('cities/add/', views.CityCreateView.as_view(), name='city_add'),
     path('cities/<int:pk>/edit/', views.CityEditView.as_view(), name='city_edit'),
+
+    path('club-info-partial/', views.club_info_partial, name='club_info_partial'),
 ]

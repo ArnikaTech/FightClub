@@ -1,105 +1,183 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load jformat %}
 
-{% block title %}{{ student.user.get_full_name }} | باشگاه ستاره‌ها{% endblock %}
+{% block title %}{{ student.user.get_full_name }} | {{ site_settings.gym_name }}{% endblock %}
 
 {% block content %}
-<h1>{{ student.user.get_full_name }}</h1>
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}
+    {% include 'partials/_mobile_nav.html' %}
+    
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="profile-header animate__animated animate__fadeIn">
+            <div class="profile-avatar-wrapper">
+                <div class="profile-avatar">
+                    {% if student.user.avatar %}
+                    <img src="{{ student.user.avatar.url }}" alt="">
+                    {% else %}
+                    <i class="bi bi-person-fill"></i>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="profile-name">{{ student.user.get_full_name }}</div>
+            <div class="profile-role">{{ student.get_current_belt_display }}</div>
+            <div class="profile-phone"><i class="bi bi-phone"></i> {{ student.user.phone }}</div>
+        </div>
+        
+        {% if not student.has_active_insurance %}
+        <div class="alert-card animate__animated animate__fadeIn">
+            <div class="alert-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div class="alert-text">بیمه این هنرجو منقضی شده یا ثبت نشده است</div>
+        </div>
+        {% endif %}
+        
+        {% if messages %}
+            {% for m in messages %}
+            <div class="alert-card" style="margin-bottom:12px;">
+                <div class="alert-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <div class="alert-text">{{ m }}</div>
+            </div>
+            {% endfor %}
+        {% endif %}
+        
+        <div class="info-card animate__animated animate__fadeInUp">
+            <div class="info-title"><i class="bi bi-info-circle-fill"></i> اطلاعات هنرجو</div>
+            <div class="info-row"><span class="info-label">کد هنرجویی</span><span class="info-value">{{ student.student_code }}</span></div>
+            <div class="info-row"><span class="info-label">باشگاه</span><span class="info-value">{{ student.club.name }} - {{ student.club.city.name }}، {{ student.club.province.name }}</span></div>
+            {% if student.sport %}<div class="info-row"><span class="info-label">رشته</span><span class="info-value">{{ student.sport.name }}</span></div>{% endif %}
+            <div class="info-row"><span class="info-label">تاریخ تولد</span><span class="info-value">{{ student.birth_date|jformat:"%Y/%m/%d"|default:"-" }} ({{ student.age|default:"-" }} سال)</span></div>
+            <div class="info-row"><span class="info-label">کمربند</span><span class="info-value"><span class="belt-dot" style="background:{{ student.belt_color }};"></span> {{ student.get_current_belt_display }}</span></div>
+            <div class="info-row"><span class="info-label">تاریخ عضویت</span><span class="info-value">{{ student.joined_at|jformat:"%Y/%m/%d" }}</span></div>
+            <div class="info-row"><span class="info-label">کد ملی</span><span class="info-value">{{ student.user.national_code|default:"-" }}</span></div>
+            <div class="info-row"><span class="info-label">یادداشت</span><span class="info-value">{{ student.notes|default:"-" }}</span></div>
+            <div class="info-row"><span class="info-label">نقش</span><span class="info-value">
+                {% if student.user.is_super_manager %}<span class="info-badge admin">مدیر کل</span>{% endif %}
+                {% if student.user.is_club_manager %}<span class="info-badge manager">مدیر باشگاه</span>{% endif %}
+                {% if student.user.is_instructor %}<span class="info-badge coach">مربی</span>{% endif %}
+                {% if not student.user.is_super_manager and not student.user.is_club_manager and not student.user.is_instructor %}هنرجو{% endif %}
+            </span></div>
+            <div class="info-row"><span class="info-label">وضعیت بیمه</span><span class="info-value">
+                {% with days=student.insurance_days_left %}
+                {% if days is not None %}
+                    {% if days <= 7 %}<span style="color:#ff9800;">🟠 {{ days }} روز</span>
+                    {% else %}<span style="color:#34c759;">🟢 {{ days }} روز</span>{% endif %}
+                {% else %}<span style="color:var(--primary);">🔴 منقضی</span>{% endif %}
+                {% endwith %}
+            </span></div>
+        </div>
+        
+        <div class="info-card animate__animated animate__fadeInUp">
+            <div class="info-title"><i class="bi bi-shield-check"></i> تاریخچه بیمه</div>
+            {% for insurance in student.insurances.all %}
+            <div class="info-row">
+                <span class="info-label">{{ insurance.start_date|jformat:"%Y/%m/%d" }} تا {{ insurance.expiry_date|jformat:"%Y/%m/%d" }}</span>
+                <span class="info-value">{% if insurance.is_active %}🟢 فعال{% else %}🔴 منقضی{% endif %}</span>
+            </div>
+            {% empty %}
+            <div class="text-center py-3 text-muted">بیمه‌ای ثبت نشده</div>
+            {% endfor %}
+        </div>
+        
+        <div class="info-card animate__animated animate__fadeInUp">
+            <div class="info-title"><i class="bi bi-telephone-fill"></i> شماره تماس والدین</div>
+            {% for contact in student.contacts.all %}
+            <div class="info-row">
+                <span class="info-label">{{ contact.label|default:contact.get_contact_type_display }}</span>
+                <span class="info-value">
+                    {{ contact.phone }}
+                    <a href="tel:{{ contact.phone }}" class="btn-call"><i class="bi bi-telephone-fill"></i></a>
+                    <button onclick="openEditContactModal({{ contact.pk }}, '{{ contact.phone }}', '{{ contact.contact_type }}', '{{ contact.label|default:'' }}')" class="btn-call" style="background:rgba(64,156,255,0.15);color:#409cff;"><i class="bi bi-pencil"></i></button>
+                    <button onclick="openDeleteContactModal({{ contact.pk }}, '{{ contact.label|default:contact.phone }}')" class="btn-call" style="background:rgba(255,77,46,0.15);color:var(--primary);"><i class="bi bi-trash"></i></button>
+                </span>
+            </div>
+            {% empty %}
+            <div class="text-center py-3 text-muted">شماره تماسی ثبت نشده</div>
+            {% endfor %}
+        </div>
+        
+        <div class="profile-actions animate__animated animate__fadeInUp">
+            <button onclick="openInsuranceModal()" class="profile-action-btn"><i class="bi bi-shield-plus"></i><span>تمدید بیمه</span><i class="bi bi-chevron-left action-arrow"></i></button>
+            <button onclick="openContactModal()" class="profile-action-btn"><i class="bi bi-person-plus"></i><span>ثبت شماره والدین</span><i class="bi bi-chevron-left action-arrow"></i></button>
+            <a href="{% url 'students:student_edit' student.pk %}" class="profile-action-btn"><i class="bi bi-pencil"></i><span>ویرایش</span><i class="bi bi-chevron-left action-arrow"></i></a>
+            <a href="{% url 'students:student_list' %}" class="profile-action-btn" style="background:var(--input-bg);"><i class="bi bi-arrow-right"></i><span>بازگشت</span><i class="bi bi-chevron-left action-arrow"></i></a>
+        </div>
+    </main>
+    
+    <div class="modal-overlay" id="insuranceModalOverlay" onclick="closeInsuranceModal()"></div>
+    <div class="modal-sheet" id="insuranceModal">
+        <div class="modal-handle"></div>
+        <div class="modal-title">تمدید بیمه</div>
+        <div class="modal-body">
+            <form method="post" action="{% url 'students:insurance_add' student.pk %}">
+                {% csrf_token %}
+                <div class="modal-form-group"><label class="form-label-sm">تاریخ شروع *</label><input type="text" name="start_date" class="input-glass" placeholder="۱۴۰۳/۰۱/۰۱" required></div>
+                <div class="modal-form-group"><label class="form-label-sm">تاریخ انقضا *</label><input type="text" name="expiry_date" class="input-glass" placeholder="۱۴۰۴/۰۱/۰۱" required></div>
+                <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeInsuranceModal()">انصراف</button><button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> ثبت بیمه</button></div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="contactModalOverlay" onclick="closeContactModal()"></div>
+    <div class="modal-sheet" id="contactModal">
+        <div class="modal-handle"></div>
+        <div class="modal-title">ثبت شماره والدین</div>
+        <div class="modal-body">
+            <form method="post" action="{% url 'students:contact_add' student.pk %}">
+                {% csrf_token %}
+                <div class="modal-form-group"><label class="form-label-sm">شماره تماس *</label><input type="text" name="phone" class="input-glass" placeholder="۰۹۱۲۳۴۵۶۷۸۹" required></div>
+                <div class="modal-form-group"><label class="form-label-sm">نوع</label><select name="contact_type" class="input-glass"><option value="parent">والدین</option><option value="emergency">اضطراری</option><option value="other">سایر</option></select></div>
+                <div class="modal-form-group"><label class="form-label-sm">برچسب</label><input type="text" name="label" class="input-glass" placeholder="مثال: پدر"></div>
+                <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeContactModal()">انصراف</button><button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> ثبت شماره</button></div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="editContactModalOverlay" onclick="closeEditContactModal()"></div>
+    <div class="modal-sheet" id="editContactModal">
+        <div class="modal-handle"></div>
+        <div class="modal-title">ویرایش شماره تماس</div>
+        <div class="modal-body">
+            <form id="editContactForm" method="post">
+                {% csrf_token %}
+                <div class="modal-form-group"><label class="form-label-sm">شماره تماس *</label><input type="text" name="phone" id="editContactPhone" class="input-glass" required></div>
+                <div class="modal-form-group"><label class="form-label-sm">نوع</label><select name="contact_type" id="editContactType" class="input-glass"><option value="parent">والدین</option><option value="emergency">اضطراری</option><option value="other">سایر</option></select></div>
+                <div class="modal-form-group"><label class="form-label-sm">برچسب</label><input type="text" name="label" id="editContactLabel" class="input-glass" placeholder="مثال: پدر"></div>
+                <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeEditContactModal()">انصراف</button><button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> ذخیره</button></div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="deleteContactModalOverlay" onclick="closeDeleteContactModal()"></div>
+    <div class="modal-sheet" id="deleteContactModal">
+        <div class="modal-handle"></div>
+        <div class="modal-title">تایید حذف</div>
+        <div class="modal-body text-center">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; color: var(--primary);"></i>
+            <p class="mt-3">آیا از حذف شماره <span id="deleteContactName"></span> مطمئن هستید؟</p>
+            <div class="modal-btn-row mt-3"><button type="button" class="btn-cancel-sm" onclick="closeDeleteContactModal()">انصراف</button>
+                <form id="deleteContactForm" method="post" style="flex:1;">{% csrf_token %}<button type="submit" class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> حذف</button></form>
+            </div>
+        </div>
+    </div>
+    
+    {% include 'partials/_bottom_nav.html' %}
+    {% include 'partials/_bottom_sheet.html' %}
+    {% include 'partials/_toast.html' %}
+</div>
+{% endblock %}
 
-<table border="1">
-    <tr><th>کد هنرجویی</th><td>{{ student.student_code }}</td></tr>
-    <tr><th>شماره موبایل</th><td>{{ student.user.phone }}</td></tr>
-    <tr><th>باشگاه</th><td>{{ student.club.name }}</td></tr>
-    <tr><th>تاریخ تولد</th><td>{{ student.birth_date|jformat:"%Y/%m/%d"|default:"-" }}</td></tr>
-    <tr><th>سن</th><td>{{ student.age }} سال</td></tr>
-    <tr><th>کمربند</th><td>{{ student.get_current_belt_display }}</td></tr>
-    <tr><th>تاریخ عضویت</th><td>{{ student.joined_at|jformat:"%Y/%m/%d" }}</td></tr>
-    <tr><th>کد ملی</th><td>{{ student.user.national_code|default:"-" }}</td></tr>
-    <tr><th>وضعیت بیمه</th><td>
-        {% with days=student.insurance_days_left %}
-        {% if days is not None %}
-        {% if days <= 7 %}🟠 {{ days }} روز
-        {% else %}🟢 {{ days }} روز{% endif %}
-        {% else %}🔴 منقضی{% endif %}
-        {% endwith %}
-    </td></tr>
-</table>
-
-<h3>تاریخچه بیمه</h3>
-{% if student.insurances.all %}
-<table border="1" width="100%">
-    <thead>
-        <tr><th>شروع</th><th>انقضا</th><th>وضعیت</th><th>تاریخ ثبت</th></tr>
-    </thead>
-    <tbody>
-        {% for insurance in student.insurances.all %}
-        <tr>
-            <td>{{ insurance.start_date|jformat:"%Y/%m/%d" }}</td>
-            <td>{{ insurance.expiry_date|jformat:"%Y/%m/%d" }}</td>
-            <td>
-                {% if insurance.expiry_date >= today %}
-                    🟢 فعال
-                {% else %}
-                    🔴 منقضی
-                {% endif %}
-            </td>
-            <td>{{ insurance.created_at|jformat:"%Y/%m/%d" }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p>بیمه‌ای ثبت نشده</p>
-{% endif %}
-
-{% for contact in student.contacts.all %}
-<p>
-    {{ contact.label|default:contact.get_contact_type_display }}: {{ contact.phone }}
-    <a href="tel:{{ contact.phone }}">📞</a>
-    <a href="{% url 'students:contact_edit' contact.pk %}">✏️</a>
-    <form method="post" action="{% url 'students:contact_delete' contact.pk %}" style="display:inline;" onsubmit="return confirm('حذف شود؟')">
-        {% csrf_token %}<button type="submit">❌</button>
-    </form>
-</p>
-{% endfor %}
-
-<h3>ثبت شماره والدین</h3>
-<form method="post" action="{% url 'students:contact_add' student.pk %}">
-    {% csrf_token %}
-    <p>
-        <label>شماره تماس:</label>
-        <input type="text" name="phone" placeholder="۰۹۱۲۳۴۵۶۷۸۹" required>
-    </p>
-    <p>
-        <label>نوع:</label>
-        <select name="contact_type">
-            <option value="parent">والدین</option>
-            <option value="emergency">اضطراری</option>
-            <option value="other">سایر</option>
-        </select>
-    </p>
-    <p>
-        <label>برچسب:</label>
-        <input type="text" name="label" placeholder="مثال: پدر، مادر">
-    </p>
-    <button type="submit">ثبت شماره</button>
-</form>
-
-<h3>ثبت/تمدید بیمه</h3>
-<form method="post" action="{% url 'students:insurance_add' student.pk %}">
-    {% csrf_token %}
-    <p>
-        <label>تاریخ شروع:</label>
-        <input type="text" name="start_date" placeholder="۱۴۰۳/۰۱/۰۱" required>
-    </p>
-    <p>
-        <label>تاریخ انقضا:</label>
-        <input type="text" name="expiry_date" placeholder="۱۴۰۴/۰۱/۰۱" required>
-    </p>
-    <button type="submit">ثبت بیمه</button>
-</form>
-
-<a href="{% url 'students:student_edit' student.pk %}">✏️ ویرایش هنرجو</a>
-
-<a href="{% url 'students:student_list' %}">بازگشت به لیست</a>
+{% block extra_js %}
+<script>
+function openInsuranceModal(){document.getElementById('insuranceModalOverlay').classList.add('show');document.getElementById('insuranceModal').classList.add('show');}
+function closeInsuranceModal(){document.getElementById('insuranceModalOverlay').classList.remove('show');document.getElementById('insuranceModal').classList.remove('show');}
+function openContactModal(){document.getElementById('contactModalOverlay').classList.add('show');document.getElementById('contactModal').classList.add('show');}
+function closeContactModal(){document.getElementById('contactModalOverlay').classList.remove('show');document.getElementById('contactModal').classList.remove('show');}
+function openEditContactModal(pk,phone,type,label){document.getElementById('editContactForm').action='/students/contact/'+pk+'/edit/';document.getElementById('editContactPhone').value=phone;document.getElementById('editContactType').value=type;document.getElementById('editContactLabel').value=label||'';document.getElementById('editContactModalOverlay').classList.add('show');document.getElementById('editContactModal').classList.add('show');}
+function closeEditContactModal(){document.getElementById('editContactModalOverlay').classList.remove('show');document.getElementById('editContactModal').classList.remove('show');}
+function openDeleteContactModal(pk,name){document.getElementById('deleteContactName').textContent=name;document.getElementById('deleteContactForm').action='/students/contact/'+pk+'/delete/';document.getElementById('deleteContactModalOverlay').classList.add('show');document.getElementById('deleteContactModal').classList.add('show');}
+function closeDeleteContactModal(){document.getElementById('deleteContactModalOverlay').classList.remove('show');document.getElementById('deleteContactModal').classList.remove('show');}
+</script>
 {% endblock %}

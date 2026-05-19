@@ -345,3 +345,9 @@ class CityDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
         city.delete()
         messages.success(request, f'شهر {name} با موفقیت حذف شد')
         return redirect('clubs:city_list')
+
+
+def club_info_partial(request):
+    club_id = request.GET.get('club')
+    club = get_object_or_404(Club, pk=club_id)
+    return render(request, 'clubs/_club_info.html', {'club': club})
