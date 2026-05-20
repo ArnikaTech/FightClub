@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
         s.textContent = sub || '';
         clearTimeout(window.toastTimer);
         toast.classList.add('show');
-        window.toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2000);
+        window.toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 3000);
     };
     
     // ============================================================

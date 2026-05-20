@@ -4,6 +4,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.http import JsonResponse
 from django.conf import settings
+from django.template.loader import render_to_string
+from django.http import HttpResponse
 
 from .models import Province, City, Club
 from .models import ClubMembership
@@ -208,40 +210,35 @@ class ProvinceListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 
 class ProvinceCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self):
-        return self.request.user.is_super_manager
-    
-    def get(self, request):
-        return render(request, 'clubs/province_add.html')
-    
+    def test_func(self): return self.request.user.is_super_manager
     def post(self, request):
         name = request.POST.get('name', '').strip()
-        if name:
-            Province.objects.create(name=name)
-            messages.success(request, f'استان {name} ایجاد شد')
-            return redirect('clubs:province_list')
-        messages.error(request, 'نام استان الزامی است')
-        return redirect('clubs:province_add')
-
+        if name: Province.objects.create(name=name); messages.success(request, f'استان {name} ایجاد شد')
+        return redirect('clubs:province_list')
 
 class ProvinceEditView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self):
-        return self.request.user.is_super_manager
-    
-    def get(self, request, pk):
-        province = get_object_or_404(Province, pk=pk)
-        return render(request, 'clubs/province_edit.html', {'province': province})
-    
+    def test_func(self): return self.request.user.is_super_manager
     def post(self, request, pk):
         province = get_object_or_404(Province, pk=pk)
         name = request.POST.get('name', '').strip()
-        if name:
-            province.name = name
-            province.save()
-            messages.success(request, 'استان بروزرسانی شد')
-            return redirect('clubs:province_list')
-        messages.error(request, 'نام استان الزامی است')
-        return redirect('clubs:province_edit', pk=pk)
+        if name: province.name = name; province.save(); messages.success(request, 'بروزرسانی شد')
+        return redirect('clubs:province_list')
+
+
+class ProvinceDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return self.request.user.is_super_manager
+    
+    def post(self, request, pk):
+        province = get_object_or_404(Province, pk=pk)
+        name = province.name
+        
+        if province.clubs.filter(is_active=True).exists():
+            messages.error(request, f'استان "{name}" باشگاه فعال دارد. ابتدا باشگاه‌ها را غیرفعال کنید.')
+        else:
+            province.delete()
+            messages.success(request, f'استان "{name}" با موفقیت حذف شد.')
+        
+        return redirect('clubs:province_list')
 
 
 # ========== شهرها ==========
@@ -298,30 +295,6 @@ class CityEditView(LoginRequiredMixin, UserPassesTestMixin, View):
             return redirect('clubs:city_list')
         messages.error(request, 'نام شهر و استان الزامی است')
         return redirect('clubs:city_edit', pk=pk)
-
-
-class ProvinceDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self):
-        return self.request.user.is_super_manager
-    
-    def post(self, request, pk):
-        province = get_object_or_404(Province, pk=pk)
-        name = province.name
-        
-        # چک: آیا حتی یک باشگاه فعال در این استان هست؟
-        has_active = Club.objects.filter(
-            province=province,
-            is_active=True
-        ).exists()
-        
-        if has_active:
-            messages.error(request, f'استان {name} باشگاه فعال دارد. ابتدا باشگاه‌ها را غیرفعال کنید.')
-            return redirect('clubs:province_list')
-        
-        # حذف امن
-        province.delete()
-        messages.success(request, f'استان {name} با موفقیت حذف شد')
-        return redirect('clubs:province_list')
 
 
 class CityDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):

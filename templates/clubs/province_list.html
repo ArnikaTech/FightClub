@@ -5,23 +5,87 @@
     {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
     <main class="dashboard-main">
         {% include 'partials/_notif_bar.html' %}
+                
         <div class="page-header animate__animated animate__fadeIn">
             <div><h1 class="page-title">استان‌ها <span>{{ provinces.count }} استان</span></h1></div>
-            <a href="{% url 'clubs:province_add' %}" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">استان جدید</span></a>
+            <button onclick="openModal()" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">استان جدید</span></button>
         </div>
+        
         <div class="coach-list-page">
             {% for p in provinces %}
             <div class="coach-card-page animate__animated animate__fadeInUp">
                 <div class="coach-avatar-page"><i class="bi bi-map-fill"></i></div>
                 <div class="coach-info-page"><div class="coach-name-page">{{ p.name }}</div><div class="coach-meta-page"><span>{{ p.cities.count }} شهر</span></div></div>
                 <div class="coach-actions">
-                    <a href="{% url 'clubs:province_edit' p.pk %}" class="coach-action-btn edit"><i class="bi bi-pencil"></i></a>
-                    <form method="post" action="{% url 'clubs:province_delete' p.pk %}" onsubmit="return confirm('حذف شود؟')">{% csrf_token %}<button class="coach-action-btn delete"><i class="bi bi-trash"></i></button></form>
+                    <button onclick="editProvince({{ p.id }}, '{{ p.name|escapejs }}')" class="coach-action-btn edit"><i class="bi bi-pencil"></i></button>
+                    <button onclick="confirmDelete('{% url 'clubs:province_delete' p.id %}', '{{ p.name|escapejs }}')" class="coach-action-btn delete"><i class="bi bi-trash"></i></button>
                 </div>
             </div>
-            {% empty %}<div class="text-center py-5 text-muted">استانی ثبت نشده</div>{% endfor %}
+            {% endfor %}
         </div>
     </main>
     {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
 </div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+<div class="modal-sheet" id="modalSheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">استان جدید</div>
+    <div class="modal-body">
+        <form method="post" id="modalForm" action="{% url 'clubs:province_add' %}">
+            {% csrf_token %}
+            <div class="modal-form-group"><label class="form-label-sm">نام استان *</label><input type="text" name="name" id="modalName" class="input-glass" required></div>
+            <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeModal()">انصراف</button><button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> ذخیره</button></div>
+        </form>
+    </div>
+</div>
+
+<!-- مودال تایید حذف -->
+<div class="modal-overlay" id="deleteModalOverlay" onclick="closeDeleteModal()"></div>
+<div class="modal-sheet" id="deleteModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">تایید حذف</div>
+    <div class="modal-body text-center">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; color: var(--primary);"></i>
+        <p class="mt-3">آیا از حذف "<span id="deleteItemName"></span>" مطمئن هستید؟</p>
+        <div class="modal-btn-row mt-3">
+            <button type="button" class="btn-cancel-sm" onclick="closeDeleteModal()">انصراف</button>
+            <form id="deleteForm" method="post" style="flex:1;">
+                {% csrf_token %}
+                <button type="submit" class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> حذف</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openModal(){document.getElementById('modalTitle').textContent='استان جدید';document.getElementById('modalForm').action='{% url "clubs:province_add" %}';document.getElementById('modalName').value='';document.getElementById('modalOverlay').classList.add('show');document.getElementById('modalSheet').classList.add('show');}
+    function closeModal(){document.getElementById('modalOverlay').classList.remove('show');document.getElementById('modalSheet').classList.remove('show');}
+    function editProvince(id,name){document.getElementById('modalTitle').textContent='ویرایش استان';document.getElementById('modalForm').action='/clubs/provinces/'+id+'/edit/';document.getElementById('modalName').value=name;document.getElementById('modalOverlay').classList.add('show');document.getElementById('modalSheet').classList.add('show');}
+    function confirmDelete(url, name) {
+        document.getElementById('deleteItemName').textContent = name;
+        document.getElementById('deleteForm').action = url;
+        document.getElementById('deleteModalOverlay').classList.add('show');
+        document.getElementById('deleteModal').classList.add('show');
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModalOverlay').classList.remove('show');
+        document.getElementById('deleteModal').classList.remove('show');
+    }
+    
+    {% if messages %}
+    document.addEventListener('DOMContentLoaded', function() {
+        {% for m in messages %}
+        showToast(
+        '{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}',
+        '{% if m.tags == "success" %}green{% else %}red{% endif %}',
+        '{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}',
+        '{{ m|escapejs }}'
+        );
+        {% endfor %}
+    });
+    {% endif %}
+</script>
 {% endblock %}
