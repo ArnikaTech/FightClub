@@ -100,7 +100,6 @@ class LogoutView(View):
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):
-    """پروفایل کاربر"""
     template_name = 'accounts/profile.html'
     
     def get_context_data(self, **kwargs):
@@ -113,8 +112,17 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         except:
             context['student'] = None
         
-        if user.is_super_manager or user.is_club_manager:
-            context['managed_clubs'] = Club.objects.filter(memberships__user=user, is_active=True)
+        # باشگاه‌های تحت مدیریت
+        if user.is_super_manager:
+            # مدیر کل همه باشگاه‌های فعال رو می‌بینه
+            context['managed_clubs'] = Club.objects.filter(is_active=True)
+        else:
+            # بقیه فقط باشگاه‌هایی که عضویت دارن
+            context['managed_clubs'] = Club.objects.filter(
+                memberships__user=user,
+                memberships__is_active=True,
+                is_active=True
+            ).distinct()
         
         return context
 

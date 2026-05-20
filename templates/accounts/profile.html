@@ -1,70 +1,145 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load jformat %}
 
-{% block title %}پروفایل من | باشگاه ستاره‌ها{% endblock %}
+{% block title %}پروفایل من | {{ site_settings.gym_name }}{% endblock %}
 
 {% block content %}
-<h1>پروفایل من</h1>
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}
+    {% include 'partials/_mobile_nav.html' %}
+    
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="profile-header animate__animated animate__fadeIn">
+            <div class="profile-avatar-wrapper">
+                <div class="profile-avatar">
+                    {% if user.avatar %}<img src="{{ user.avatar.url }}" alt="">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
+                </div>
+            </div>
+            <div class="profile-name">{{ user.get_full_name }}</div>
+            <div class="profile-role">
+                {% if user.is_super_manager %}مدیر کل{% elif user.is_club_manager %}مدیر باشگاه{% elif user.is_instructor %}مربی{% else %}هنرجو{% endif %}
+            </div>
+            <div class="profile-phone"><i class="bi bi-phone"></i> {{ user.phone }}</div>
+        </div>
+        
+        <div class="info-card animate__animated animate__fadeInUp">
+            <div class="info-title"><i class="bi bi-person-fill"></i> اطلاعات کاربری</div>
+            <div class="info-row"><span class="info-label">نام</span><span class="info-value">{{ user.first_name }}</span></div>
+            <div class="info-row"><span class="info-label">نام خانوادگی</span><span class="info-value">{{ user.last_name }}</span></div>
+            <div class="info-row"><span class="info-label">شماره موبایل</span><span class="info-value">{{ user.phone }}</span></div>
+            <div class="info-row"><span class="info-label">کد ملی</span><span class="info-value">{{ user.national_code|default:"-" }}</span></div>
+            <div class="info-row"><span class="info-label">تاریخ تولد</span><span class="info-value">{{ user.birth_date|jformat:"%Y/%m/%d"|default:"-" }}</span></div>
+            <div class="info-row"><span class="info-label">نقش</span><span class="info-value">
+                {% if user.is_super_manager %}<span class="info-badge admin">مدیر کل</span>{% endif %}
+                {% if user.is_club_manager %}<span class="info-badge manager">مدیر باشگاه</span>{% endif %}
+                {% if user.is_instructor %}<span class="info-badge coach">مربی</span>{% endif %}
+                {% if not user.is_super_manager and not user.is_club_manager and not user.is_instructor %}هنرجو{% endif %}
+            </span></div>
+        </div>
+        
+        {% if student %}
+        <div class="info-card animate__animated animate__fadeInUp">
+            <div class="info-title"><i class="bi bi-person-badge-fill"></i> اطلاعات هنرجویی</div>
+            <div class="info-row"><span class="info-label">کد هنرجویی</span><span class="info-value">{{ student.student_code }}</span></div>
+            <div class="info-row"><span class="info-label">باشگاه</span><span class="info-value">{{ student.club.name }} - {{ student.club.city.name }}</span></div>
+            {% if student.sport %}<div class="info-row"><span class="info-label">رشته</span><span class="info-value">{{ student.sport.name }}</span></div>{% endif %}
+            <div class="info-row"><span class="info-label">کمربند</span><span class="info-value"><span class="belt-dot" style="background:{{ student.belt_color }};"></span> {{ student.get_current_belt_display }}</span></div>
+            <div class="info-row"><span class="info-label">تاریخ عضویت</span><span class="info-value">{{ student.joined_at|jformat:"%Y/%m/%d" }}</span></div>
+            <div class="info-row"><span class="info-label">وضعیت بیمه</span><span class="info-value">
+                {% with days=student.insurance_days_left %}
+                {% if days is not None %}{% if days <= 7 %}<span style="color:#ff9800;">🟠 {{ days }} روز</span>{% else %}<span style="color:#34c759;">🟢 {{ days }} روز</span>{% endif %}{% else %}<span style="color:var(--primary);">🔴 منقضی</span>{% endif %}
+                {% endwith %}
+            </span></div>
+        </div>
+        {% endif %}
+        
+        {% if managed_clubs %}
+        <div class="info-card animate__animated animate__fadeInUp">
+            <div class="info-title"><i class="bi bi-building"></i> باشگاه‌های تحت مدیریت</div>
+            {% for club in managed_clubs %}<div class="info-row"><span class="info-label">{{ club.name }}</span><span class="info-value">{{ club.city.name }} - {{ club.students.count }} هنرجو</span></div>{% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="profile-actions animate__animated animate__fadeInUp">
+            <button onclick="openProfileEditModal()" class="profile-action-btn"><i class="bi bi-pencil"></i><span>ویرایش پروفایل</span><i class="bi bi-chevron-left action-arrow"></i></button>
+            <button onclick="openPasswordModal()" class="profile-action-btn"><i class="bi bi-lock"></i><span>تغییر رمز عبور</span><i class="bi bi-chevron-left action-arrow"></i></button>
+            <form method="post" action="{% url 'accounts:logout' %}" style="display:contents;">{% csrf_token %}<button type="submit" class="profile-action-btn logout"><i class="bi bi-box-arrow-right"></i><span>خروج</span><i class="bi bi-chevron-left action-arrow"></i></button></form>
+        </div>
+    </main>
+    
+    {% include 'partials/_bottom_nav.html' %}
+    {% include 'partials/_bottom_sheet.html' %}
+    {% include 'partials/_toast.html' %}
+</div>
 
-{% if messages %}{% for m in messages %}<p style="color:{% if m.tags == 'error' %}red{% else %}green{% endif %};">{{ m }}</p>{% endfor %}{% endif %}
+<!-- مودال ویرایش پروفایل -->
+<div class="modal-overlay" id="profileEditModalOverlay"></div>
+<div class="modal-sheet" id="profileEditModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">ویرایش پروفایل</div>
+    <div class="modal-body">
+        <form method="post" action="{% url 'accounts:profile_edit' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="text-center mb-3">
+                {% if user.avatar %}<img src="{{ user.avatar.url }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">{% else %}<i class="bi bi-person-fill" style="font-size:3rem;color:var(--text-muted);"></i>{% endif %}
+                <br><label class="mt-2" style="cursor:pointer;color:var(--accent);"><i class="bi bi-camera"></i> تغییر تصویر<input type="file" name="avatar" accept="image/*" style="display:none;"></label>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label-sm">نام</label><input type="text" name="first_name" class="input-glass" value="{{ user.first_name }}" required></div>
+                <div class="form-group"><label class="form-label-sm">نام خانوادگی</label><input type="text" name="last_name" class="input-glass" value="{{ user.last_name }}" required></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label-sm">کد ملی</label><input type="text" name="national_code" class="input-glass" value="{{ user.national_code|default:'' }}"></div>
+                <div class="form-group"><label class="form-label-sm">تاریخ تولد</label><input type="text" name="birth_date" class="input-glass" value="{{ user.birth_date|jformat:'%Y/%m/%d'|default:'' }}" placeholder="۱۳۸۰/۰۱/۰۱"></div>
+            </div>
+            {% if user.is_super_manager %}
+            <div class="form-row">
+                <div class="form-group"><label class="checkbox-label"><input type="checkbox" name="is_instructor" class="checkbox-custom" {% if user.is_instructor %}checked{% endif %}> مربی</label></div>
+                <div class="form-group"><label class="checkbox-label"><input type="checkbox" name="is_club_manager" class="checkbox-custom" {% if user.is_club_manager %}checked{% endif %}> مدیر باشگاه</label></div>
+            </div>
+            {% endif %}
+            <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeProfileEditModal()">انصراف</button><button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> ذخیره</button></div>
+        </form>
+    </div>
+</div>
 
-<!-- عکس -->
-<p style="text-align:center;">
-    {% if user.avatar %}
-    <img src="{{ user.avatar.url }}" width="100" height="100" style="border-radius:50%;border:3px solid #ccc;">
-    {% else %}
-    <span style="font-size:80px;">👤</span>
+<!-- مودال تغییر رمز -->
+<div class="modal-overlay" id="passwordModalOverlay"></div>
+<div class="modal-sheet" id="passwordModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">تغییر رمز عبور</div>
+    <div class="modal-body">
+        <form method="post" action="{% url 'accounts:password_change' %}">
+            {% csrf_token %}
+            <div class="modal-form-group"><label class="form-label-sm">رمز عبور فعلی *</label><input type="password" name="current_password" class="input-glass" required></div>
+            <div class="modal-form-group"><label class="form-label-sm">رمز عبور جدید *</label><input type="password" name="new_password" class="input-glass" required></div>
+            <div class="modal-form-group"><label class="form-label-sm">تکرار رمز جدید *</label><input type="password" name="confirm_password" class="input-glass" required></div>
+            <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closePasswordModal()">انصراف</button><button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> تغییر رمز</button></div>
+        </form>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openProfileEditModal(){document.getElementById('profileEditModalOverlay').classList.add('show');document.getElementById('profileEditModal').classList.add('show');}
+function closeProfileEditModal(){document.getElementById('profileEditModalOverlay').classList.remove('show');document.getElementById('profileEditModal').classList.remove('show');}
+function openPasswordModal(){document.getElementById('passwordModalOverlay').classList.add('show');document.getElementById('passwordModal').classList.add('show');}
+function closePasswordModal(){document.getElementById('passwordModalOverlay').classList.remove('show');document.getElementById('passwordModal').classList.remove('show');}
+
+document.addEventListener('DOMContentLoaded', function() {
+    {% if messages %}
+        {% for m in messages %}
+            if (typeof showToast === 'function') {
+                showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');
+            }
+        {% endfor %}
     {% endif %}
-</p>
-
-<h2 style="text-align:center;">{{ user.get_full_name }}</h2>
-
-<!-- اطلاعات شخصی (همه کاربران) -->
-<h3>اطلاعات شخصی</h3>
-<table border="1" width="100%">
-    <tr><th>نام</th><td>{{ user.first_name }}</td></tr>
-    <tr><th>نام خانوادگی</th><td>{{ user.last_name }}</td></tr>
-    <tr><th>شماره موبایل</th><td>{{ user.phone }}</td></tr>
-    <tr><th>کد ملی</th><td>{{ user.national_code|default:"-" }}</td></tr>
-    <tr><th>تاریخ تولد</th><td>{{ user.birth_date|jformat:"%Y/%m/%d"|default:"-" }}</td></tr>
-    <tr><th>نقش</th><td>
-        {% if user.is_super_manager %}👑 مدیر کل{% endif %}
-        {% if user.is_club_manager %}🏢 مدیر باشگاه{% endif %}
-        {% if user.is_instructor %}👨‍🏫 مربی{% endif %}
-        {% if not user.is_super_manager and not user.is_club_manager and not user.is_instructor %}👤 هنرجو{% endif %}
-    </td></tr>
-</table>
-
-<!-- اطلاعات هنرجویی (فقط اگر Student داشته باشه) -->
-{% if student %}
-<h3>اطلاعات هنرجویی</h3>
-<table border="1" width="100%">
-    <tr><th>کد هنرجویی</th><td>{{ student.student_code }}</td></tr>
-    <tr><th>باشگاه</th><td>{{ student.club.name }} - {{ student.club.city.name }}</td></tr>
-    <tr><th>کمربند</th><td><span style="color:{{ student.belt_color }};">●</span> {{ student.get_current_belt_display }}</td></tr>
-    <tr><th>تاریخ عضویت</th><td>{{ student.joined_at|jformat:"%Y/%m/%d" }}</td></tr>
-    <tr><th>وضعیت بیمه</th><td>
-        {% with days=student.insurance_days_left %}
-        {% if days is not None %}🟢 {{ days }} روز{% else %}🔴 منقضی{% endif %}
-        {% endwith %}
-    </td></tr>
-</table>
-{% endif %}
-
-<!-- باشگاه‌های تحت مدیریت -->
-{% if managed_clubs %}
-<h3>باشگاه‌های تحت مدیریت</h3>
-<table border="1" width="100%">
-    {% for club in managed_clubs %}
-    <tr><td>{{ club.name }}</td><td>{{ club.city.name }}</td><td>{{ club.students.count }} هنرجو</td></tr>
-    {% endfor %}
-</table>
-{% endif %}
-
-<!-- لینک‌ها -->
-<p>
-    <a href="{% url 'accounts:profile_edit' %}">✏️ ویرایش پروفایل</a> |
-    <a href="{% url 'accounts:password_change' %}">🔒 تغییر رمز</a> |
-    <a href="{% url 'accounts:logout' %}">🚪 خروج</a>
-</p>
+});
+</script>
 {% endblock %}
