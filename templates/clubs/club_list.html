@@ -1,41 +1,52 @@
 {% extends 'base.html' %}
-
-{% block title %}باشگاه‌ها | باشگاه ستاره‌ها{% endblock %}
-
+{% block title %}باشگاه‌ها | {{ site_settings.gym_name }}{% endblock %}
 {% block content %}
-<h1>باشگاه‌ها</h1>
-
-{% if messages %}
-    {% for m in messages %}<p style="color:green;">{{ m }}</p>{% endfor %}
-{% endif %}
-
-<a href="{% url 'clubs:club_add' %}">➕ باشگاه جدید</a>
-
-<h2>فعال ({{ clubs.count }})</h2>
-{% for club in clubs %}
-    <p>
-        <a href="{% url 'clubs:club_detail' club.pk %}">{{ club.name }}</a>
-        - {{ club.city.name }}، {{ club.province.name }}
-        - {{ club.students.count }} هنرجو
-        <a href="{% url 'clubs:club_edit' club.pk %}">✏️</a>
-        <form method="post" action="{% url 'clubs:club_delete' club.pk %}" style="display:inline;" onsubmit="return confirm('غیرفعال شود؟')">
-            {% csrf_token %}<button type="submit">❌</button>
-        </form>
-    </p>
-{% empty %}
-    <p>باشگاه فعالی نیست</p>
-{% endfor %}
-
-{% if inactive_clubs %}
-<h2>غیرفعال ({{ inactive_clubs.count }})</h2>
-{% for club in inactive_clubs %}
-    <p style="opacity:0.5;">
-        <a href="{% url 'clubs:club_detail' club.pk %}">{{ club.name }}</a>
-        - {{ club.city.name }}
-        <form method="post" action="{% url 'clubs:club_activate' club.pk %}" style="display:inline;">
-            {% csrf_token %}<button type="submit">🔄 فعال‌سازی</button>
-        </form>
-    </p>
-{% endfor %}
-{% endif %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">باشگاه‌ها <span>{{ clubs.count }} فعال</span></h1></div>
+            <a href="{% url 'clubs:club_add' %}" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">باشگاه جدید</span></a>
+        </div>
+        <div class="coach-list-page">
+    {% for club in clubs %}
+    <div class="coach-card-page animate__animated animate__fadeInUp">
+        <a href="{% url 'clubs:club_detail' club.pk %}" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;flex:1;">
+            <div class="coach-avatar-page" style="flex-shrink:0;"><i class="bi bi-building"></i></div>
+            <div class="coach-info-page">
+                <div class="coach-name-page">{{ club.name }}</div>
+                <div class="coach-meta-page">
+                    <span>{{ club.city.name }}</span>
+                    <span>{{ club.province.name }}</span>
+                    <span>{{ club.students.count }} هنرجو</span>
+                </div>
+            </div>
+        </a>
+        <div class="coach-actions" style="flex-shrink:0;">
+            <a href="{% url 'clubs:club_edit' club.pk %}" class="coach-action-btn edit"><i class="bi bi-pencil"></i></a>
+            <form method="post" action="{% url 'clubs:club_delete' club.pk %}" onsubmit="return confirm('غیرفعال شود؟')">{% csrf_token %}<button class="coach-action-btn delete"><i class="bi bi-trash"></i></button></form>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5 text-muted" style="grid-column:1/-1;">باشگاه فعالی نیست</div>
+    {% endfor %}
+</div>
+        {% if inactive_clubs %}
+        <h3 style="margin-top:20px;">غیرفعال ({{ inactive_clubs.count }})</h3>
+        <div class="coach-list-page">
+            {% for club in inactive_clubs %}
+            <div class="coach-card-page animate__animated animate__fadeInUp" style="opacity:0.5;">
+                <div class="coach-avatar-page"><i class="bi bi-building"></i></div>
+                <div class="coach-info-page"><div class="coach-name-page">{{ club.name }}</div><div class="coach-meta-page"><span>{{ club.city.name }}</span></div></div>
+                <div class="coach-actions">
+                    <form method="post" action="{% url 'clubs:club_activate' club.pk %}">{% csrf_token %}<button class="coach-action-btn edit" style="color:#34c759;"><i class="bi bi-arrow-repeat"></i></button></form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
 {% endblock %}

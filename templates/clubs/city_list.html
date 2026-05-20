@@ -1,16 +1,27 @@
 {% extends 'base.html' %}
-{% block title %}شهرها{% endblock %}
+{% block title %}شهرها | {{ site_settings.gym_name }}{% endblock %}
 {% block content %}
-<h1>شهرها ({{ cities.count }})</h1>
-{% if messages %}{% for m in messages %}<p style="color:green;">{{ m }}</p>{% endfor %}{% endif %}
-<a href="{% url 'clubs:city_add' %}">➕ شهر جدید</a>
-{% for c in cities %}
-    <p>
-        {{ c.name }} - {{ c.province.name }}
-        <a href="{% url 'clubs:city_edit' c.pk %}">✏️</a>
-        <form method="post" action="{% url 'clubs:city_delete' c.pk %}" style="display:inline;" onsubmit="return confirm('حذف شود؟')">
-            {% csrf_token %}<button type="submit">❌</button>
-        </form>
-    </p>
-{% endfor %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">شهرها <span>{{ cities.count }} شهر</span></h1></div>
+            <a href="{% url 'clubs:city_add' %}" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">شهر جدید</span></a>
+        </div>
+        <div class="coach-list-page">
+            {% for c in cities %}
+            <div class="coach-card-page animate__animated animate__fadeInUp">
+                <div class="coach-avatar-page"><i class="bi bi-geo-alt-fill"></i></div>
+                <div class="coach-info-page"><div class="coach-name-page">{{ c.name }}</div><div class="coach-meta-page"><span>{{ c.province.name }}</span></div></div>
+                <div class="coach-actions">
+                    <a href="{% url 'clubs:city_edit' c.pk %}" class="coach-action-btn edit"><i class="bi bi-pencil"></i></a>
+                    <form method="post" action="{% url 'clubs:city_delete' c.pk %}" onsubmit="return confirm('حذف شود؟')">{% csrf_token %}<button class="coach-action-btn delete"><i class="bi bi-trash"></i></button></form>
+                </div>
+            </div>
+            {% empty %}<div class="text-center py-5 text-muted">شهری ثبت نشده</div>{% endfor %}
+        </div>
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
 {% endblock %}

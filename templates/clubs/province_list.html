@@ -1,16 +1,27 @@
 {% extends 'base.html' %}
-{% block title %}استان‌ها{% endblock %}
+{% block title %}استان‌ها | {{ site_settings.gym_name }}{% endblock %}
 {% block content %}
-<h1>استان‌ها ({{ provinces.count }})</h1>
-{% if messages %}{% for m in messages %}<p style="color:green;">{{ m }}</p>{% endfor %}{% endif %}
-<a href="{% url 'clubs:province_add' %}">➕ استان جدید</a>
-{% for p in provinces %}
-    <p>
-        {{ p.name }} ({{ p.cities.count }} شهر)
-        <a href="{% url 'clubs:province_edit' p.pk %}">✏️</a>
-        <form method="post" action="{% url 'clubs:province_delete' p.pk %}" style="display:inline;" onsubmit="return confirm('حذف شود؟')">
-            {% csrf_token %}<button type="submit">❌</button>
-        </form>
-    </p>
-{% endfor %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">استان‌ها <span>{{ provinces.count }} استان</span></h1></div>
+            <a href="{% url 'clubs:province_add' %}" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">استان جدید</span></a>
+        </div>
+        <div class="coach-list-page">
+            {% for p in provinces %}
+            <div class="coach-card-page animate__animated animate__fadeInUp">
+                <div class="coach-avatar-page"><i class="bi bi-map-fill"></i></div>
+                <div class="coach-info-page"><div class="coach-name-page">{{ p.name }}</div><div class="coach-meta-page"><span>{{ p.cities.count }} شهر</span></div></div>
+                <div class="coach-actions">
+                    <a href="{% url 'clubs:province_edit' p.pk %}" class="coach-action-btn edit"><i class="bi bi-pencil"></i></a>
+                    <form method="post" action="{% url 'clubs:province_delete' p.pk %}" onsubmit="return confirm('حذف شود؟')">{% csrf_token %}<button class="coach-action-btn delete"><i class="bi bi-trash"></i></button></form>
+                </div>
+            </div>
+            {% empty %}<div class="text-center py-5 text-muted">استانی ثبت نشده</div>{% endfor %}
+        </div>
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
 {% endblock %}

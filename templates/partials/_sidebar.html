@@ -2,53 +2,48 @@
 <aside class="dashboard-sidebar">
     <div class="sidebar-logo">
         <div class="logo-sm"><i class="bi bi-shield-fill"></i></div>
-        <span class="logo-text">{{ site_settings.gym_name|default:"آرنیکا" }}</span>
+        <span class="logo-text">{{ site_settings.gym_name|default:"ستاره‌ها" }}</span>
     </div>
     <div class="sidebar-menu-wrapper">
         <ul class="sidebar-nav">
             <li><a href="{% url 'accounts:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="bi bi-grid-fill"></i> پیشخوان</a></li>
-            <li><a href="{% url 'accounts:profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}"><i class="bi bi-person-circle"></i> پروفایل</a></li>
+            <li><a href="{% url 'accounts:profile' %}" class="{% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'profile_edit' or request.resolver_match.url_name == 'password_change' %}active{% endif %}"><i class="bi bi-person-circle"></i> پروفایل</a></li>
         </ul>
         
         {% if user.is_super_manager or user.is_club_manager or user.is_instructor %}
         <div class="sidebar-category">باشگاه</div>
         <ul class="sidebar-nav">
             {% if user.is_super_manager %}
-            <li><a href="{% url 'clubs:province_list' %}" class="{% if 'province' in request.path %}active{% endif %}"><i class="bi bi-map-fill"></i> استان‌ها</a></li>
-            <li><a href="{% url 'clubs:city_list' %}" class="{% if 'city' in request.path %}active{% endif %}"><i class="bi bi-geo-alt-fill"></i> شهرها</a></li>
+            <li><a href="{% url 'clubs:province_list' %}" class="{% if request.resolver_match.url_name == 'province_list' or request.resolver_match.url_name == 'province_add' or request.resolver_match.url_name == 'province_edit' %}active{% endif %}"><i class="bi bi-map-fill"></i> استان‌ها</a></li>
+            <li><a href="{% url 'clubs:city_list' %}" class="{% if request.resolver_match.url_name == 'city_list' or request.resolver_match.url_name == 'city_add' or request.resolver_match.url_name == 'city_edit' %}active{% endif %}"><i class="bi bi-geo-alt-fill"></i> شهرها</a></li>
             {% endif %}
-            <li><a href="{% url 'clubs:club_list' %}" class="{% if 'club' in request.path %}active{% endif %}"><i class="bi bi-building"></i> باشگاه‌ها</a></li>
-            <li><a href="{% url 'clubs:coach_list' %}" class="{% if 'coach' in request.path %}active{% endif %}"><i class="bi bi-person-badge-fill"></i> مربیان</a></li>
+            <li><a href="{% url 'clubs:club_list' %}" class="{% if request.resolver_match.url_name == 'club_list' or request.resolver_match.url_name == 'club_add' or request.resolver_match.url_name == 'club_detail' or request.resolver_match.url_name == 'club_edit' %}active{% endif %}"><i class="bi bi-building"></i> باشگاه‌ها</a></li>
+            <li><a href="{% url 'clubs:coach_list' %}" class="{% if request.resolver_match.url_name == 'coach_list' or request.resolver_match.url_name == 'coach_add' or request.resolver_match.url_name == 'coach_edit' %}active{% endif %}"><i class="bi bi-person-badge-fill"></i> مربیان</a></li>
         </ul>
         
         <div class="sidebar-category">هنرجوها</div>
         <ul class="sidebar-nav">
-            <li><a href="{% url 'students:student_list' %}" class="{% if 'student_list' in request.path %}active{% endif %}"><i class="bi bi-people-fill"></i> لیست هنرجوها</a></li>
-            <li><a href="{% url 'students:student_add' %}" class="{% if 'student_add' in request.path %}active{% endif %}"><i class="bi bi-person-plus-fill"></i> ثبت هنرجو جدید</a></li>
+            <li><a href="{% url 'students:student_list' %}" class="{% if request.resolver_match.url_name == 'student_list' %}active{% endif %}"><i class="bi bi-people-fill"></i> لیست هنرجوها</a></li>
+            <li><a href="{% url 'students:student_add' %}" class="{% if request.resolver_match.url_name == 'student_add' %}active{% endif %}"><i class="bi bi-person-plus-fill"></i> ثبت هنرجو جدید</a></li>
         </ul>
         
         <div class="sidebar-category">حضور و غیاب</div>
         <ul class="sidebar-nav">
-            <li><a href="{% url 'students:attendance' %}" class="{% if 'attendance' in request.path %}active{% endif %}"><i class="bi bi-calendar-check-fill"></i> ثبت حضور</a></li>
-            <li><a href="{% url 'students:absentees' %}" class="{% if 'absentees' in request.path %}active{% endif %}"><i class="bi bi-exclamation-triangle-fill"></i> پیگیری غیبت‌ها</a></li>
+            <li><a href="{% url 'students:attendance' %}" class="{% if request.resolver_match.url_name == 'attendance' %}active{% endif %}"><i class="bi bi-calendar-check-fill"></i> ثبت حضور</a></li>
+            <li><a href="{% url 'students:absentees' %}" class="{% if request.resolver_match.url_name == 'absentees' %}active{% endif %}"><i class="bi bi-exclamation-triangle-fill"></i> پیگیری غیبت‌ها</a></li>
         </ul>
         {% endif %}
     </div>
     <div class="sidebar-user">
         <div class="user-avatar">
-            {% if user.avatar %}
-            <img src="{{ user.avatar.url }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-            {% else %}
-            <i class="bi bi-person-fill"></i>
-            {% endif %}
+            {% if user.avatar %}<img src="{{ user.avatar.url }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
         </div>
         <div class="user-info">
             <div class="user-name">{{ user.get_full_name }}</div>
             <div class="user-role">{% if user.is_super_manager %}مدیر کل{% elif user.is_club_manager %}مدیر باشگاه{% elif user.is_instructor %}مربی{% else %}هنرجو{% endif %}</div>
         </div>
         <form method="post" action="{% url 'accounts:logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="logout-btn" title="خروج"><i class="bi bi-box-arrow-right"></i></button>
+            {% csrf_token %}<button type="submit" class="logout-btn" title="خروج"><i class="bi bi-box-arrow-right"></i></button>
         </form>
     </div>
 </aside>
