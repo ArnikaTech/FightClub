@@ -9,8 +9,8 @@ from django.http import HttpResponse
 
 from .models import Province, City, Club
 from .models import ClubMembership
+from apps.accounts.models import User
 
-User = settings.AUTH_USER_MODEL
 
 
 # ========== استان‌ها ==========
@@ -214,75 +214,61 @@ class CoachListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     template_name = 'clubs/coach_list.html'
     context_object_name = 'coaches'
     
-    def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
+    def test_func(self): return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def get_queryset(self):
         return ClubMembership.objects.filter(is_active=True).select_related('user', 'club')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['users'] = User.objects.filter(is_active=True)
+        context['clubs'] = Club.objects.filter(is_active=True)
+        return context
 
 
 class CoachCreateView(LoginRequiredMixin, View):
-    def get(self, request):
-        from apps.accounts.models import User as UserModel
-        users = UserModel.objects.filter(is_active=True)
-        clubs = Club.objects.filter(is_active=True)
-        return render(request, 'clubs/coach_add.html', {'users': users, 'clubs': clubs})
-    
     def post(self, request):
         user_id = request.POST.get('user_id')
         club_id = request.POST.get('club_id')
         role = request.POST.get('role', 'instructor')
         
         if user_id and club_id:
-            from apps.accounts.models import User as UserModel
-            user = get_object_or_404(UserModel, pk=user_id)
+            user = get_object_or_404(User, pk=user_id)
             club = get_object_or_404(Club, pk=club_id)
-            
             user.is_instructor = True
             user.save()
             
-            # اگر قبلاً عضو بوده، فقط آپدیت کن
-            membership = ClubMembership.objects.filter(user=user, club=club).first()
-            if membership:
+            membership, created = ClubMembership.objects.get_or_create(
+                user=user, club=club,
+                defaults={'role': role}
+            )
+            if not created:
                 membership.role = role
                 membership.is_active = True
                 membership.save()
-            else:
-                ClubMembership.objects.create(user=user, club=club, role=role)
             
-            messages.success(request, f'{user.get_full_name()} به عنوان مربی اضافه شد')
-            return redirect('clubs:coach_list')
-        
-        messages.error(request, 'همه فیلدها الزامی است')
-        return redirect('clubs:coach_add')
+            messages.success(request, f'{user.get_full_name()} اضافه شد')
+        return redirect('clubs:coach_list')
 
 
 class CoachEditView(LoginRequiredMixin, View):
-    def get(self, request, pk):
-        membership = get_object_or_404(ClubMembership, pk=pk)
-        clubs = Club.objects.filter(is_active=True)
-        return render(request, 'clubs/coach_edit.html', {'membership': membership, 'clubs': clubs})
-    
     def post(self, request, pk):
         membership = get_object_or_404(ClubMembership, pk=pk)
+        user_id = request.POST.get('user_id')
+        club_id = request.POST.get('club_id')
+        role = request.POST.get('role')
         
-        new_role = request.POST.get('role', membership.role)
-        new_club_id = request.POST.get('club_id', membership.club_id)
-        
-        # چک کن تکراری نباشه
-        if str(membership.club_id) != str(new_club_id):
-            exists = ClubMembership.objects.filter(
-                user=membership.user, club_id=new_club_id
-            ).exclude(pk=pk).first()
-            
+        # چک تکراری نبودن در باشگاه جدید
+        if str(membership.club_id) != str(club_id) or str(membership.user_id) != str(user_id):
+            exists = ClubMembership.objects.filter(user_id=user_id, club_id=club_id).exclude(pk=pk).exists()
             if exists:
                 messages.error(request, 'این کاربر قبلاً در این باشگاه عضو است')
-                return redirect('clubs:coach_edit', pk=pk)
+                return redirect('clubs:coach_list')
         
-        membership.role = new_role
-        membership.club_id = new_club_id
+        membership.user_id = user_id
+        membership.club_id = club_id
+        membership.role = role
         membership.save()
-    
         messages.success(request, 'بروزرسانی شد')
         return redirect('clubs:coach_list')
 
@@ -293,7 +279,5 @@ class CoachDeleteView(LoginRequiredMixin, View):
         name = membership.user.get_full_name()
         membership.is_active = False
         membership.save()
-        messages.success(request, f'{name} از مربیان حذف شد')
+        messages.success(request, f'{name} حذف شد')
         return redirect('clubs:coach_list')
-
-
