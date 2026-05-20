@@ -5,23 +5,73 @@
     {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
     <main class="dashboard-main">
         {% include 'partials/_notif_bar.html' %}
+        
         <div class="page-header animate__animated animate__fadeIn">
             <div><h1 class="page-title">شهرها <span>{{ cities.count }} شهر</span></h1></div>
-            <a href="{% url 'clubs:city_add' %}" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">شهر جدید</span></a>
+            <button onclick="openCityModal()" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">شهر جدید</span></button>
         </div>
+        
         <div class="coach-list-page">
             {% for c in cities %}
             <div class="coach-card-page animate__animated animate__fadeInUp">
                 <div class="coach-avatar-page"><i class="bi bi-geo-alt-fill"></i></div>
                 <div class="coach-info-page"><div class="coach-name-page">{{ c.name }}</div><div class="coach-meta-page"><span>{{ c.province.name }}</span></div></div>
                 <div class="coach-actions">
-                    <a href="{% url 'clubs:city_edit' c.pk %}" class="coach-action-btn edit"><i class="bi bi-pencil"></i></a>
-                    <form method="post" action="{% url 'clubs:city_delete' c.pk %}" onsubmit="return confirm('حذف شود؟')">{% csrf_token %}<button class="coach-action-btn delete"><i class="bi bi-trash"></i></button></form>
+                    <button onclick="editCity({{ c.id }}, '{{ c.name|escapejs }}', {{ c.province_id }})" class="coach-action-btn edit"><i class="bi bi-pencil"></i></button>
+                    <button onclick="confirmCityDelete('{% url 'clubs:city_delete' c.id %}', '{{ c.name|escapejs }}')" class="coach-action-btn delete"><i class="bi bi-trash"></i></button>
                 </div>
             </div>
-            {% empty %}<div class="text-center py-5 text-muted">شهری ثبت نشده</div>{% endfor %}
+            {% endfor %}
         </div>
     </main>
     {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
 </div>
+
+<!-- مودال شهر -->
+<div class="modal-overlay" id="cityModalOverlay" onclick="closeCityModal()"></div>
+<div class="modal-sheet" id="cityModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="cityModalTitle">شهر جدید</div>
+    <div class="modal-body">
+        <form method="post" id="cityForm" action="{% url 'clubs:city_add' %}">
+            {% csrf_token %}
+            <div class="modal-form-group"><label class="form-label-sm">نام شهر *</label><input type="text" name="name" id="cityName" class="input-glass" required></div>
+            <div class="modal-form-group"><label class="form-label-sm">استان *</label><select name="province" id="cityProvince" class="input-glass" required>{% for p in provinces %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}</select></div>
+            <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeCityModal()">انصراف</button><button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> ذخیره</button></div>
+        </form>
+    </div>
+</div>
+
+<!-- مودال حذف -->
+<div class="modal-overlay" id="deleteCityModalOverlay" onclick="closeCityDeleteModal()"></div>
+<div class="modal-sheet" id="deleteCityModal">
+    <div class="modal-handle"></div><div class="modal-title">تایید حذف</div>
+    <div class="modal-body text-center">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;color:var(--primary);"></i>
+        <p class="mt-3">آیا از حذف "<span id="deleteCityName"></span>" مطمئن هستید؟</p>
+        <div class="modal-btn-row mt-3"><button type="button" class="btn-cancel-sm" onclick="closeCityDeleteModal()">انصراف</button>
+            <form id="deleteCityForm" method="post" style="flex:1;">{% csrf_token %}<button class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> حذف</button></form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openCityModal(){document.getElementById('cityModalTitle').textContent='شهر جدید';document.getElementById('cityForm').action='{% url "clubs:city_add" %}';document.getElementById('cityName').value='';document.getElementById('cityProvince').value='';document.getElementById('cityModalOverlay').classList.add('show');document.getElementById('cityModal').classList.add('show');}
+function closeCityModal(){document.getElementById('cityModalOverlay').classList.remove('show');document.getElementById('cityModal').classList.remove('show');}
+function editCity(id,name,provinceId){document.getElementById('cityModalTitle').textContent='ویرایش شهر';document.getElementById('cityForm').action='/clubs/cities/'+id+'/edit/';document.getElementById('cityName').value=name;document.getElementById('cityProvince').value=provinceId;document.getElementById('cityModalOverlay').classList.add('show');document.getElementById('cityModal').classList.add('show');}
+function confirmCityDelete(url,name){document.getElementById('deleteCityName').textContent=name;document.getElementById('deleteCityForm').action=url;document.getElementById('deleteCityModalOverlay').classList.add('show');document.getElementById('deleteCityModal').classList.add('show');}
+function closeCityDeleteModal(){document.getElementById('deleteCityModalOverlay').classList.remove('show');document.getElementById('deleteCityModal').classList.remove('show');}
+
+document.addEventListener('DOMContentLoaded', function() {
+    {% if messages %}
+        {% for m in messages %}
+            if (typeof showToast === 'function') {
+                showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');
+            }
+        {% endfor %}
+    {% endif %}
+});
+</script>
 {% endblock %}

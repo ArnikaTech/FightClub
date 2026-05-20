@@ -1,46 +1,44 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}باشگاه‌ها | {{ site_settings.gym_name }}{% endblock %}
 {% block content %}
 <div class="dashboard-layout">
     {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
     <main class="dashboard-main">
         {% include 'partials/_notif_bar.html' %}
+        
         <div class="page-header animate__animated animate__fadeIn">
             <div><h1 class="page-title">باشگاه‌ها <span>{{ clubs.count }} فعال</span></h1></div>
-            <a href="{% url 'clubs:club_add' %}" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">باشگاه جدید</span></a>
+            <button onclick="openClubModal()" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">باشگاه جدید</span></button>
         </div>
+        
         <div class="coach-list-page">
-    {% for club in clubs %}
-    <div class="coach-card-page animate__animated animate__fadeInUp">
-        <a href="{% url 'clubs:club_detail' club.pk %}" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;flex:1;">
-            <div class="coach-avatar-page" style="flex-shrink:0;"><i class="bi bi-building"></i></div>
-            <div class="coach-info-page">
-                <div class="coach-name-page">{{ club.name }}</div>
-                <div class="coach-meta-page">
-                    <span>{{ club.city.name }}</span>
-                    <span>{{ club.province.name }}</span>
-                    <span>{{ club.students.count }} هنرجو</span>
+            {% for club in clubs %}
+            <div class="coach-card-page animate__animated animate__fadeInUp">
+                <div class="coach-avatar-page" style="flex-shrink:0;"><i class="bi bi-building"></i></div>
+                <div class="coach-info-page" style="flex:1;">
+                    <div class="coach-name-page">{{ club.name }}</div>
+                    <div class="coach-meta-page"><span>{{ club.city.name }}</span><span>{{ club.province.name }}</span><span>{{ club.students.count }} هنرجو</span></div>
+                </div>
+                <div class="coach-actions" style="flex-shrink:0;">
+                    <button onclick="event.stopPropagation(); openClubDetail({{ club.id }})" class="coach-action-btn"><i class="bi bi-eye"></i></button>
+                    <button onclick="event.stopPropagation(); editClub({{ club.id }}, '{{ club.name|escapejs }}', '{{ club.phone|default:'' }}', '{{ club.address|default:''|escapejs }}', {{ club.province_id }}, {{ club.city_id }})" class="coach-action-btn edit"><i class="bi bi-pencil"></i></button>
+                    <button onclick="event.stopPropagation(); confirmClubDeactivate('{% url 'clubs:club_delete' club.id %}', '{{ club.name|escapejs }}')" class="coach-action-btn delete"><i class="bi bi-trash"></i></button>
                 </div>
             </div>
-        </a>
-        <div class="coach-actions" style="flex-shrink:0;">
-            <a href="{% url 'clubs:club_edit' club.pk %}" class="coach-action-btn edit"><i class="bi bi-pencil"></i></a>
-            <form method="post" action="{% url 'clubs:club_delete' club.pk %}" onsubmit="return confirm('غیرفعال شود؟')">{% csrf_token %}<button class="coach-action-btn delete"><i class="bi bi-trash"></i></button></form>
+            {% empty %}<div class="text-center py-5 text-muted" style="grid-column:1/-1;">باشگاه فعالی نیست</div>{% endfor %}
         </div>
-    </div>
-    {% empty %}
-    <div class="text-center py-5 text-muted" style="grid-column:1/-1;">باشگاه فعالی نیست</div>
-    {% endfor %}
-</div>
+        
         {% if inactive_clubs %}
-        <h3 style="margin-top:20px;">غیرفعال ({{ inactive_clubs.count }})</h3>
+        <h3 style="margin-top:20px;color:var(--text-muted);">غیرفعال ({{ inactive_clubs.count }})</h3>
         <div class="coach-list-page">
             {% for club in inactive_clubs %}
             <div class="coach-card-page animate__animated animate__fadeInUp" style="opacity:0.5;">
                 <div class="coach-avatar-page"><i class="bi bi-building"></i></div>
-                <div class="coach-info-page"><div class="coach-name-page">{{ club.name }}</div><div class="coach-meta-page"><span>{{ club.city.name }}</span></div></div>
+                <div class="coach-info-page" style="flex:1;"><div class="coach-name-page">{{ club.name }}</div><div class="coach-meta-page"><span>{{ club.city.name }}</span></div></div>
                 <div class="coach-actions">
-                    <form method="post" action="{% url 'clubs:club_activate' club.pk %}">{% csrf_token %}<button class="coach-action-btn edit" style="color:#34c759;"><i class="bi bi-arrow-repeat"></i></button></form>
+                    <button onclick="event.stopPropagation(); openClubDetail({{ club.id }})" class="coach-action-btn"><i class="bi bi-eye"></i></button>
+                    <form method="post" action="{% url 'clubs:club_activate' club.pk %}" style="display:inline;">{% csrf_token %}<button class="coach-action-btn edit" style="color:#34c759;"><i class="bi bi-arrow-repeat"></i></button></form>
                 </div>
             </div>
             {% endfor %}
@@ -49,4 +47,68 @@
     </main>
     {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
 </div>
+
+<!-- مودال افزودن/ویرایش -->
+<div class="modal-overlay" id="clubModalOverlay"></div>
+<div class="modal-sheet" id="clubModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="clubModalTitle">باشگاه جدید</div>
+    <div class="modal-body">
+        <form method="post" id="clubForm" action="{% url 'clubs:club_add' %}">
+            {% csrf_token %}
+            <div class="modal-form-group"><label class="form-label-sm">نام باشگاه *</label><input type="text" name="name" id="clubName" class="input-glass" required></div>
+            <div class="modal-form-group"><label class="form-label-sm">استان *</label><select name="province" id="clubProvince" class="input-glass" required onchange="loadCities()"><option value="">--</option>{% for p in provinces %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}</select></div>
+            <div class="modal-form-group"><label class="form-label-sm">شهر *</label><select name="city" id="clubCity" class="input-glass" required><option value="">--</option></select></div>
+            <div class="modal-form-group"><label class="form-label-sm">تلفن</label><input type="text" name="phone" id="clubPhone" class="input-glass"></div>
+            <div class="modal-form-group"><label class="form-label-sm">آدرس</label><textarea name="address" id="clubAddress" class="input-glass" rows="2"></textarea></div>
+            <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeClubModal()">انصراف</button><button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> ذخیره</button></div>
+        </form>
+    </div>
+</div>
+
+<!-- مودال جزئیات -->
+<div class="modal-overlay" id="clubDetailModalOverlay" onclick="closeClubDetailModal()"></div>
+<div class="modal-sheet" id="clubDetailModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="detailClubName"></div>
+    <div class="modal-body">
+        <div class="info-row"><span class="info-label">استان</span><span class="info-value" id="detailClubProvince"></span></div>
+        <div class="info-row"><span class="info-label">شهر</span><span class="info-value" id="detailClubCity"></span></div>
+        <div class="info-row"><span class="info-label">تلفن</span><span class="info-value" id="detailClubPhone"></span></div>
+        <div class="info-row"><span class="info-label">آدرس</span><span class="info-value" id="detailClubAddress"></span></div>
+        <div class="info-row"><span class="info-label">هنرجویان</span><span class="info-value" id="detailClubStudents"></span></div>
+        <div class="info-card"><div class="info-title">کادر فنی</div><div id="detailClubCoaches"></div></div>
+        <div class="modal-btn-row mt-3"><button type="button" class="btn-cancel-sm" onclick="closeClubDetailModal()">بستن</button></div>
+    </div>
+</div>
+
+<!-- مودال غیرفعال‌سازی -->
+<div class="modal-overlay" id="deleteClubModalOverlay"></div>
+<div class="modal-sheet" id="deleteClubModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">تایید غیرفعال‌سازی</div>
+    <div class="modal-body text-center">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;color:var(--primary);"></i>
+        <p class="mt-3">آیا از غیرفعال کردن "<span id="deleteClubName"></span>" مطمئن هستید؟</p>
+        <div class="modal-btn-row mt-3"><button type="button" class="btn-cancel-sm" onclick="closeClubDeleteModal()">انصراف</button>
+            <form id="deleteClubForm" method="post" style="flex:1;">{% csrf_token %}<button class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> غیرفعال</button></form>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openClubModal(){document.getElementById('clubModalTitle').textContent='باشگاه جدید';document.getElementById('clubForm').action='{% url "clubs:club_add" %}';document.getElementById('clubName').value='';document.getElementById('clubPhone').value='';document.getElementById('clubAddress').value='';document.getElementById('clubProvince').value='';document.getElementById('clubCity').innerHTML='<option value="">--</option>';document.getElementById('clubModalOverlay').classList.add('show');document.getElementById('clubModal').classList.add('show');}
+function closeClubModal(){document.getElementById('clubModalOverlay').classList.remove('show');document.getElementById('clubModal').classList.remove('show');}
+function editClub(id,name,phone,address,provinceId,cityId){document.getElementById('clubModalTitle').textContent='ویرایش باشگاه';document.getElementById('clubForm').action='/clubs/'+id+'/edit/';document.getElementById('clubName').value=name;document.getElementById('clubPhone').value=phone;document.getElementById('clubAddress').value=address;document.getElementById('clubProvince').value=provinceId;loadCities(provinceId,cityId);document.getElementById('clubModalOverlay').classList.add('show');document.getElementById('clubModal').classList.add('show');}
+function confirmClubDeactivate(url,name){document.getElementById('deleteClubName').textContent=name;document.getElementById('deleteClubForm').action=url;document.getElementById('deleteClubModalOverlay').classList.add('show');document.getElementById('deleteClubModal').classList.add('show');}
+function closeClubDeleteModal(){document.getElementById('deleteClubModalOverlay').classList.remove('show');document.getElementById('deleteClubModal').classList.remove('show');}
+function openClubDetail(id){fetch('/clubs/'+id+'/detail-ajax/').then(function(r){return r.json();}).then(function(data){document.getElementById('detailClubName').textContent=data.name;document.getElementById('detailClubCity').textContent=data.city;document.getElementById('detailClubProvince').textContent=data.province;document.getElementById('detailClubPhone').textContent=data.phone||'-';document.getElementById('detailClubAddress').textContent=data.address||'-';document.getElementById('detailClubStudents').textContent=data.students_count+' هنرجو';document.getElementById('detailClubCoaches').innerHTML=data.coaches.map(function(c){return '<p>'+c.name+' ('+c.role+')</p>';}).join('');document.getElementById('clubDetailModalOverlay').classList.add('show');document.getElementById('clubDetailModal').classList.add('show');});}
+function closeClubDetailModal(){document.getElementById('clubDetailModalOverlay').classList.remove('show');document.getElementById('clubDetailModal').classList.remove('show');}
+function loadCities(provinceId,selectedCityId){var pId=provinceId||document.getElementById('clubProvince').value;if(!pId){document.getElementById('clubCity').innerHTML='<option value="">--</option>';return;}fetch('/clubs/get-cities/'+pId+'/').then(function(r){return r.json();}).then(function(d){var c=document.getElementById('clubCity');c.innerHTML='<option value="">--</option>';d.forEach(function(i){var o=document.createElement('option');o.value=i.id;o.textContent=i.name;if(i.id==selectedCityId)o.selected=true;c.appendChild(o);});});}
+document.addEventListener('DOMContentLoaded',function(){loadCities();{% if messages %}{% for m in messages %}if(typeof showToast==='function'){showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');}{% endfor %}{% endif %}});
+</script>
 {% endblock %}

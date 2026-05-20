@@ -28,4 +28,5 @@ urlpatterns = [
     path('cities/<int:pk>/edit/', views.CityEditView.as_view(), name='city_edit'),
 
     path('club-info-partial/', views.club_info_partial, name='club_info_partial'),
+    path('<int:pk>/detail-ajax/', views.club_detail_ajax, name='club_detail_ajax'),
 ]
