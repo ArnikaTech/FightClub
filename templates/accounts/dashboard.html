@@ -6,9 +6,7 @@
 
 {% block content %}
 <div class="dashboard-layout">
-    {% include 'partials/_sidebar.html' %}
-    {% include 'partials/_mobile_nav.html' %}
-    
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
     <main class="dashboard-main">
         {% include 'partials/_notif_bar.html' %}
         
@@ -23,9 +21,16 @@
         <div class="welcome-card animate__animated animate__fadeIn">
             {% if user.is_super_manager %}
             <div class="welcome-text">{{ user.get_short_name }} عزیز، خوش آمدید</div>
-            <div class="welcome-sub">مدیر کل مجموعه {{ site_settings.gym_name }}</div>
+            <div class="welcome-sub">مدیر کل مجموعه ورزشی</div>
+            {% elif user.is_club_manager %}
+            <div class="welcome-text">{{ user.get_short_name }} عزیز، به باشگاه <span>ستاره‌ها</span> خوش آمدید</div>
+            <div class="welcome-sub">هاپکیدو</div>
+            {% elif user.is_instructor %}
+            <div class="welcome-text">{{ user.get_short_name }} عزیز، خوش آمدید</div>
+            <div class="welcome-sub">مربی باشگاه</div>
             {% else %}
-            <div class="welcome-text">{{ user.get_short_name }} عزیز، به باشگاه <span>{{ site_settings.gym_name }}</span> خوش آمدید</div>
+            <div class="welcome-text">{{ user.get_short_name }} عزیز، به باشگاه <span>ستاره‌ها</span> خوش آمدید</div>
+            <div class="welcome-sub">هاپکیدو</div>
             {% endif %}
             <div class="belt-badge">
                 <span class="belt-dot" style="background: var(--accent);"></span>
@@ -36,6 +41,7 @@
             </div>
         </div>
         
+        {% if user.is_super_manager or user.is_club_manager %}
         <!-- فیلتر باشگاه -->
         {% if user.is_super_manager and clubs %}
         <form method="get" style="margin-bottom: 16px;">
@@ -76,24 +82,42 @@
         <div class="section-block animate__animated animate__fadeInUp">
             <div class="section-head"><h3>دسترسی سریع</h3></div>
             <div class="profile-actions">
-                <a href="{% url 'students:student_list' %}" class="profile-action-btn">
-                    <i class="bi bi-people-fill"></i><span>هنرجویان</span><i class="bi bi-chevron-left action-arrow"></i>
-                </a>
-                <a href="{% url 'students:attendance' %}" class="profile-action-btn">
-                    <i class="bi bi-calendar-check"></i><span>حضور و غیاب</span><i class="bi bi-chevron-left action-arrow"></i>
-                </a>
-                <a href="{% url 'students:absentees' %}" class="profile-action-btn">
-                    <i class="bi bi-exclamation-triangle"></i><span>غیبت‌ها</span><i class="bi bi-chevron-left action-arrow"></i>
-                </a>
-                <a href="{% url 'students:student_add' %}" class="profile-action-btn">
-                    <i class="bi bi-person-plus"></i><span>هنرجو جدید</span><i class="bi bi-chevron-left action-arrow"></i>
-                </a>
+                <a href="{% url 'students:student_list' %}" class="profile-action-btn"><i class="bi bi-people-fill"></i><span>هنرجویان</span><i class="bi bi-chevron-left action-arrow"></i></a>
+                <a href="{% url 'students:attendance' %}" class="profile-action-btn"><i class="bi bi-calendar-check"></i><span>حضور و غیاب</span><i class="bi bi-chevron-left action-arrow"></i></a>
+                <a href="{% url 'students:absentees' %}" class="profile-action-btn"><i class="bi bi-exclamation-triangle"></i><span>غیبت‌ها</span><i class="bi bi-chevron-left action-arrow"></i></a>
+                <a href="{% url 'students:student_add' %}" class="profile-action-btn"><i class="bi bi-person-plus"></i><span>هنرجو جدید</span><i class="bi bi-chevron-left action-arrow"></i></a>
             </div>
         </div>
+        
+        {% elif user.is_instructor %}
+        <!-- آمار مربی -->
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon red"><i class="bi bi-people-fill"></i></div><div class="stat-value">{{ total_students }}</div><div class="stat-label">هنرجویان من</div></div>
+            <div class="stat-card"><div class="stat-icon green"><i class="bi bi-calendar-check-fill"></i></div><div class="stat-value">{{ present_today }}</div><div class="stat-label">حاضر امروز</div></div>
+            <div class="stat-card"><div class="stat-icon gold"><i class="bi bi-exclamation-triangle-fill"></i></div><div class="stat-value">{{ critical_absences }}</div><div class="stat-label">غیبت متوالی</div></div>
+            <div class="stat-card"><div class="stat-icon blue"><i class="bi bi-gift-fill"></i></div><div class="stat-value">{{ birthdays_today }}</div><div class="stat-label">تولد امروز</div></div>
+        </div>
+        
+        <div class="profile-actions">
+            <a href="{% url 'students:student_list' %}" class="profile-action-btn"><i class="bi bi-people-fill"></i><span>هنرجویان</span><i class="bi bi-chevron-left action-arrow"></i></a>
+            <a href="{% url 'students:attendance' %}" class="profile-action-btn"><i class="bi bi-calendar-check"></i><span>حضور و غیاب</span><i class="bi bi-chevron-left action-arrow"></i></a>
+            <a href="{% url 'students:absentees' %}" class="profile-action-btn"><i class="bi bi-exclamation-triangle"></i><span>غیبت‌ها</span><i class="bi bi-chevron-left action-arrow"></i></a>
+        </div>
+        
+        {% else %}
+        <!-- هنرجو -->
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon green"><i class="bi bi-calendar-check-fill"></i></div><div class="stat-value">{{ present_today }}</div><div class="stat-label">حضور من (ماه جاری)</div></div>
+            <div class="stat-card"><div class="stat-icon red"><i class="bi bi-x-circle-fill"></i></div><div class="stat-value">{{ absent_today }}</div><div class="stat-label">غیبت من (ماه جاری)</div></div>
+            <div class="stat-card"><div class="stat-icon blue"><i class="bi bi-shield-check"></i></div><div class="stat-value">{{ insurance_status }}</div><div class="stat-label">وضعیت بیمه</div></div>
+        </div>
+        
+        <div class="profile-actions">
+            <a href="{% url 'accounts:inbox' %}" class="profile-action-btn"><i class="bi bi-inbox"></i><span>صندوق ورودی</span><i class="bi bi-chevron-left action-arrow"></i></a>
+            <a href="{% url 'accounts:compose_message' %}" class="profile-action-btn"><i class="bi bi-pencil-square"></i><span>پیام جدید</span><i class="bi bi-chevron-left action-arrow"></i></a>
+        </div>
+        {% endif %}
     </main>
-    
-    {% include 'partials/_bottom_nav.html' %}
-    {% include 'partials/_bottom_sheet.html' %}
-    {% include 'partials/_toast.html' %}
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
 </div>
 {% endblock %}

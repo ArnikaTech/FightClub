@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}صندوق ورودی | {{ site_settings.gym_name }}{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">📥 صندوق ورودی</h1></div>
+            <div style="display:flex;gap:8px;">
+                <a href="{% url 'accounts:sent_messages' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                    <i class="bi bi-send"></i><span class="btn-add-text">ارسال شده</span>
+                </a>
+                {% if user.is_super_manager or user.is_club_manager or user.is_instructor %}
+                <a href="{% url 'accounts:bulk_message' %}" class="btn-add" style="background: var(--accent);">
+                    <i class="bi bi-megaphone"></i><span class="btn-add-text">گروهی</span>
+                </a>
+                {% endif %}
+                <a href="{% url 'accounts:compose_message' %}" class="btn-add">
+                    <i class="bi bi-plus-lg"></i><span class="btn-add-text">پیام جدید</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="coach-list-page">
+            {% for m in messages %}
+            <a href="{% url 'accounts:message_thread' m.pk %}" style="text-decoration:none;color:inherit;">
+                <div class="coach-card-page animate__animated animate__fadeInUp" style="{% if not m.is_read %}border-right:3px solid var(--accent);{% endif %}">
+                    <div class="coach-avatar-page"><i class="bi bi-person-circle"></i></div>
+                    <div class="coach-info-page" style="flex:1;">
+                        <div class="coach-name-page">{{ m.sender.get_full_name }}</div>
+                        <div class="coach-meta-page"><span>{{ m.subject }}</span><span>{{ m.created_at|date:"Y/m/d H:i" }}</span></div>
+                        <div style="color:var(--text-muted);font-size:0.75rem;margin-top:4px;">{{ m.body|truncatechars:100 }}</div>
+                    </div>
+                    {% if not m.is_read %}
+<span class="badge bg-warning text-dark" style="font-size:0.65rem;flex-shrink:0;margin-right:8px;">جدید</span>
+{% endif %}
+                </div></a>
+                {% empty %}<div class="text-center py-5 text-muted" style="grid-column:1/-1;">📭 پیامی نیست</div>{% endfor %}
+            </div>
+            
+            {% if is_paginated %}
+            <div class="animate__animated animate__fadeInUp" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:24px;padding:12px;background:var(--card-bg);border:1px solid var(--border-glass);border-radius:14px;">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;">
+                    <i class="bi bi-chevron-right"></i> قبلی
+                </a>
+                {% endif %}
+                <span style="color:var(--text-secondary);font-size:0.85rem;">{{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;">
+                    بعدی <i class="bi bi-chevron-left"></i>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </main>
+        {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+    </div>
+    {% endblock %}

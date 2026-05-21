@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}پیام گروهی | {{ site_settings.gym_name }}{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">📢 پیام گروهی</h1></div>
+            <a href="{% url 'accounts:inbox' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                <i class="bi bi-arrow-right"></i><span class="btn-add-text">بازگشت</span>
+            </a>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if students %}
+            <div class="form-section">
+                <div class="form-section-title"><i class="bi bi-people-fill"></i> هنرجویان</div>
+                <label style="padding:8px;cursor:pointer;">
+                    <input type="checkbox" id="selectAllStudents" onchange="toggleAllStudents()" class="checkbox-custom"> انتخاب همه
+                </label>
+                <div style="max-height:250px;overflow-y:auto;">
+                    {% for s in students %}
+                    <label style="display:flex;align-items:center;gap:8px;padding:8px;cursor:pointer;">
+                        <input type="checkbox" name="students" value="{{ s.id }}" class="checkbox-custom student-cb">
+                        <span>{{ s.user.get_full_name }}</span>
+                        <small style="color:var(--text-muted);">{{ s.club.name }}</small>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if coaches %}
+            <div class="form-section">
+                <div class="form-section-title"><i class="bi bi-person-badge"></i> مربیان</div>
+                <label style="padding:8px;cursor:pointer;">
+                    <input type="checkbox" id="selectAllCoaches" onchange="toggleAllCoaches()" class="checkbox-custom"> انتخاب همه
+                </label>
+                <div style="max-height:200px;overflow-y:auto;">
+                    {% for c in coaches %}
+                    <label style="display:flex;align-items:center;gap:8px;padding:8px;cursor:pointer;">
+                        <input type="checkbox" name="coaches" value="{{ c.id }}" class="checkbox-custom coach-cb">
+                        <span>{{ c.get_full_name }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if managers %}
+            <div class="form-section">
+                <div class="form-section-title"><i class="bi bi-building"></i> مدیران</div>
+                <label style="padding:8px;cursor:pointer;">
+                    <input type="checkbox" id="selectAllManagers" onchange="toggleAllManagers()" class="checkbox-custom"> انتخاب همه
+                </label>
+                <div style="max-height:200px;overflow-y:auto;">
+                    {% for m in managers %}
+                    <label style="display:flex;align-items:center;gap:8px;padding:8px;cursor:pointer;">
+                        <input type="checkbox" name="managers" value="{{ m.id }}" class="checkbox-custom manager-cb">
+                        <span>{{ m.get_full_name }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="form-section animate__animated animate__fadeInUp">
+                <div class="form-group"><label>موضوع *</label><input type="text" name="subject" class="input-glass" required></div>
+                <div class="form-group"><label>متن پیام *</label><textarea name="body" class="input-glass" rows="5" required></textarea></div>
+            </div>
+            
+            <div class="form-actions"><button type="submit" class="btn-submit-form"><i class="bi bi-send"></i> ارسال گروهی</button></div>
+        </form>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleAllStudents() {
+        var checkboxes = document.querySelectorAll('.student-cb');
+        var all = document.getElementById('selectAllStudents');
+        checkboxes.forEach(function(cb) { cb.checked = all.checked; });
+    }
+    
+    function toggleAllCoaches() {
+        var checkboxes = document.querySelectorAll('.coach-cb');
+        var all = document.getElementById('selectAllCoaches');
+        checkboxes.forEach(function(cb) { cb.checked = all.checked; });
+    }
+    
+    function toggleAllManagers() {
+        var checkboxes = document.querySelectorAll('.manager-cb');
+        var all = document.getElementById('selectAllManagers');
+        checkboxes.forEach(function(cb) { cb.checked = all.checked; });
+    }
+</script>
+{% endblock %}

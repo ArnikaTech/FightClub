@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}ارسال شده | {{ site_settings.gym_name }}{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">📤 ارسال شده</h1></div>
+            <div style="display:flex;gap:8px;">
+                <a href="{% url 'accounts:inbox' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                    <i class="bi bi-inbox"></i><span class="btn-add-text">صندوق ورودی</span>
+                </a>
+                {% if user.is_super_manager or user.is_club_manager or user.is_instructor %}
+                <a href="{% url 'accounts:bulk_message' %}" class="btn-add" style="background: var(--accent);">
+                    <i class="bi bi-megaphone"></i><span class="btn-add-text">گروهی</span>
+                </a>
+                {% endif %}
+                <a href="{% url 'accounts:compose_message' %}" class="btn-add">
+                    <i class="bi bi-plus-lg"></i><span class="btn-add-text">پیام جدید</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="coach-list-page">
+            {% for msg in message_list %}
+            <a href="{% url 'accounts:message_thread' msg.pk %}" style="text-decoration:none;color:inherit;">
+                <div class="coach-card-page animate__animated animate__fadeInUp">
+                    <div class="coach-avatar-page"><i class="bi bi-person-circle"></i></div>
+                    <div class="coach-info-page" style="flex:1;">
+                        <div class="coach-name-page">به: {{ msg.receiver.get_full_name }}</div>
+                        <div class="coach-meta-page"><span>{{ msg.subject }}</span><span>{{ msg.created_at|date:"Y/m/d H:i" }}</span></div>
+                    </div>
+                </div>
+            </a>
+            {% empty %}<div class="text-center py-5 text-muted" style="grid-column:1/-1;">📭 پیامی نیست</div>{% endfor %}
+        </div>
+        
+        {% if is_paginated %}
+        <div class="animate__animated animate__fadeInUp" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:24px;padding:12px;background:var(--card-bg);border:1px solid var(--border-glass);border-radius:14px;">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;">
+                <i class="bi bi-chevron-right"></i> قبلی
+            </a>
+            {% endif %}
+            <span style="color:var(--text-secondary);font-size:0.85rem;">{{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;">
+                بعدی <i class="bi bi-chevron-left"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if messages %}
+        {% for m in messages %}
+        if (typeof showToast === 'function') {
+            showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');
+        }
+        {% endfor %}
+        {% endif %}
+    });
+</script>
+{% endblock %}

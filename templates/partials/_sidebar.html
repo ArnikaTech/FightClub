@@ -33,6 +33,16 @@
             <li><a href="{% url 'students:absentees' %}" class="{% if request.resolver_match.url_name == 'absentees' %}active{% endif %}"><i class="bi bi-exclamation-triangle-fill"></i> پیگیری غیبت‌ها</a></li>
         </ul>
         {% endif %}
+        
+        <div class="sidebar-category">پیام‌ها</div>
+        <ul class="sidebar-nav">
+            <li><a href="{% url 'accounts:compose_message' %}" class="{% if request.resolver_match.url_name == 'compose_message' %}active{% endif %}"><i class="bi bi-pencil-square"></i> پیام جدید</a></li>
+            <li><a href="{% url 'accounts:sent_messages' %}" class="{% if request.resolver_match.url_name == 'sent_messages' %}active{% endif %}"><i class="bi bi-send"></i> ارسال شده</a></li>
+            {% if user.is_super_manager or user.is_club_manager or user.is_instructor %}
+            <li><a href="{% url 'accounts:bulk_message' %}" class="{% if request.resolver_match.url_name == 'bulk_message' %}active{% endif %}"><i class="bi bi-megaphone"></i> ارسال گروهی</a></li>
+            {% endif %}
+            <li><a href="{% url 'accounts:inbox' %}" class="{% if request.resolver_match.url_name == 'inbox' %}active{% endif %}"><i class="bi bi-inbox"></i> صندوق ورودی</a></li>
+        </ul>
     </div>
     <div class="sidebar-user">
         <div class="user-avatar">

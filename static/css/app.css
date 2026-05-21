@@ -11,8 +11,8 @@ APP.CSS
     --bg-dark: #0f1115;
     --card-bg: rgba(22, 24, 30, 0.95);
     --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.65);
-    --text-muted: rgba(255, 255, 255, 0.4);
+    --text-secondary: rgba(255, 255, 255, 0.80);
+    --text-muted: rgba(255, 255, 255, 0.60);
     --border-glass: rgba(255, 255, 255, 0.08);
     --input-bg: rgba(255, 255, 255, 0.05);
     --danger: #ff8a80;

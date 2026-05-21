@@ -36,7 +36,7 @@
             {% for item in absentees %}
             {% with s=item.student %}
             <div class="absentee-card animate__animated animate__fadeInUp">
-                <div class="abs-avatar">
+                <div class="att-item-avatar">
                     {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}" alt="">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
                 </div>
                 <div class="abs-info">

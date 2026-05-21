@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}{{ message.subject }}{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">📩 {{ message.subject }}</h1></div>
+            <a href="{% url 'accounts:inbox' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                <i class="bi bi-arrow-right"></i><span class="btn-add-text">بازگشت</span>
+            </a>
+        </div>
+
+{% if request.GET.sent == '1' %}
+<div class="alert-card animate__animated animate__fadeIn" id="autoAlert" style="margin-bottom:16px;background:rgba(52,199,89,0.1);border:1px solid rgba(52,199,89,0.3);">
+    <div class="alert-icon"><i class="bi bi-check-circle-fill"></i></div>
+    <div class="alert-text">پاسخ با موفقیت ارسال شد</div>
+</div>
+<script>
+    setTimeout(function() {
+        var alert = document.getElementById('autoAlert');
+        if (alert) {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(function() { alert.remove(); }, 500);
+        }
+    }, 3000);
+</script>
+{% endif %}
+        
+        {% for m in thread %}
+        <div class="info-card animate__animated animate__fadeInUp" style="{% if m.sender == request.user %}border-right:3px solid var(--accent);{% endif %}">
+            <div class="info-row"><span class="info-label">{{ m.sender.get_full_name }}</span><span class="info-value">{{ m.created_at|date:"Y/m/d H:i" }}</span></div>
+            <p style="margin-top:8px;">{{ m.body|linebreaks }}</p>
+        </div>
+        {% endfor %}
+        
+        <form method="post" action="{% url 'accounts:reply_message' message.pk %}" class="form-section mt-3">
+            {% csrf_token %}
+            <div class="form-group"><textarea name="body" class="input-glass" rows="3" placeholder="پاسخ..." required></textarea></div>
+            <button type="submit" class="btn-submit-form" style="width:100%;"><i class="bi bi-reply"></i> ارسال پاسخ</button>
+        </form>
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+
+{% endblock %}

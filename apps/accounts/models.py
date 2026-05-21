@@ -53,3 +53,22 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     def get_full_name(self):
         return f'{self.first_name} {self.last_name}'
+
+
+class Message(models.Model):
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages', verbose_name='فرستنده')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages', verbose_name='گیرنده')
+    student = models.ForeignKey('students.Student', on_delete=models.SET_NULL, null=True, blank=True, related_name='messages', verbose_name='مربوط به هنرجو')
+    subject = models.CharField('موضوع', max_length=200)
+    body = models.TextField('متن پیام')
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replies', verbose_name='پاسخ به')
+    is_read = models.BooleanField('خوانده شده', default=False)
+    created_at = models.DateTimeField('تاریخ', auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'پیام'
+        verbose_name_plural = 'پیام‌ها'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.sender} → {self.receiver}: {self.subject}"

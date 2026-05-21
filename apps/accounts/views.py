@@ -1,12 +1,14 @@
-from django.shortcuts import render, redirect
-from django.views.generic import TemplateView, View
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.generic import TemplateView, ListView, DetailView, View
 from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+from django.urls import reverse
 
 import jdatetime
 from apps.students.models import Student, Attendance
 from apps.clubs.models import Club
+from .models import User, Message
 
 
 class LandingView(TemplateView):
@@ -198,3 +200,182 @@ class PasswordChangeView(LoginRequiredMixin, View):
         
         messages.success(request, 'رمز عبور با موفقیت تغییر کرد')
         return redirect('accounts:profile')
+
+
+class InboxView(LoginRequiredMixin, ListView):
+    template_name = 'accounts/inbox.html'
+    context_object_name = 'messages'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_super_manager:
+            return Message.objects.filter(receiver=user).select_related('sender', 'student')
+        return Message.objects.filter(receiver=user).select_related('sender', 'student')
+
+
+class SentView(LoginRequiredMixin, ListView):
+    template_name = 'accounts/sent.html'
+    context_object_name = 'message_list'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        return Message.objects.filter(sender=self.request.user).select_related('receiver', 'student')
+
+
+class ComposeView(LoginRequiredMixin, View):
+    def get(self, request):
+        user = request.user
+        
+        if user.is_super_manager:
+            receivers = User.objects.filter(is_active=True)
+        elif user.is_club_manager:
+            clubs = Club.objects.filter(memberships__user=user, is_active=True)
+            receivers = User.objects.filter(student_profile__club__in=clubs, is_active=True).distinct()
+        elif user.is_instructor:
+            clubs = Club.objects.filter(memberships__user=user, is_active=True)
+            receivers = User.objects.filter(student_profile__club__in=clubs, is_active=True).distinct()
+        else:
+            clubs = Club.objects.filter(students__user=user)
+            receivers = User.objects.filter(
+                club_memberships__club__in=clubs, is_active=True
+            ).distinct()
+        
+        return render(request, 'accounts/compose.html', {'receivers': receivers})
+    
+    def post(self, request):
+        receiver_id = request.POST.get('receiver')
+        student_id = request.POST.get('student')
+        subject = request.POST.get('subject', '').strip()
+        body = request.POST.get('body', '').strip()
+        
+        if receiver_id and subject and body:
+            Message.objects.create(
+                sender=request.user,
+                receiver_id=receiver_id,
+                student_id=student_id or None,
+                subject=subject,
+                body=body
+            )
+            messages.success(request, 'پیام ارسال شد')
+            return redirect('accounts:sent_messages')
+        
+        messages.error(request, 'همه فیلدها الزامی است')
+        return redirect('accounts:compose_message')
+
+
+class ThreadView(LoginRequiredMixin, DetailView):
+    model = Message
+    template_name = 'accounts/thread.html'
+    context_object_name = 'message'
+    
+    def get_object(self):
+        msg = super().get_object()
+        # فقط گیرنده mark as read کنه
+        if msg.receiver == self.request.user and not msg.is_read:
+            msg.is_read = True
+            msg.save()
+        return msg
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        msg = self.object
+        
+        thread = []
+        current = msg
+        while current.parent:
+            current = current.parent
+        thread.append(current)
+        for reply in current.replies.all():
+            thread.append(reply)
+        
+        context['thread'] = thread
+        return context
+
+
+class ReplyView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        parent = get_object_or_404(Message, pk=pk)
+        body = request.POST.get('body', '').strip()
+        
+        if body:
+            Message.objects.create(
+                sender=request.user,
+                receiver=parent.sender,
+                student=parent.student,
+                subject=f"پاسخ: {parent.subject}",
+                body=body,
+                parent=parent
+            )
+        return redirect(f'{reverse("accounts:message_thread", kwargs={"pk": pk})}?sent=1')
+
+
+class BulkMessageView(LoginRequiredMixin, View):
+    def get(self, request):
+        user = request.user
+        
+        # دریافت مخاطبان بر اساس دسترسی
+        if user.is_super_manager:
+            students = Student.objects.filter(is_active=True).select_related('user', 'club')
+            coaches = User.objects.filter(is_instructor=True, is_active=True)
+            managers = User.objects.filter(is_club_manager=True, is_active=True)
+        elif user.is_club_manager:
+            clubs = Club.objects.filter(memberships__user=user, is_active=True)
+            students = Student.objects.filter(club__in=clubs, is_active=True).select_related('user', 'club')
+            coaches = User.objects.filter(club_memberships__club__in=clubs, is_instructor=True, is_active=True).distinct()
+            managers = User.objects.none()
+        elif user.is_instructor:
+            clubs = Club.objects.filter(memberships__user=user, is_active=True)
+            students = Student.objects.filter(club__in=clubs, is_active=True).select_related('user', 'club')
+            coaches = User.objects.none()
+            managers = User.objects.none()
+        else:
+            students = Student.objects.none()
+            coaches = User.objects.none()
+            managers = User.objects.none()
+        
+        return render(request, 'accounts/bulk_message.html', {
+            'students': students,
+            'coaches': coaches,
+            'managers': managers,
+        })
+    
+    def post(self, request):
+        student_ids = request.POST.getlist('students')
+        coach_ids = request.POST.getlist('coaches')
+        manager_ids = request.POST.getlist('managers')
+        subject = request.POST.get('subject', '').strip()
+        body = request.POST.get('body', '').strip()
+        
+        if not subject or not body:
+            messages.error(request, 'موضوع و متن پیام الزامی است')
+            return redirect('accounts:bulk_message')
+        
+        count = 0
+        
+        # ارسال به هنرجویان
+        for student_id in student_ids:
+            student = Student.objects.get(pk=student_id)
+            Message.objects.create(sender=request.user, receiver=student.user, student=student, subject=subject, body=body)
+            count += 1
+            
+            # به والدین هنرجو هم بفرست
+            for contact in student.contacts.filter(contact_type='parent'):
+                parent_user = User.objects.filter(phone=contact.phone).first()
+                if parent_user:
+                    Message.objects.create(sender=request.user, receiver=parent_user, student=student, subject=subject, body=body)
+        
+        # ارسال به مربیان
+        for coach_id in coach_ids:
+            coach = User.objects.get(pk=coach_id)
+            Message.objects.create(sender=request.user, receiver=coach, subject=subject, body=body)
+            count += 1
+        
+        # ارسال به مدیران
+        for manager_id in manager_ids:
+            manager = User.objects.get(pk=manager_id)
+            Message.objects.create(sender=request.user, receiver=manager, subject=subject, body=body)
+            count += 1
+        
+        messages.success(request, f'پیام به {count} نفر ارسال شد')
+        return redirect('accounts:sent_messages')

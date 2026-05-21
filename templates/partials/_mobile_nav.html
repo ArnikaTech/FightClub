@@ -42,6 +42,18 @@
             </div>
         </div>
         {% endif %}
+        
+        <div class="nav-group">
+            <div class="nav-group-header"><div><i class="bi bi-chat-dots"></i> پیام‌ها</div><i class="bi bi-chevron-down nav-chevron"></i></div>
+            <div class="nav-submenu">
+                <a href="{% url 'accounts:compose_message' %}"><i class="bi bi-pencil-square"></i> پیام جدید</a>
+                <a href="{% url 'accounts:sent_messages' %}"><i class="bi bi-send"></i> ارسال شده</a>
+                {% if user.is_super_manager or user.is_club_manager or user.is_instructor %}
+                <a href="{% url 'accounts:bulk_message' %}"><i class="bi bi-megaphone"></i> پیام گروهی</a>
+                {% endif %}
+                <a href="{% url 'accounts:inbox' %}"><i class="bi bi-inbox"></i> صندوق ورودی</a>
+            </div>
+        </div>
     </div>
     <div class="mobile-nav-footer">
         <div class="nav-user-avatar">{% if user.avatar %}<img src="{{ user.avatar.url }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">{% else %}<i class="bi bi-person-fill"></i>{% endif %}</div>

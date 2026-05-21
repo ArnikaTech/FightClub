@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}پیام جدید{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        <div class="page-header animate__animated animate__fadeIn">
+    <div><h1 class="page-title">✏️ پیام جدید</h1></div>
+    <a href="{% url 'accounts:inbox' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+        <i class="bi bi-arrow-right"></i><span class="btn-add-text">بازگشت</span>
+    </a>
+</div>
+        <form method="post" class="form-section">
+            {% csrf_token %}
+            <div class="form-group"><label>گیرنده *</label><select name="receiver" class="input-glass" required><option value="">--</option>{% for u in receivers %}<option value="{{ u.id }}">{{ u.get_full_name }} ({{ u.phone }})</option>{% endfor %}</select></div>
+            <div class="form-group"><label>موضوع *</label><input type="text" name="subject" class="input-glass" required></div>
+            <div class="form-group"><label>متن پیام *</label><textarea name="body" class="input-glass" rows="5" required></textarea></div>
+            <div class="form-actions"><button type="submit" class="btn-submit-form"><i class="bi bi-send"></i> ارسال</button></div>
+        </form>
+    </main>
+</div>
+{% endblock %}
