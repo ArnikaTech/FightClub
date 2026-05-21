@@ -281,6 +281,13 @@ class AttendanceView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context = super().get_context_data(**kwargs)
         today = jdatetime.date.today()
         attended_ids = Attendance.objects.filter(date=today, status='present').values_list('student_id', flat=True)
+        
+        # جلسه قبل هر هنرجو
+        students = context['students']
+        for s in students:
+            last_att = s.attendances.exclude(date=today).order_by('-date').first()
+            s.previous_absent = (last_att and last_att.status == 'absent')
+        
         context['attended_today'] = set(attended_ids)
         context['today'] = today
         context['present_count'] = len(attended_ids)
