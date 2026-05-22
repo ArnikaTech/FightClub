@@ -7,7 +7,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 
-from .models import Province, City, Club
+from .models import Province, City, Club, Sport
 from .models import ClubMembership
 from apps.accounts.models import User
 
@@ -281,3 +281,45 @@ class CoachDeleteView(LoginRequiredMixin, View):
         membership.save()
         messages.success(request, f'{name} حذف شد')
         return redirect('clubs:coach_list')
+
+
+class SportListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = Sport
+    template_name = 'clubs/sport_list.html'
+    context_object_name = 'sports'
+    
+    def test_func(self): return self.request.user.is_super_manager
+
+
+class SportCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return self.request.user.is_super_manager
+    
+    def post(self, request):
+        name = request.POST.get('name', '').strip()
+        if name:
+            Sport.objects.create(name=name)
+            messages.success(request, f'رشته {name} ایجاد شد')
+        return redirect('clubs:sport_list')
+
+
+class SportEditView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return self.request.user.is_super_manager
+    
+    def post(self, request, pk):
+        sport = get_object_or_404(Sport, pk=pk)
+        name = request.POST.get('name', '').strip()
+        if name:
+            sport.name = name
+            sport.save()
+            messages.success(request, 'بروزرسانی شد')
+        return redirect('clubs:sport_list')
+
+
+class SportDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return self.request.user.is_super_manager
+    
+    def post(self, request, pk):
+        sport = get_object_or_404(Sport, pk=pk)
+        sport.delete()
+        messages.success(request, 'رشته حذف شد')
+        return redirect('clubs:sport_list')

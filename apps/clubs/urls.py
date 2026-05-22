@@ -29,4 +29,9 @@ urlpatterns = [
 
     path('club-info-partial/', views.club_info_partial, name='club_info_partial'),
     path('<int:pk>/detail-ajax/', views.club_detail_ajax, name='club_detail_ajax'),
+
+    path('sports/', views.SportListView.as_view(), name='sport_list'),
+    path('sports/add/', views.SportCreateView.as_view(), name='sport_add'),
+    path('sports/<int:pk>/edit/', views.SportEditView.as_view(), name='sport_edit'),
+    path('sports/<int:pk>/delete/', views.SportDeleteView.as_view(), name='sport_delete'),
 ]

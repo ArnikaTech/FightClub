@@ -19,6 +19,9 @@
             {% endif %}
             <li><a href="{% url 'clubs:club_list' %}" class="{% if request.resolver_match.url_name == 'club_list' or request.resolver_match.url_name == 'club_add' or request.resolver_match.url_name == 'club_detail' or request.resolver_match.url_name == 'club_edit' %}active{% endif %}"><i class="bi bi-building"></i> باشگاه‌ها</a></li>
             <li><a href="{% url 'clubs:coach_list' %}" class="{% if request.resolver_match.url_name == 'coach_list' or request.resolver_match.url_name == 'coach_add' or request.resolver_match.url_name == 'coach_edit' %}active{% endif %}"><i class="bi bi-person-badge-fill"></i> مربیان</a></li>
+            {% if user.is_super_manager %}
+            <li><a href="{% url 'clubs:sport_list' %}"><i class="bi bi-trophy"></i> رشته‌های ورزشی</a></li>
+            {% endif %}
         </ul>
         
         <div class="sidebar-category">هنرجوها</div>
@@ -45,13 +48,13 @@
         </ul>
         
         {% if user.is_super_manager or user.is_club_manager %}
-<div class="sidebar-category">مالی</div>
-<ul class="sidebar-nav">
-    <li><a href="{% url 'finance:payment_list' %}" class="{% if request.resolver_match.url_name == 'payment_list' %}active{% endif %}"><i class="bi bi-cash"></i> دریافتی‌ها</a></li>
-    <li><a href="{% url 'finance:expense_list' %}" class="{% if request.resolver_match.url_name == 'expense_list' %}active{% endif %}"><i class="bi bi-cash-stack"></i> پرداختی‌ها</a></li>
-    <li><a href="{% url 'finance:report' %}" class="{% if request.resolver_match.url_name == 'report' %}active{% endif %}"><i class="bi bi-bar-chart"></i> گزارش</a></li>
-</ul>
-{% endif %}
+        <div class="sidebar-category">مالی</div>
+        <ul class="sidebar-nav">
+            <li><a href="{% url 'finance:payment_list' %}" class="{% if request.resolver_match.url_name == 'payment_list' %}active{% endif %}"><i class="bi bi-cash"></i> دریافتی‌ها</a></li>
+            <li><a href="{% url 'finance:expense_list' %}" class="{% if request.resolver_match.url_name == 'expense_list' %}active{% endif %}"><i class="bi bi-cash-stack"></i> پرداختی‌ها</a></li>
+            <li><a href="{% url 'finance:report' %}" class="{% if request.resolver_match.url_name == 'report' %}active{% endif %}"><i class="bi bi-bar-chart"></i> گزارش</a></li>
+        </ul>
+        {% endif %}
     </div>
     <div class="sidebar-user">
         <div class="user-avatar">
