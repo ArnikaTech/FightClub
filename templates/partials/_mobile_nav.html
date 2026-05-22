@@ -48,7 +48,6 @@
         {% endif %}
         {% endif %}
         
-        <hr style="border-color:var(--border-glass);">
         <div class="nav-group">
             <div class="nav-group-header"><div><i class="bi bi-chat-dots"></i> پیام‌ها</div><i class="bi bi-chevron-down nav-chevron"></i></div>
             <div class="nav-submenu">
@@ -59,6 +58,17 @@
                 {% endif %}
             </div>
         </div>
+
+        <hr style="border-color:var(--border-glass);">
+        {% if user.is_super_manager %}
+        <div class="nav-group">
+            <div class="nav-group-header"><div><i class="bi bi-gear"></i> تنظیمات</div><i class="bi bi-chevron-down nav-chevron"></i></div>
+            <div class="nav-submenu">
+                <a href="{% url 'core:settings' %}"><i class="bi bi-gear"></i> تنظیمات</a>
+            </div>
+        </div>
+        {% endif %}
+
     </div>
     <div class="mobile-nav-footer">
         <div class="nav-user-avatar">{% if user.avatar %}<img src="{{ user.avatar.url }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">{% else %}<i class="bi bi-person-fill"></i>{% endif %}</div>
