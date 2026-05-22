@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load jformat %}
+
+{% block title %}پرداختی‌ها | {{ site_settings.gym_name }}{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">💸 پرداختی‌ها</h1></div>
+            <div style="display:flex;gap:8px;">
+                <a href="{% url 'finance:report' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                    <i class="bi bi-bar-chart"></i><span class="btn-add-text">گزارش</span>
+                </a>
+                <a href="{% url 'finance:payment_list' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                    <i class="bi bi-cash"></i><span class="btn-add-text">دریافتی‌ها</span>
+                </a>
+                <a href="{% url 'finance:expense_add' %}" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">ثبت هزینه</span></a>
+            </div>
+        </div>
+        
+        <div class="coach-list-page">
+            {% for e in expenses %}
+            <div class="coach-card-page animate__animated animate__fadeInUp">
+                <div class="coach-avatar-page"><i class="bi bi-cash-stack"></i></div>
+                <div class="coach-info-page" style="flex:1;">
+                    <div class="coach-name-page">{{ e.title }}</div>
+                    <div class="coach-meta-page"><span>{{ e.amount }} تومان</span><span>{{ e.expense_date|jformat:"%Y/%m/%d" }}</span><span>{{ e.get_category_display }}</span><span>{{ e.club.name }}</span></div>
+                </div>
+            </div>
+            {% empty %}<div class="text-center py-5 text-muted" style="grid-column:1/-1;">هزینه‌ای ثبت نشده</div>{% endfor %}
+        </div>
+        
+        {% if is_paginated %}
+        <div class="animate__animated animate__fadeInUp" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:24px;padding:12px;background:var(--card-bg);border:1px solid var(--border-glass);border-radius:14px;">
+            {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;"><i class="bi bi-chevron-right"></i> قبلی</a>{% endif %}
+            <span style="color:var(--text-secondary);font-size:0.85rem;">{{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;">بعدی <i class="bi bi-chevron-left"></i></a>{% endif %}
+        </div>
+        {% endif %}
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}گزارش مالی | {{ site_settings.gym_name }}{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">📊 گزارش مالی</h1></div>
+            <div style="display:flex;gap:8px;">
+                <a href="{% url 'finance:expense_list' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                    <i class="bi bi-cash-stack"></i><span class="btn-add-text">پرداختی‌ها</span>
+                </a>
+                <a href="{% url 'finance:payment_list' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                    <i class="bi bi-cash"></i><span class="btn-add-text">دریافتی‌ها</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon green"><i class="bi bi-cash"></i></div><div class="stat-value">{{ total_income|floatformat:0 }}</div><div class="stat-label">کل دریافتی (تومان)</div></div>
+            <div class="stat-card"><div class="stat-icon red"><i class="bi bi-cash-stack"></i></div><div class="stat-value">{{ total_expense|floatformat:0 }}</div><div class="stat-label">کل پرداختی (تومان)</div></div>
+            <div class="stat-card"><div class="stat-icon {% if balance >= 0 %}blue{% else %}red{% endif %}"><i class="bi bi-wallet2"></i></div><div class="stat-value">{{ balance|floatformat:0 }}</div><div class="stat-label">موجودی</div></div>
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load jformat %}
+
+{% block title %}دریافتی‌ها | {{ site_settings.gym_name }}{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">💰 دریافتی‌ها</h1></div>
+            <div style="display:flex;gap:8px;">
+                <a href="{% url 'finance:report' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                    <i class="bi bi-bar-chart"></i><span class="btn-add-text">گزارش</span>
+                </a>
+                <a href="{% url 'finance:expense_list' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                    <i class="bi bi-cash-stack"></i><span class="btn-add-text">پرداختی‌ها</span>
+                </a>
+                <a href="{% url 'finance:payment_add' %}" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">ثبت پرداخت</span></a>
+            </div>
+        </div>
+        
+        <div class="coach-list-page">
+            {% for p in payments %}
+            <div class="coach-card-page animate__animated animate__fadeInUp">
+                <div class="coach-avatar-page"><i class="bi bi-cash"></i></div>
+                <div class="coach-info-page" style="flex:1;">
+                    <div class="coach-name-page">{{ p.student.user.get_full_name }}</div>
+                    <div class="coach-meta-page">
+                        <span>{{ p.amount }} تومان</span>
+                        <span>{{ p.payment_date|jformat:"%Y/%m/%d" }}</span>
+                        <span>{{ p.month }}</span>
+                    </div>
+                </div>
+                <span class="badge bg-success" style="margin-right:8px;">{{ p.get_method_display }}</span>
+                <div class="coach-actions">
+                    <a href="{% url 'finance:payment_edit' p.pk %}" class="coach-action-btn edit"><i class="bi bi-pencil"></i></a>
+                    <button onclick="confirmDeletePayment({{ p.id }}, '{{ p.student.user.get_full_name|escapejs }}')" class="coach-action-btn delete"><i class="bi bi-trash"></i></button>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5 text-muted" style="grid-column:1/-1;">
+                <i class="bi bi-cash" style="font-size:3rem;"></i>
+                <p class="mt-3">پرداختی ثبت نشده</p>
+                <a href="{% url 'finance:payment_add' %}" class="btn-add mt-2"><i class="bi bi-plus-lg"></i><span>ثبت اولین پرداخت</span></a>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if is_paginated %}
+        <div class="animate__animated animate__fadeInUp" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:24px;padding:12px;background:var(--card-bg);border:1px solid var(--border-glass);border-radius:14px;">
+            {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;"><i class="bi bi-chevron-right"></i> قبلی</a>{% endif %}
+            <span style="color:var(--text-secondary);font-size:0.85rem;">{{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;">بعدی <i class="bi bi-chevron-left"></i></a>{% endif %}
+        </div>
+        {% endif %}
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+
+<!-- مودال حذف -->
+<div class="modal-overlay" id="deletePaymentModalOverlay"></div>
+<div class="modal-sheet" id="deletePaymentModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">تایید حذف</div>
+    <div class="modal-body text-center">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;color:var(--primary);"></i>
+        <p class="mt-3">آیا از حذف "<span id="deletePaymentName"></span>" مطمئن هستید؟</p>
+        <div class="modal-btn-row mt-3">
+            <button type="button" class="btn-cancel-sm" onclick="closeDeletePaymentModal()">انصراف</button>
+            <form id="deletePaymentForm" method="post" style="flex:1;">
+                {% csrf_token %}
+                <button type="submit" class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> حذف</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if messages %}
+        {% for m in messages %}
+        if (typeof showToast === 'function') {
+            showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');
+        }
+        {% endfor %}
+        {% endif %}
+    });
+    function confirmDeletePayment(id, name){
+        document.getElementById('deletePaymentName').textContent=name;
+        document.getElementById('deletePaymentForm').action='/finance/'+id+'/delete/';
+        document.getElementById('deletePaymentModalOverlay').classList.add('show');
+        document.getElementById('deletePaymentModal').classList.add('show');
+    }
+    function closeDeletePaymentModal(){
+        document.getElementById('deletePaymentModalOverlay').classList.remove('show');
+        document.getElementById('deletePaymentModal').classList.remove('show');
+    }
+</script>
+{% endblock %}

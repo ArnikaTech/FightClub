@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load jformat %}
+
+{% block title %}ثبت پرداخت | {{ site_settings.gym_name }}{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">ثبت پرداخت</h1></div>
+            <a href="{% url 'finance:payment_list' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                <i class="bi bi-arrow-right"></i><span class="btn-add-text">بازگشت</span>
+            </a>
+        </div>
+        
+        <form method="post" action="{% url 'finance:payment_add' %}" class="form-section">
+            {% csrf_token %}
+            <div class="form-group"><label class="form-label-sm">هنرجو *</label><select name="student" class="input-glass" required><option value="">--</option>{% for s in students %}<option value="{{ s.id }}">{{ s.user.get_full_name }} ({{ s.club.name }})</option>{% endfor %}</select></div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label-sm">مبلغ (تومان) *</label><input type="text" name="amount" class="input-glass" placeholder="۱,۰۰۰,۰۰۰" required></div>
+                <div class="form-group"><label class="form-label-sm">تاریخ پرداخت *</label><input type="text" name="payment_date" class="input-glass" placeholder="۱۴۰۴/۰۳/۲۱" required></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label-sm">ماه متناظر *</label><input type="text" name="month" class="input-glass" placeholder="خرداد ۱۴۰۵" required></div>
+                <div class="form-group"><label class="form-label-sm">روش</label><select name="method" class="input-glass"><option value="cash">نقدی</option><option value="card">کارت</option><option value="online">آنلاین</option></select></div>
+            </div>
+            <div class="form-group"><label class="form-label-sm">توضیحات</label><textarea name="description" class="input-glass" rows="2"></textarea></div>
+            <div class="form-actions"><button type="submit" class="btn-submit-form"><i class="bi bi-check-lg"></i> ثبت پرداخت</button></div>
+        </form>
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+{% endblock %}

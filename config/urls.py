@@ -14,6 +14,7 @@ urlpatterns += []
 urlpatterns += [
     path('', include('apps.accounts.urls', namespace='accounts')),
     path('clubs/', include('apps.clubs.urls', namespace='clubs')),
+    path('finance/', include('apps.finance.urls', namespace='finance')),
     path('students/', include('apps.students.urls', namespace='students')),
 ]
 

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load jformat %}
+
+{% block title %}ویرایش پرداخت | {{ site_settings.gym_name }}{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div>
+                <h1 class="page-title">ویرایش پرداخت</h1>
+                <div class="page-subtitle">{{ payment.student.user.get_full_name }}</div>
+            </div>
+            <a href="{% url 'finance:payment_list' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                <i class="bi bi-arrow-right"></i><span class="btn-add-text">بازگشت</span>
+            </a>
+        </div>
+        
+        <div class="info-card animate__animated animate__fadeInUp" style="margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:20px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <i class="bi bi-person-circle" style="color:var(--primary);font-size:1.5rem;"></i>
+                    <span style="font-weight:700;">{{ payment.student.user.get_full_name }}</span>
+                </div>
+                <div style="width:1px;height:24px;background:var(--border-glass);"></div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <i class="bi bi-building" style="color:var(--accent);"></i>
+                    <span style="color:var(--text-secondary);">{{ payment.student.club.name }}</span>
+                </div>
+            </div>
+        </div> 
+        
+        <form method="post" class="form-section animate__animated animate__fadeInUp">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label-sm">مبلغ (تومان) *</label>
+                    <input type="text" name="amount" class="input-glass" value="{{ payment.amount }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label-sm">تاریخ پرداخت *</label>
+                    <input type="text" name="payment_date" class="input-glass" value="{{ payment.payment_date|jformat:'%Y/%m/%d' }}" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label-sm">ماه متناظر *</label>
+                    <input type="text" name="month" class="input-glass" value="{{ payment.month }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label-sm">روش پرداخت</label>
+                    <select name="method" class="input-glass">
+                        <option value="cash" {% if payment.method == 'cash' %}selected{% endif %}>نقدی</option>
+                        <option value="card" {% if payment.method == 'card' %}selected{% endif %}>کارت</option>
+                        <option value="online" {% if payment.method == 'online' %}selected{% endif %}>آنلاین</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label-sm">توضیحات</label>
+                <textarea name="description" class="input-glass" rows="2">{{ payment.description|default:'' }}</textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-submit-form"><i class="bi bi-check-lg"></i> ذخیره تغییرات</button>
+                <a href="{% url 'finance:payment_list' %}" class="btn-cancel-form">انصراف</a>
+            </div>
+        </form>
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+{% endblock %}

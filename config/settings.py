@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     # Apps
     'apps.core.apps.CoreConfig',
     'apps.clubs.apps.ClubsConfig',
+    'apps.finance.apps.FinanceConfig',
     'apps.accounts.apps.AccountsConfig',
     'apps.students.apps.StudentsConfig',
 ]
@@ -123,3 +124,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Config
 AUTH_USER_MODEL = 'accounts.User'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+
+# Thousand Separator
+NUMBER_GROUPING = 3
+USE_THOUSAND_SEPARATOR = True

@@ -43,6 +43,15 @@
             {% endif %}
             <li><a href="{% url 'accounts:inbox' %}" class="{% if request.resolver_match.url_name == 'inbox' %}active{% endif %}"><i class="bi bi-inbox"></i> صندوق ورودی</a></li>
         </ul>
+        
+        {% if user.is_super_manager or user.is_club_manager %}
+<div class="sidebar-category">مالی</div>
+<ul class="sidebar-nav">
+    <li><a href="{% url 'finance:payment_list' %}" class="{% if request.resolver_match.url_name == 'payment_list' %}active{% endif %}"><i class="bi bi-cash"></i> دریافتی‌ها</a></li>
+    <li><a href="{% url 'finance:expense_list' %}" class="{% if request.resolver_match.url_name == 'expense_list' %}active{% endif %}"><i class="bi bi-cash-stack"></i> پرداختی‌ها</a></li>
+    <li><a href="{% url 'finance:report' %}" class="{% if request.resolver_match.url_name == 'report' %}active{% endif %}"><i class="bi bi-bar-chart"></i> گزارش</a></li>
+</ul>
+{% endif %}
     </div>
     <div class="sidebar-user">
         <div class="user-avatar">
