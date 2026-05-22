@@ -28,10 +28,25 @@
                 <div class="coach-avatar-page"><i class="bi bi-cash-stack"></i></div>
                 <div class="coach-info-page" style="flex:1;">
                     <div class="coach-name-page">{{ e.title }}</div>
-                    <div class="coach-meta-page"><span>{{ e.amount }} تومان</span><span>{{ e.expense_date|jformat:"%Y/%m/%d" }}</span><span>{{ e.get_category_display }}</span><span>{{ e.club.name }}</span></div>
+                    <div class="coach-meta-page">
+                        <span>{{ e.amount|floatformat:0 }} تومان</span>
+                        <span>{{ e.expense_date|jformat:"%Y/%m/%d" }}</span>
+                        <span>{{ e.get_category_display }}</span>
+                        <span>{{ e.club.name }}</span>
+                    </div>
+                </div>
+                <div class="coach-actions">
+                    <a href="{% url 'finance:expense_edit' e.pk %}" class="coach-action-btn edit"><i class="bi bi-pencil"></i></a>
+                    <button onclick="confirmDeleteExpense({{ e.id }}, '{{ e.title|escapejs }}')" class="coach-action-btn delete"><i class="bi bi-trash"></i></button>
                 </div>
             </div>
-            {% empty %}<div class="text-center py-5 text-muted" style="grid-column:1/-1;">هزینه‌ای ثبت نشده</div>{% endfor %}
+            {% empty %}
+            <div class="text-center py-5 text-muted" style="grid-column:1/-1;">
+                <i class="bi bi-cash-stack" style="font-size:3rem;"></i>
+                <p class="mt-3">هزینه‌ای ثبت نشده</p>
+                <a href="{% url 'finance:expense_add' %}" class="btn-add mt-2"><i class="bi bi-plus-lg"></i><span>ثبت اولین هزینه</span></a>
+            </div>
+            {% endfor %}
         </div>
         
         {% if is_paginated %}
@@ -44,4 +59,49 @@
     </main>
     {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
 </div>
+
+<!-- مودال حذف -->
+<div class="modal-overlay" id="deleteExpenseModalOverlay"></div>
+<div class="modal-sheet" id="deleteExpenseModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">تایید حذف</div>
+    <div class="modal-body text-center">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;color:var(--primary);"></i>
+        <p class="mt-3">آیا از حذف "<span id="deleteExpenseName"></span>" مطمئن هستید؟</p>
+        <div class="modal-btn-row mt-3">
+            <button type="button" class="btn-cancel-sm" onclick="closeDeleteExpenseModal()">انصراف</button>
+            <form id="deleteExpenseForm" method="post" style="flex:1;">
+                {% csrf_token %}
+                <button type="submit" class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> حذف</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if messages %}
+        {% for m in messages %}
+        if (typeof showToast === 'function') {
+            showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');
+        }
+        {% endfor %}
+        {% endif %}
+    });
+    
+    function confirmDeleteExpense(id, name){
+        document.getElementById('deleteExpenseName').textContent=name;
+        document.getElementById('deleteExpenseForm').action='/finance/expenses/'+id+'/delete/';
+        document.getElementById('deleteExpenseModalOverlay').classList.add('show');
+        document.getElementById('deleteExpenseModal').classList.add('show');
+    }
+    function closeDeleteExpenseModal(){
+        document.getElementById('deleteExpenseModalOverlay').classList.remove('show');
+        document.getElementById('deleteExpenseModal').classList.remove('show');
+    }
+</script>
 {% endblock %}

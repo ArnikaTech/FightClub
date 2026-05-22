@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load jformat %}
+
+{% block title %}ویرایش هزینه | {{ site_settings.gym_name }}{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div>
+                <h1 class="page-title">ویرایش هزینه</h1>
+                <div class="page-subtitle">{{ expense.title }}</div>
+            </div>
+            <a href="{% url 'finance:expense_list' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
+                <i class="bi bi-arrow-right"></i><span class="btn-add-text">بازگشت</span>
+            </a>
+        </div>
+        
+        <form method="post" action="{% url 'finance:expense_edit' expense.pk %}" class="form-section">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group"><label class="form-label-sm">باشگاه *</label><select name="club" class="input-glass" required>{% for c in clubs %}<option value="{{ c.id }}" {% if c.id == expense.club_id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></div>
+                <div class="form-group"><label class="form-label-sm">دسته‌بندی</label><select name="category" class="input-glass"><option value="rent" {% if expense.category == 'rent' %}selected{% endif %}>اجاره</option><option value="salary" {% if expense.category == 'salary' %}selected{% endif %}>حقوق</option><option value="equipment" {% if expense.category == 'equipment' %}selected{% endif %}>تجهیزات</option><option value="utility" {% if expense.category == 'utility' %}selected{% endif %}>قبض</option><option value="other" {% if expense.category == 'other' %}selected{% endif %}>متفرقه</option></select></div>
+            </div>
+            <div class="form-group"><label class="form-label-sm">عنوان *</label><input type="text" name="title" class="input-glass" value="{{ expense.title }}" required></div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label-sm">مبلغ (تومان) *</label><input type="text" name="amount" class="input-glass" value="{{ expense.amount }}" required></div>
+                <div class="form-group"><label class="form-label-sm">تاریخ *</label><input type="text" name="expense_date" class="input-glass" value="{{ expense.expense_date|jformat:'%Y/%m/%d' }}" required></div>
+            </div>
+            <div class="form-group"><label class="form-label-sm">توضیحات</label><textarea name="description" class="input-glass" rows="2">{{ expense.description|default:'' }}</textarea></div>
+            <div class="form-actions">
+                <button type="submit" class="btn-submit-form"><i class="bi bi-check-lg"></i> ذخیره تغییرات</button>
+                <a href="{% url 'finance:expense_list' %}" class="btn-cancel-form">انصراف</a>
+            </div>
+        </form>
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+{% endblock %}

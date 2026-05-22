@@ -15,23 +15,18 @@
             </a>
         </div>
         
-        <form method="post" class="form-section">
+        <form method="post" action="{% url 'finance:expense_add' %}" class="form-section">
             {% csrf_token %}
-            
             <div class="form-row">
                 <div class="form-group"><label class="form-label-sm">باشگاه *</label><select name="club" class="input-glass" required><option value="">--</option>{% for c in clubs %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
                 <div class="form-group"><label class="form-label-sm">دسته‌بندی</label><select name="category" class="input-glass"><option value="rent">اجاره</option><option value="salary">حقوق</option><option value="equipment">تجهیزات</option><option value="utility">قبض</option><option value="other">متفرقه</option></select></div>
             </div>
-            
             <div class="form-group"><label class="form-label-sm">عنوان *</label><input type="text" name="title" class="input-glass" required></div>
-            
             <div class="form-row">
                 <div class="form-group"><label class="form-label-sm">مبلغ (تومان) *</label><input type="text" name="amount" class="input-glass" placeholder="۵۰۰,۰۰۰" required></div>
                 <div class="form-group"><label class="form-label-sm">تاریخ *</label><input type="text" name="expense_date" class="input-glass" placeholder="۱۴۰۴/۰۳/۲۱" required></div>
             </div>
-            
             <div class="form-group"><label class="form-label-sm">توضیحات</label><textarea name="description" class="input-glass" rows="2"></textarea></div>
-            
             <div class="form-actions"><button type="submit" class="btn-submit-form"><i class="bi bi-check-lg"></i> ثبت هزینه</button></div>
         </form>
     </main>

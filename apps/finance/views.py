@@ -128,8 +128,7 @@ class ExpenseListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 
 class ExpenseCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
+    def test_func(self): return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def get(self, request):
         clubs = Club.objects.filter(is_active=True)
@@ -138,7 +137,7 @@ class ExpenseCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
     def post(self, request):
         club_id = request.POST.get('club')
         title = request.POST.get('title', '')
-        amount = request.POST.get('amount', '').replace(',', '')
+        amount = request.POST.get('amount', '0').replace(',', '')
         expense_date = request.POST.get('expense_date')
         category = request.POST.get('category', 'other')
         description = request.POST.get('description', '')
@@ -146,33 +145,42 @@ class ExpenseCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
         if club_id and title and amount and expense_date:
             try:
                 parts = list(map(int, expense_date.replace('/', '-').split('-')))
-                date = jdatetime.date(*parts)
                 Expense.objects.create(
                     club_id=club_id,
                     title=title,
-                    amount=int(amount),
-                    expense_date=date,
+                    amount=int(float(amount)),
+                    expense_date=jdatetime.date(*parts),
                     category=category,
                     description=description
                 )
-                messages.success(request, 'هزینه با موفقیت ثبت شد')
+                messages.success(request, 'هزینه ثبت شد')
                 return redirect('finance:expense_list')
-            except:
-                messages.error(request, 'تاریخ نامعتبر است')
+            except Exception as e:
+                messages.error(request, str(e))
         else:
             messages.error(request, 'همه فیلدهای ستاره‌دار الزامی است')
-        
         return redirect('finance:expense_add')
 
 
-class ExpenseEditView(LoginRequiredMixin, View):
+class ExpenseEditView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return self.request.user.is_super_manager or self.request.user.is_club_manager
+    
+    def get(self, request, pk):
+        expense = get_object_or_404(Expense, pk=pk)
+        clubs = Club.objects.filter(is_active=True)
+        return render(request, 'finance/expense_edit.html', {'expense': expense, 'clubs': clubs})
+    
     def post(self, request, pk):
         expense = get_object_or_404(Expense, pk=pk)
+        expense.club_id = request.POST.get('club', expense.club_id)
         expense.title = request.POST.get('title', expense.title)
-        expense.amount = int(request.POST.get('amount', expense.amount).replace(',', ''))
-        expense.expense_date = jdatetime.date(*map(int, request.POST.get('expense_date').split('/')))
+        expense.amount = int(request.POST.get('amount', '0').replace(',', ''))
+        date_str = request.POST.get('expense_date')
+        if date_str:
+            parts = list(map(int, date_str.replace('/', '-').split('-')))
+            expense.expense_date = jdatetime.date(*parts)
         expense.category = request.POST.get('category', expense.category)
-        expense.description = request.POST.get('description', expense.description)
+        expense.description = request.POST.get('description', '')
         expense.save()
         messages.success(request, 'هزینه بروزرسانی شد')
         return redirect('finance:expense_list')
