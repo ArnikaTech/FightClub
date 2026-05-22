@@ -16,12 +16,10 @@
             {% if user.is_super_manager %}
             <li><a href="{% url 'clubs:province_list' %}" class="{% if request.resolver_match.url_name == 'province_list' or request.resolver_match.url_name == 'province_add' or request.resolver_match.url_name == 'province_edit' %}active{% endif %}"><i class="bi bi-map-fill"></i> استان‌ها</a></li>
             <li><a href="{% url 'clubs:city_list' %}" class="{% if request.resolver_match.url_name == 'city_list' or request.resolver_match.url_name == 'city_add' or request.resolver_match.url_name == 'city_edit' %}active{% endif %}"><i class="bi bi-geo-alt-fill"></i> شهرها</a></li>
+            <li><a href="{% url 'clubs:sport_list' %}" class="{% if request.resolver_match.url_name == 'sport_list' or request.resolver_match.url_name == 'sport_add' or request.resolver_match.url_name == 'sport_edit' %}active{% endif %}"><i class="bi bi-trophy-fill"></i> رشته‌های ورزشی</a></li>
             {% endif %}
             <li><a href="{% url 'clubs:club_list' %}" class="{% if request.resolver_match.url_name == 'club_list' or request.resolver_match.url_name == 'club_add' or request.resolver_match.url_name == 'club_detail' or request.resolver_match.url_name == 'club_edit' %}active{% endif %}"><i class="bi bi-building"></i> باشگاه‌ها</a></li>
             <li><a href="{% url 'clubs:coach_list' %}" class="{% if request.resolver_match.url_name == 'coach_list' or request.resolver_match.url_name == 'coach_add' or request.resolver_match.url_name == 'coach_edit' %}active{% endif %}"><i class="bi bi-person-badge-fill"></i> مربیان</a></li>
-            {% if user.is_super_manager %}
-            <li><a href="{% url 'clubs:sport_list' %}"><i class="bi bi-trophy"></i> رشته‌های ورزشی</a></li>
-            {% endif %}
         </ul>
         
         <div class="sidebar-category">هنرجوها</div>
@@ -35,17 +33,6 @@
             <li><a href="{% url 'students:attendance' %}" class="{% if request.resolver_match.url_name == 'attendance' %}active{% endif %}"><i class="bi bi-calendar-check-fill"></i> ثبت حضور</a></li>
             <li><a href="{% url 'students:absentees' %}" class="{% if request.resolver_match.url_name == 'absentees' %}active{% endif %}"><i class="bi bi-exclamation-triangle-fill"></i> پیگیری غیبت‌ها</a></li>
         </ul>
-        {% endif %}
-        
-        <div class="sidebar-category">پیام‌ها</div>
-        <ul class="sidebar-nav">
-            <li><a href="{% url 'accounts:compose_message' %}" class="{% if request.resolver_match.url_name == 'compose_message' %}active{% endif %}"><i class="bi bi-pencil-square"></i> پیام جدید</a></li>
-            <li><a href="{% url 'accounts:sent_messages' %}" class="{% if request.resolver_match.url_name == 'sent_messages' %}active{% endif %}"><i class="bi bi-send"></i> ارسال شده</a></li>
-            {% if user.is_super_manager or user.is_club_manager or user.is_instructor %}
-            <li><a href="{% url 'accounts:bulk_message' %}" class="{% if request.resolver_match.url_name == 'bulk_message' %}active{% endif %}"><i class="bi bi-megaphone"></i> ارسال گروهی</a></li>
-            {% endif %}
-            <li><a href="{% url 'accounts:inbox' %}" class="{% if request.resolver_match.url_name == 'inbox' %}active{% endif %}"><i class="bi bi-inbox"></i> صندوق ورودی</a></li>
-        </ul>
         
         {% if user.is_super_manager or user.is_club_manager %}
         <div class="sidebar-category">مالی</div>
@@ -55,6 +42,16 @@
             <li><a href="{% url 'finance:report' %}" class="{% if request.resolver_match.url_name == 'report' %}active{% endif %}"><i class="bi bi-bar-chart"></i> گزارش</a></li>
         </ul>
         {% endif %}
+        {% endif %}
+        
+        <div class="sidebar-category">پیام‌ها</div>
+        <ul class="sidebar-nav">
+            <li><a href="{% url 'accounts:inbox' %}" class="{% if request.resolver_match.url_name == 'inbox' %}active{% endif %}"><i class="bi bi-inbox"></i> صندوق ورودی</a></li>
+            <li><a href="{% url 'accounts:compose_message' %}" class="{% if request.resolver_match.url_name == 'compose_message' %}active{% endif %}"><i class="bi bi-pencil-square"></i> پیام جدید</a></li>
+            {% if user.is_super_manager or user.is_club_manager or user.is_instructor %}
+            <li><a href="{% url 'accounts:bulk_message' %}" class="{% if request.resolver_match.url_name == 'bulk_message' %}active{% endif %}"><i class="bi bi-megaphone"></i> پیام گروهی</a></li>
+            {% endif %}
+        </ul>
     </div>
     <div class="sidebar-user">
         <div class="user-avatar">

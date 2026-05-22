@@ -1,7 +1,7 @@
 <nav class="bottom-nav">
-    <a href="{% url 'accounts:dashboard' %}"><i class="bi bi-grid-fill"></i><span>پیشخوان</span></a>
-    <a href="{% url 'students:student_list' %}"><i class="bi bi-people"></i><span>هنرجوها</span></a>
-    <a href="{% url 'students:attendance' %}"><i class="bi bi-calendar-check"></i><span>حضور</span></a>
-    <a href="{% url 'clubs:club_list' %}"><i class="bi bi-building"></i><span>باشگاه‌ها</span></a>
+    <a href="{% url 'accounts:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="bi bi-grid-fill"></i><span>پیشخوان</span></a>
+    <a href="{% url 'students:student_list' %}" class="{% if request.resolver_match.url_name == 'student_list' %}active{% endif %}"><i class="bi bi-people-fill"></i><span>هنرجوها</span></a>
+    <a href="{% url 'students:attendance' %}" class="{% if request.resolver_match.url_name == 'attendance' %}active{% endif %}"><i class="bi bi-calendar-check-fill"></i><span>حضور</span></a>
+    <a href="{% url 'accounts:inbox' %}" class="{% if request.resolver_match.url_name == 'inbox' %}active{% endif %}"><i class="bi bi-inbox"></i><span>پیام‌ها</span></a>
     <a href="#" id="moreBtn"><i class="bi bi-three-dots"></i><span>بیشتر</span></a>
 </nav>
