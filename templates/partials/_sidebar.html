@@ -52,6 +52,13 @@
             <li><a href="{% url 'accounts:bulk_message' %}" class="{% if request.resolver_match.url_name == 'bulk_message' %}active{% endif %}"><i class="bi bi-megaphone"></i> پیام گروهی</a></li>
             {% endif %}
         </ul>
+        
+        {% if user.is_super_manager %}
+        <div class="sidebar-category">تنظیمات</div>
+        <ul class="sidebar-nav">
+            <li><a href="{% url 'core:settings' %}" class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}"><i class="bi bi-gear"></i> تنظیمات</a></li>
+        </ul>
+        {% endif %}
     </div>
     <div class="sidebar-user">
         <div class="user-avatar">

@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تنظیمات | {{ site_settings.gym_name }}{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">⚙️ تنظیمات</h1></div>
+        </div>
+        
+        <div class="form-section animate__animated animate__fadeInUp">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-section animate__animated animate__fadeInUp">
+                    <div class="form-section-title"><i class="bi bi-building"></i> اطلاعات مجموعه</div>
+                    
+                    <div class="text-center mb-3">
+                        {% if settings.logo %}
+                        <img src="{{ settings.logo.url }}" style="max-width:150px;max-height:80px;">
+                        {% endif %}
+                        <br>
+                        <label class="mt-2" style="cursor:pointer;color:var(--accent);">
+                            <i class="bi bi-camera"></i> تغییر لوگو
+                            <input type="file" name="logo" accept="image/*" style="display:none;">
+                        </label>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group"><label class="form-label-sm">نام مجموعه</label><input type="text" name="gym_name" class="input-glass" value="{{ settings.gym_name }}"></div>
+                        <div class="form-group"><label class="form-label-sm">شماره تماس</label><input type="text" name="central_phone" class="input-glass" value="{{ settings.central_phone|default:'' }}"></div>
+                    </div>
+                    <div class="form-group"><label class="form-label-sm">آدرس</label><textarea name="central_address" class="input-glass" rows="2">{{ settings.central_address|default:'' }}</textarea></div>
+                    <div class="form-group"><label class="form-label-sm">ساعات کاری</label><input type="text" name="working_hours" class="input-glass" value="{{ settings.working_hours|default:'' }}" placeholder="۸ صبح تا ۱۰ شب"></div>
+                </div>
+                
+                <div class="form-section animate__animated animate__fadeInUp">
+                    <div class="form-section-title"><i class="bi bi-info-circle"></i> محتوای عمومی</div>
+                    <div class="form-group"><label class="form-label-sm">درباره ما</label><textarea name="about_text" class="input-glass" rows="3">{{ settings.about_text|default:'' }}</textarea></div>
+                    <div class="form-group"><label class="form-label-sm">شرایط عضویت</label><textarea name="rules_text" class="input-glass" rows="3">{{ settings.rules_text|default:'' }}</textarea></div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit-form"><i class="bi bi-check-lg"></i> ذخیره تنظیمات</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="form-section animate__animated animate__fadeInUp">
+            <div class="form-section mt-3 animate__animated animate__fadeInUp">
+                <div class="form-section-title"><i class="bi bi-share"></i> شبکه‌های اجتماعی</div>
+                
+                <form method="post" id="socialForm" action="{% url 'core:social_add' %}">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label-sm">پلتفرم</label>
+                            <select name="platform" id="socialPlatform" class="input-glass">
+                                <option value="instagram">اینستاگرام</option>
+                                <option value="telegram">تلگرام</option>
+                                <option value="whatsapp">واتساپ</option>
+                                <option value="youtube">یوتیوب</option>
+                                <option value="website">وب‌سایت</option>
+                                <option value="other">سایر</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label-sm">عنوان (اختیاری)</label>
+                            <input type="text" name="label" id="socialLabel" class="input-glass" placeholder="مثلاً: پیج رسمی">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label-sm">لینک *</label>
+                        <input type="text" name="url" id="socialUrl" class="input-glass" placeholder="https://..." required>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button type="submit" id="socialSubmitBtn" class="btn-submit-form"><i class="bi bi-plus-lg"></i> افزودن</button>
+                        <button type="button" id="socialCancelBtn" class="btn-cancel-sm" style="display:none;" onclick="cancelEditSocial()">انصراف</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="form-section mt-3 animate__animated animate__fadeInUp">
+                {% if social_links %}
+                <div class="coach-list-page" style="margin-top:16px;">
+                    {% for link in social_links %}
+                    <div class="coach-card-page">
+                        <div class="coach-avatar-page">
+                            <i class="bi bi-{% if link.platform == 'instagram' %}instagram{% elif link.platform == 'telegram' %}telegram{% elif link.platform == 'whatsapp' %}whatsapp{% elif link.platform == 'youtube' %}youtube{% else %}globe{% endif %}"></i>
+                        </div>
+                        <div class="coach-info-page" style="flex:1;">
+                            <div class="coach-name-page">{{ link.label|default:link.get_platform_display }}</div>
+                            <div class="coach-meta-page"><span>{{ link.url }}</span></div>
+                        </div>
+                        <div class="coach-actions">
+                            <button onclick="editSocialLink({{ link.id }}, '{{ link.platform }}', '{{ link.label|default:''|escapejs }}', '{{ link.url|escapejs }}')" class="coach-action-btn edit"><i class="bi bi-pencil"></i></button>
+                            <button onclick="confirmSocialDelete('{% url 'core:social_delete' link.pk %}', '{{ link.label|default:link.get_platform_display|escapejs }}')" class="coach-action-btn delete"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+    
+    <!-- مودال حذف شبکه اجتماعی -->
+    <div class="modal-overlay" id="deleteSocialModalOverlay"></div>
+    <div class="modal-sheet" id="deleteSocialModal">
+        <div class="modal-handle"></div>
+        <div class="modal-title">تایید حذف</div>
+        <div class="modal-body text-center">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;color:var(--primary);"></i>
+            <p class="mt-3">آیا از حذف "<span id="deleteSocialName"></span>" مطمئن هستید؟</p>
+            <div class="modal-btn-row mt-3">
+                <button type="button" class="btn-cancel-sm" onclick="closeSocialDeleteModal()">انصراف</button>
+                <form id="deleteSocialForm" method="post" style="flex:1;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> حذف</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if messages %}{% for m in messages %}if(typeof showToast==='function'){showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');}{% endfor %}{% endif %}
+    });
+    
+    function editSocialLink(id, platform, label, url){
+        document.getElementById('socialPlatform').value = platform;
+        document.getElementById('socialLabel').value = label;
+        document.getElementById('socialUrl').value = url;
+        document.getElementById('socialForm').action = '/core/social/' + id + '/edit/';
+        document.getElementById('socialSubmitBtn').innerHTML = '<i class="bi bi-check-lg"></i> ذخیره';
+        document.getElementById('socialCancelBtn').style.display = 'inline-flex';
+    }
+    
+    function cancelEditSocial(){
+        document.getElementById('socialPlatform').value = 'instagram';
+        document.getElementById('socialLabel').value = '';
+        document.getElementById('socialUrl').value = '';
+        document.getElementById('socialForm').action = '{% url "core:social_add" %}';
+        document.getElementById('socialSubmitBtn').innerHTML = '<i class="bi bi-plus-lg"></i> افزودن';
+        document.getElementById('socialCancelBtn').style.display = 'none';
+    }
+    
+    function confirmSocialDelete(url, name){
+        document.getElementById('deleteSocialName').textContent = name;
+        document.getElementById('deleteSocialForm').action = url;
+        document.getElementById('deleteSocialModalOverlay').classList.add('show');
+        document.getElementById('deleteSocialModal').classList.add('show');
+    }
+    function closeSocialDeleteModal(){
+        document.getElementById('deleteSocialModalOverlay').classList.remove('show');
+        document.getElementById('deleteSocialModal').classList.remove('show');
+    }
+</script>
+{% endblock %}

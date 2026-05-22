@@ -13,6 +13,7 @@ urlpatterns += []
 # Apps
 urlpatterns += [
     path('', include('apps.accounts.urls', namespace='accounts')),
+    path('core/', include('apps.core.urls', namespace='core')),
     path('clubs/', include('apps.clubs.urls', namespace='clubs')),
     path('finance/', include('apps.finance.urls', namespace='finance')),
     path('students/', include('apps.students.urls', namespace='students')),
