@@ -2,7 +2,7 @@
 APP.CSS
 ============================================================ */
 
-@import url(fonts.css);
+@import url("fonts.css");
 
 :root {
     --primary: #ff4d2e;

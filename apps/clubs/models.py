@@ -66,7 +66,6 @@ class ClubMembership(models.Model):
 
 
 class Sport(models.Model):
-    """رشته ورزشی"""
     name = models.CharField('نام رشته', max_length=100)
     description = models.TextField('توضیحات', blank=True, null=True)
     

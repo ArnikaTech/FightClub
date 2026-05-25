@@ -1,7 +1,8 @@
 from django.db import models
 from django.conf import settings
-from django_jalali.db import models as jmodels
+
 import jdatetime
+from django_jalali.db import models as jmodels
 from apps.clubs.models import Club, Sport
 
 
@@ -42,7 +43,7 @@ class Student(models.Model):
     
     class Meta:
         verbose_name = 'هنرجو'
-        verbose_name_plural = 'هنرجویان'
+        verbose_name_plural = 'هنرجوها'
     
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.student_code}"

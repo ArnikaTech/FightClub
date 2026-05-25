@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+
 from django_jalali.db import models as jmodels
 from apps.students.models import Student
 from apps.clubs.models import Club

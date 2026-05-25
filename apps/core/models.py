@@ -1,13 +1,11 @@
 from django.db import models
 
+
 class SiteSetting(models.Model):
-    # ضروری
-    gym_name = models.CharField('نام مجموعه', max_length=200, default='باشگاه ستاره‌ها')
+    gym_name = models.CharField('نام مجموعه', max_length=200, default='آرنیکا')
     logo = models.ImageField('لوگو', upload_to='site/', blank=True, null=True)
     central_phone = models.CharField('شماره تماس مرکزی', max_length=11, blank=True, null=True)
-    central_address = models.TextField('آدرس مرکزی', blank=True, null=True)
-    
-    # مفید
+    central_address = models.TextField('آدرس مرکزی', blank=True, null=True)    
     about_text = models.TextField('درباره ما', blank=True, null=True)
     working_hours = models.CharField('ساعات کاری', max_length=200, blank=True, null=True, help_text='مثال: ۸ صبح تا ۱۰ شب')
     rules_text = models.TextField('شرایط عضویت', blank=True, null=True)
@@ -30,13 +28,15 @@ class SiteSetting(models.Model):
 
 
 class SocialLink(models.Model):
-    """شبکه‌های اجتماعی - مدیر کل هر چی خواست اضافه کنه"""
     PLATFORM_CHOICES = [
-        ('instagram', 'اینستاگرام'),
+        ('bale', 'بله'),
+        ('eitaa', 'ایتا'),
+        ('rubika', 'روبیکا'),
+        ('youtube', 'یوتیوب'),
         ('telegram', 'تلگرام'),
         ('whatsapp', 'واتساپ'),
-        ('youtube', 'یوتیوب'),
         ('website', 'وب‌سایت'),
+        ('instagram', 'اینستاگرام'),
         ('other', 'سایر'),
     ]
     
@@ -45,8 +45,8 @@ class SocialLink(models.Model):
     url = models.CharField('لینک', max_length=500)
     
     class Meta:
-        verbose_name = 'شبکه اجتماعی'
-        verbose_name_plural = 'شبکه‌های اجتماعی'
+        verbose_name = 'رسانه اجتماعی'
+        verbose_name_plural = 'رسانه‌های اجتماعی'
         ordering = ['platform']
     
     def __str__(self):

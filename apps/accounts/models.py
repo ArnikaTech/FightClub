@@ -23,19 +23,19 @@ class UserMnaager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    phone = models.CharField(max_length=11, unique=True)
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
+    phone = models.CharField('شماره همراه', max_length=11, unique=True)
+    first_name = models.CharField('نام', max_length=100)
+    last_name = models.CharField('نام‌خانوادگی', max_length=100)
     birth_date = jmodels.jDateField('تاریخ تولد', null=True, blank=True)
     national_code = models.CharField(max_length=10, blank=True, null=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
-    is_super_manager = models.BooleanField(default=False)
-    is_club_manager = models.BooleanField(default=False)
-    is_instructor = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
+    is_super_manager = models.BooleanField('مدیر کل', default=False)
+    is_club_manager = models.BooleanField('مدیر باشگاه', default=False)
+    is_instructor = models.BooleanField('مربی', default=False)
+    is_active = models.BooleanField('فعال', default=True)
     is_staff = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField('تاریخ ثبت', auto_now_add=True)
+    updated_at = models.DateTimeField('تاریخ ویرایش', auto_now=True)
 
     objects = UserMnaager()
     USERNAME_FIELD = 'phone'
