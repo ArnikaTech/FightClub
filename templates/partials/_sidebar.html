@@ -22,6 +22,11 @@
             <li><a href="{% url 'clubs:coach_list' %}" class="{% if request.resolver_match.url_name == 'coach_list' or request.resolver_match.url_name == 'coach_add' or request.resolver_match.url_name == 'coach_edit' %}active{% endif %}"><i class="bi bi-person-badge-fill"></i> مربیان</a></li>
         </ul>
         
+        <div class="sidebar-category">کلاس‌ها</div>
+        <ul class="sidebar-nav">
+            <li><a href="{% url 'students:class_list' %}"><i class="bi bi-people-fill"></i> کلاس‌ها</a></li>
+        </ul>
+        
         <div class="sidebar-category">هنرجوها</div>
         <ul class="sidebar-nav">
             <li><a href="{% url 'students:student_list' %}" class="{% if request.resolver_match.url_name == 'student_list' %}active{% endif %}"><i class="bi bi-people-fill"></i> لیست هنرجوها</a></li>

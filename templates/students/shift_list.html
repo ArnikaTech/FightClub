@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}شیفت‌ها | {{ site_settings.gym_name }}{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div>
+                <h1 class="page-title">{{ class_group.name }}</h1>
+                <div class="page-subtitle">{{ class_group.club.name }} - {{ class_group.sport.name }}</div>
+            </div>
+            <button onclick="openShiftModal()" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">شیفت جدید</span></button>
+        </div>
+        
+        <div class="coach-list-page" id="shiftList">
+            {% for s in shifts %}
+            <div class="coach-card-page animate__animated animate__fadeInUp">
+                <div class="coach-avatar-page"><i class="bi bi-clock"></i></div>
+                <div class="coach-info-page" style="flex:1;">
+                    <div class="coach-name-page">{{ s.name }}</div>
+                    <div class="coach-meta-page"><span>{{ s.days }}</span><span>{{ s.start_time|time:"H:i" }} تا {{ s.end_time|time:"H:i" }}</span></div>
+                </div>
+                <div class="coach-actions">
+                    <button onclick="editShift({{ s.id }}, '{{ s.name|escapejs }}', '{{ s.days|escapejs }}', '{{ s.start_time|time:'H:i' }}', '{{ s.end_time|time:'H:i' }}')" class="coach-action-btn edit"><i class="bi bi-pencil"></i></button>
+                    <button onclick="confirmShiftDelete('{% url 'students:shift_delete' s.id %}', '{{ s.name|escapejs }}')" class="coach-action-btn delete"><i class="bi bi-trash"></i></button>
+                </div>
+            </div>
+            {% empty %}<div class="text-center py-5 text-muted" style="grid-column:1/-1;">شیفتی ثبت نشده</div>{% endfor %}
+        </div>
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+
+<div class="modal-overlay" id="shiftModalOverlay" onclick="closeShiftModal()"></div>
+<div class="modal-sheet" id="shiftModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="shiftModalTitle">شیفت جدید</div>
+    <div class="modal-body">
+        <form method="post" id="shiftForm" action="{% url 'students:shift_add' class_group.id %}">
+            {% csrf_token %}
+            <div class="modal-form-group"><label class="form-label-sm">نام شیفت *</label><input type="text" name="name" id="shiftName" class="input-glass" required></div>
+            <div class="modal-form-group">
+                <label class="form-label-sm">روزها *</label>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;" id="daysCheckboxes">
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" value="شنبه" class="day-cb"> شنبه</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" value="یکشنبه" class="day-cb"> یکشنبه</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" value="دوشنبه" class="day-cb"> دوشنبه</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" value="سه‌شنبه" class="day-cb"> سه‌شنبه</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" value="چهارشنبه" class="day-cb"> چهارشنبه</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" value="پنج‌شنبه" class="day-cb"> پنج‌شنبه</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" value="جمعه" class="day-cb"> جمعه</label>
+                </div>
+                <input type="hidden" name="days" id="shiftDaysHidden">
+            </div>
+            <div class="form-row">
+                <div class="modal-form-group">
+                    <label class="form-label-sm">شروع *</label>
+                    <input type="text" name="start_time" id="shiftStart" class="input-glass" placeholder="مثال: ۱۴:۳۰" required>
+                </div>
+                <div class="modal-form-group">
+                    <label class="form-label-sm">پایان *</label>
+                    <input type="text" name="end_time" id="shiftEnd" class="input-glass" placeholder="مثال: ۱۶:۰۰" required>
+                </div>
+            </div>
+            <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeShiftModal()">انصراف</button><button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> ذخیره</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="deleteShiftModalOverlay" onclick="closeShiftDeleteModal()"></div>
+<div class="modal-sheet" id="deleteShiftModal">
+    <div class="modal-handle"></div><div class="modal-title">تایید غیرفعال‌سازی</div>
+    <div class="modal-body text-center">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;color:var(--primary);"></i>
+        <p class="mt-3">آیا از غیرفعال کردن "<span id="deleteShiftName"></span>" مطمئن هستید؟</p>
+        <div class="modal-btn-row mt-3"><button type="button" class="btn-cancel-sm" onclick="closeShiftDeleteModal()">انصراف</button>
+            <form id="deleteShiftForm" method="post" style="flex:1;">{% csrf_token %}<button class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> غیرفعال</button></form>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function getSelectedDays(){var days=[];document.querySelectorAll('.day-cb:checked').forEach(function(cb){days.push(cb.value);});return days.join('، ');}
+    function setSelectedDays(daysStr){var days=daysStr.split('، ');document.querySelectorAll('.day-cb').forEach(function(cb){cb.checked=days.includes(cb.value);});}
+    
+    document.getElementById('shiftForm').addEventListener('submit', function(){document.getElementById('shiftDaysHidden').value = getSelectedDays();});
+    
+    function openShiftModal(){
+        document.getElementById('shiftModalTitle').textContent='شیفت جدید';
+        document.getElementById('shiftForm').action='{% url "students:shift_add" class_group.id %}';
+        document.getElementById('shiftName').value='';
+        document.getElementById('shiftStart').value='';
+        document.getElementById('shiftEnd').value='';
+        document.querySelectorAll('.day-cb').forEach(function(cb){cb.checked=false;});
+        document.getElementById('shiftModalOverlay').classList.add('show');
+        document.getElementById('shiftModal').classList.add('show');
+    }
+    function closeShiftModal(){document.getElementById('shiftModalOverlay').classList.remove('show');document.getElementById('shiftModal').classList.remove('show');}
+    
+    function editShift(id,name,days,start,end){
+        document.getElementById('shiftModalTitle').textContent='ویرایش شیفت';
+        document.getElementById('shiftForm').action='/students/shifts/'+id+'/edit/';
+        document.getElementById('shiftName').value=name;
+        document.getElementById('shiftStart').value=start;
+        document.getElementById('shiftEnd').value=end;
+        setSelectedDays(days);
+        document.getElementById('shiftModalOverlay').classList.add('show');
+        document.getElementById('shiftModal').classList.add('show');
+    }
+    
+    function confirmShiftDelete(url,name){document.getElementById('deleteShiftName').textContent=name;document.getElementById('deleteShiftForm').action=url;document.getElementById('deleteShiftModalOverlay').classList.add('show');document.getElementById('deleteShiftModal').classList.add('show');}
+    function closeShiftDeleteModal(){document.getElementById('deleteShiftModalOverlay').classList.remove('show');document.getElementById('deleteShiftModal').classList.remove('show');}
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if messages %}{% for m in messages %}if(typeof showToast==='function'){showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');}{% endfor %}{% endif %}
+    });
+</script>
+{% endblock %}

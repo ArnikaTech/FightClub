@@ -7,7 +7,7 @@ from django.db import models
 
 import jdatetime
 from .forms import StudentCreateForm
-from .models import Student, Insurance, StudentContact, Attendance
+from .models import Student, Insurance, StudentContact, Attendance, ClassGroup, Shift, Shift
 from apps.clubs.models import Club, Sport
 
 
@@ -416,3 +416,153 @@ class StudentDeleteView(LoginRequiredMixin, View):
         student.save()
         messages.success(request, f'{student.user.get_full_name()} غیرفعال شد')
         return redirect('students:student_list')
+
+
+class ClassGroupListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = ClassGroup
+    template_name = 'students/class_list.html'
+    context_object_name = 'classes'
+    
+    def test_func(self):
+        return self.request.user.is_super_manager or self.request.user.is_club_manager
+    
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_super_manager:
+            return ClassGroup.objects.filter(is_active=True).select_related('club', 'sport')
+        return ClassGroup.objects.filter(
+            club__memberships__user=user, is_active=True
+        ).select_related('club', 'sport').distinct()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['clubs'] = Club.objects.filter(is_active=True)
+        context['sports'] = Sport.objects.all()
+        return context
+
+
+class ClassGroupCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager or self.request.user.is_club_manager
+    
+    def post(self, request):
+        name = request.POST.get('name', '').strip()
+        club_id = request.POST.get('club')
+        sport_id = request.POST.get('sport')
+        gender = request.POST.get('gender', 'mixed')
+        description = request.POST.get('description', '')
+        
+        if name and club_id and sport_id:
+            ClassGroup.objects.create(
+                name=name, club_id=club_id, sport_id=sport_id,
+                gender=gender, description=description
+            )
+            messages.success(request, f'کلاس {name} ایجاد شد')
+        else:
+            messages.error(request, 'نام، باشگاه و رشته الزامی است')
+        return redirect('students:class_list')
+
+
+class ClassGroupEditView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager or self.request.user.is_club_manager
+    
+    def post(self, request, pk):
+        class_group = get_object_or_404(ClassGroup, pk=pk)
+        class_group.name = request.POST.get('name', class_group.name).strip()
+        class_group.club_id = request.POST.get('club', class_group.club_id)
+        class_group.sport_id = request.POST.get('sport', class_group.sport_id)
+        class_group.gender = request.POST.get('gender', class_group.gender)
+        class_group.description = request.POST.get('description', '')
+        class_group.save()
+        messages.success(request, 'کلاس بروزرسانی شد')
+        return redirect('students:class_list')
+
+
+class ClassGroupDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager or self.request.user.is_club_manager
+    
+    def post(self, request, pk):
+        class_group = get_object_or_404(ClassGroup, pk=pk)
+        class_group.is_active = False
+        class_group.save()
+        messages.success(request, f'کلاس {class_group.name} غیرفعال شد')
+        return redirect('students:class_list')
+
+
+class ShiftListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    template_name = 'students/shift_list.html'
+    context_object_name = 'shifts'
+    
+    def test_func(self):
+        return self.request.user.is_super_manager or self.request.user.is_club_manager
+    
+    def get_queryset(self):
+        self.class_group = get_object_or_404(ClassGroup, pk=self.kwargs['class_id'])
+        return self.class_group.shifts.filter(is_active=True)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['class_group'] = self.class_group
+        return context
+
+
+class ShiftCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager or self.request.user.is_club_manager
+    
+    def post(self, request, class_id):
+        class_group = get_object_or_404(ClassGroup, pk=class_id)
+        name = request.POST.get('name', '').strip()
+        start_time = request.POST.get('start_time')
+        end_time = request.POST.get('end_time')
+        
+        # جمع‌آوری روزهای انتخاب شده
+        days_list = []
+        day_names = ['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday']
+        day_labels = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه']
+        
+        for i, day in enumerate(day_names):
+            if request.POST.get(f'day_{day}'):
+                days_list.append(day_labels[i])
+        
+        days = '، '.join(days_list) if days_list else request.POST.get('days', '')
+        
+        if name and days and start_time and end_time:
+            Shift.objects.create(
+                class_group=class_group, name=name, days=days,
+                start_time=start_time, end_time=end_time
+            )
+            messages.success(request, f'شیفت {name} ایجاد شد')
+        else:
+            messages.error(request, 'همه فیلدها الزامی است')
+        return redirect('students:shift_list', class_id=class_id)
+
+
+class ShiftEditView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager or self.request.user.is_club_manager
+    
+    def post(self, request, pk):
+        shift = get_object_or_404(Shift, pk=pk)
+        shift.name = request.POST.get('name', shift.name).strip()
+        shift.days = request.POST.get('days', shift.days).strip()
+        shift.start_time = request.POST.get('start_time') or shift.start_time
+        shift.end_time = request.POST.get('end_time') or shift.end_time
+        shift.save()
+        messages.success(request, 'شیفت بروزرسانی شد')
+        return redirect('students:shift_list', class_id=shift.class_group_id)
+
+
+class ShiftDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager or self.request.user.is_club_manager
+    
+    def post(self, request, pk):
+        shift = get_object_or_404(Shift, pk=pk)
+        class_id = shift.class_group_id
+        shift.is_active = False
+        shift.save()
+        messages.success(request, 'شیفت غیرفعال شد')
+        return redirect('students:shift_list', class_id=class_id)

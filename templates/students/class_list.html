@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}کلاس‌ها | {{ site_settings.gym_name }}{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">کلاس‌ها <span>{{ classes.count }} کلاس</span></h1></div>
+            <button onclick="openClassModal()" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">کلاس جدید</span></button>
+        </div>
+        
+        <div class="coach-list-page">
+            {% for c in classes %}
+            <div class="coach-card-page animate__animated animate__fadeInUp">
+                <div class="coach-avatar-page"><i class="bi bi-people-fill"></i></div>
+                <div class="coach-info-page" style="flex:1;">
+                    <div class="coach-name-page">{{ c.name }}</div>
+                    <div class="coach-meta-page">
+                        <span>{{ c.sport.name }}</span>
+                        <span>{{ c.club.name }}</span>
+                        <span>{{ c.get_gender_display }}</span>
+                        <span>{{ c.shifts.count }} شیفت</span>
+                    </div>
+                </div>
+                <div class="coach-actions">
+                    <a href="{% url 'students:shift_list' c.pk %}" class="coach-action-btn"><i class="bi bi-clock"></i></a>
+                    <button onclick="editClass({{ c.id }}, '{{ c.name|escapejs }}', {{ c.club_id }}, {{ c.sport_id }}, '{{ c.gender }}')" class="coach-action-btn edit"><i class="bi bi-pencil"></i></button>
+                    <button onclick="confirmClassDelete('{% url 'students:class_delete' c.id %}', '{{ c.name|escapejs }}')" class="coach-action-btn delete"><i class="bi bi-trash"></i></button>
+                </div>
+            </div>
+            {% empty %}<div class="text-center py-5 text-muted" style="grid-column:1/-1;">کلاسی ثبت نشده</div>{% endfor %}
+        </div>
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+
+<!-- مودال -->
+<div class="modal-overlay" id="classModalOverlay"></div>
+<div class="modal-sheet" id="classModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="classModalTitle">کلاس جدید</div>
+    <div class="modal-body">
+        <form method="post" id="classForm" action="{% url 'students:class_add' %}">
+            {% csrf_token %}
+            <div class="modal-form-group"><label class="form-label-sm">نام کلاس *</label><input type="text" name="name" id="className" class="input-glass" required></div>
+            <div class="modal-form-group"><label class="form-label-sm">باشگاه *</label><select name="club" id="classClub" class="input-glass" required><option value="">--</option>{% for c in clubs %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+            <div class="modal-form-group"><label class="form-label-sm">رشته *</label><select name="sport" id="classSport" class="input-glass" required><option value="">--</option>{% for s in sports %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select></div>
+            <div class="modal-form-group"><label class="form-label-sm">جنسیت</label><select name="gender" id="classGender" class="input-glass"><option value="mixed">مختلط</option><option value="male">آقایان</option><option value="female">بانوان</option></select></div>
+            <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeClassModal()">انصراف</button><button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> ذخیره</button></div>
+        </form>
+    </div>
+</div>
+
+<!-- مودال حذف -->
+<div class="modal-overlay" id="deleteClassModalOverlay"></div>
+<div class="modal-sheet" id="deleteClassModal">
+    <div class="modal-handle"></div><div class="modal-title">تایید غیرفعال‌سازی</div>
+    <div class="modal-body text-center">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;color:var(--primary);"></i>
+        <p class="mt-3">آیا از غیرفعال کردن "<span id="deleteClassName"></span>" مطمئن هستید؟</p>
+        <div class="modal-btn-row mt-3"><button type="button" class="btn-cancel-sm" onclick="closeClassDeleteModal()">انصراف</button>
+            <form id="deleteClassForm" method="post" style="flex:1;">{% csrf_token %}<button class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> غیرفعال</button></form>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if messages %}{% for m in messages %}if(typeof showToast==='function'){showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');}{% endfor %}{% endif %}
+    });
+    function openClassModal(){document.getElementById('classModalTitle').textContent='کلاس جدید';document.getElementById('classForm').action='{% url "students:class_add" %}';document.getElementById('className').value='';document.getElementById('classClub').value='';document.getElementById('classSport').value='';document.getElementById('classGender').value='mixed';document.getElementById('classModalOverlay').classList.add('show');document.getElementById('classModal').classList.add('show');}
+    function closeClassModal(){document.getElementById('classModalOverlay').classList.remove('show');document.getElementById('classModal').classList.remove('show');}
+    function editClass(id,name,club,sport,gender){document.getElementById('classModalTitle').textContent='ویرایش کلاس';document.getElementById('classForm').action='/students/classes/'+id+'/edit/';document.getElementById('className').value=name;document.getElementById('classClub').value=club;document.getElementById('classSport').value=sport;document.getElementById('classGender').value=gender;document.getElementById('classModalOverlay').classList.add('show');document.getElementById('classModal').classList.add('show');}
+    function confirmClassDelete(url,name){document.getElementById('deleteClassName').textContent=name;document.getElementById('deleteClassForm').action=url;document.getElementById('deleteClassModalOverlay').classList.add('show');document.getElementById('deleteClassModal').classList.add('show');}
+    function closeClassDeleteModal(){document.getElementById('deleteClassModalOverlay').classList.remove('show');document.getElementById('deleteClassModal').classList.remove('show');}
+</script>
+{% endblock %}
