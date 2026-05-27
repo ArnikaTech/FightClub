@@ -7,7 +7,7 @@ from django.db import models
 
 import jdatetime
 from .forms import StudentCreateForm
-from .models import Student, Insurance, StudentContact, Attendance, ClassGroup, Shift, Shift
+from .models import Student, Insurance, StudentContact, Attendance, ClassGroup, Shift, Enrollment
 from apps.clubs.models import Club, Sport
 
 
@@ -586,3 +586,107 @@ class ShiftDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
         shift.save()
         messages.success(request, 'شیفت غیرفعال شد')
         return redirect('students:shift_list', class_id=class_id)
+
+
+class EnrollmentActivateView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        enrollment = get_object_or_404(Enrollment, pk=pk)
+        enrollment.is_active = True
+        enrollment.save()
+        messages.success(request, f'ثبت‌نام {enrollment.student.user.get_full_name()} فعال شد')
+        return redirect('students:enrollment_list')
+
+
+class EnrollmentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    template_name = 'students/enrollment_list.html'
+    context_object_name = 'enrollments'
+    paginate_by = 20
+    
+    def test_func(self):
+        return self.request.user.is_super_manager or self.request.user.is_club_manager
+    
+    def get_queryset(self):
+        return Enrollment.objects.filter(is_active=True).select_related(
+            'student__user', 'student__club', 'shift__class_group__sport', 'shift__class_group__club'
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['students'] = Student.objects.filter(is_active=True).select_related('user', 'club')
+        context['shifts'] = Shift.objects.filter(is_active=True, class_group__is_active=True).select_related('class_group')
+        context['inactive_enrollments'] = Enrollment.objects.filter(is_active=False).select_related(
+            'student__user', 'student__club', 'shift__class_group__sport', 'shift__class_group__club'
+        )
+        return context
+
+
+class EnrollmentCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager or self.request.user.is_club_manager
+    
+    def post(self, request):
+        student_id = request.POST.get('student')
+        shift_id = request.POST.get('shift')
+        monthly_fee = request.POST.get('monthly_fee', '0').replace(',', '')
+        
+        if student_id and shift_id:
+            student = get_object_or_404(Student, pk=student_id)
+            shift = get_object_or_404(Shift, pk=shift_id)
+            
+            # چک کن قبلاً غیرفعال شده یا نه
+            old_enrollment = Enrollment.objects.filter(student=student, shift=shift).first()
+            if old_enrollment:
+                if old_enrollment.is_active:
+                    messages.error(request, 'این هنرجو قبلاً در این شیفت ثبت‌نام شده')
+                else:
+                    old_enrollment.is_active = True
+                    old_enrollment.monthly_fee = int(monthly_fee) if monthly_fee else 0
+                    old_enrollment.save()
+                    messages.success(request, f'{student.user.get_full_name()} مجدداً در {shift.name} ثبت‌نام شد')
+            else:
+                Enrollment.objects.create(
+                    student=student, shift=shift,
+                    monthly_fee=int(monthly_fee) if monthly_fee else 0
+                )
+                messages.success(request, f'{student.user.get_full_name()} در {shift.name} ثبت‌نام شد')
+        else:
+            messages.error(request, 'هنرجو و شیفت را انتخاب کنید')
+        return redirect('students:enrollment_list')
+
+
+class EnrollmentEditView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        enrollment = get_object_or_404(Enrollment, pk=pk)
+        shift_id = request.POST.get('shift')
+        monthly_fee = request.POST.get('monthly_fee', '0').replace(',', '')
+        
+        if shift_id:
+            # چک تکراری نبودن
+            if str(enrollment.shift_id) != str(shift_id):
+                exists = Enrollment.objects.filter(
+                    student=enrollment.student, shift_id=shift_id
+                ).exclude(pk=pk).exists()
+                if exists:
+                    messages.error(request, 'این هنرجو قبلاً در این شیفت ثبت‌نام شده')
+                    return redirect('students:enrollment_list')
+            
+            enrollment.shift_id = shift_id
+        
+        if monthly_fee:
+            enrollment.monthly_fee = int(monthly_fee)
+        
+        enrollment.save()
+        messages.success(request, 'ثبت‌نام بروزرسانی شد')
+        return redirect('students:enrollment_list')
+
+
+class EnrollmentDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager or self.request.user.is_club_manager
+    
+    def post(self, request, pk):
+        enrollment = get_object_or_404(Enrollment, pk=pk)
+        enrollment.is_active = False
+        enrollment.save()
+        messages.success(request, f'ثبت‌نام {enrollment.student.user.get_full_name()} لغو شد')
+        return redirect('students:enrollment_list')

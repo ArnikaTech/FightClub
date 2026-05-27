@@ -22,10 +22,13 @@
             <li><a href="{% url 'clubs:coach_list' %}" class="{% if request.resolver_match.url_name == 'coach_list' or request.resolver_match.url_name == 'coach_add' or request.resolver_match.url_name == 'coach_edit' %}active{% endif %}"><i class="bi bi-person-badge-fill"></i> مربیان</a></li>
         </ul>
         
+        {% if user.is_super_manager or user.is_club_manager %}
         <div class="sidebar-category">کلاس‌ها</div>
         <ul class="sidebar-nav">
-            <li><a href="{% url 'students:class_list' %}"><i class="bi bi-people-fill"></i> کلاس‌ها</a></li>
+            <li><a href="{% url 'students:class_list' %}" class="{% if request.resolver_match.url_name == 'class_list' %}active{% endif %}"><i class="bi bi-people-fill"></i> کلاس‌ها و شیفت‌ها</a></li>
+            <li><a href="{% url 'students:enrollment_list' %}" class="{% if request.resolver_match.url_name == 'enrollment_list' %}active{% endif %}"><i class="bi bi-journal-check"></i> ثبت‌نام‌ها</a></li>
         </ul>
+        {% endif %}
         
         <div class="sidebar-category">هنرجوها</div>
         <ul class="sidebar-nav">
