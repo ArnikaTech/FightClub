@@ -19,6 +19,7 @@ urlpatterns = [
 
     path('attendance/', views.AttendanceView.as_view(), name='attendance'),
     path('absentees/', views.AbsenteeListView.as_view(), name='absentees'),
+    path('attendance/save/', views.AttendanceSaveView.as_view(), name='attendance_save'),
     path('attendance/toggle/<int:student_id>/', views.AttendanceToggleView.as_view(), name='attendance_toggle'),
 
     path('classes/', views.ClassGroupListView.as_view(), name='class_list'),

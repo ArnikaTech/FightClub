@@ -2,13 +2,10 @@
 {% load static %}
 {% load jformat %}
 
-{% block title %}ثبت حضور | {{ site_settings.gym_name }}{% endblock %}
-
+{% block title %}حضور و غیاب | {{ site_settings.gym_name }}{% endblock %}
 {% block content %}
 <div class="dashboard-layout">
-    {% include 'partials/_sidebar.html' %}
-    {% include 'partials/_mobile_nav.html' %}
-    
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
     <main class="dashboard-main">
         {% include 'partials/_notif_bar.html' %}
         
@@ -24,50 +21,98 @@
             <div class="date-text">{{ today|jformat:"%Y/%m/%d" }}<small>تاریخ امروز</small></div>
         </div>
         
-        <div id="attendanceStats" hx-swap-oob="true">
-            {% include 'students/_attendance_stats.html' %}
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <form method="get" style="flex:1;">
+                <select name="shift" class="input-glass" onchange="this.form.submit()" style="width:100%;max-width:400px;">
+                    <option value="">-- انتخاب شیفت --</option>
+                    {% for sh in shifts %}
+                    <option value="{{ sh.id }}" {% if selected_shift and selected_shift.id == sh.id %}selected{% endif %}>
+                        {{ sh.name }} - {{ sh.class_group.name }} ({{ sh.days }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
         </div>
         
-        <div class="section-block animate__animated animate__fadeInUp">
-            <div class="section-head"><h3>هنرجویان</h3><span style="font-size:0.75rem;color:var(--accent);">کلیک = تغییر وضعیت</span></div>
-            
-            <div class="attendance-list" id="attendanceList">
-                {% for s in students %}
-                <div class="attendance-item {% if s.id in attended_today %}checked{% endif %}"
-                hx-post="{% url 'students:attendance_toggle' s.id %}"
-                hx-trigger="click"
-                hx-swap="outerHTML"
-                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-                <div class="att-item-avatar">
-                    {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}" alt="">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
-                </div>
-                <div class="att-item-info">
-                    <div class="att-name">
-                        {{ s.user.get_full_name }}
-                        {% if s.is_birthday_today %}
-                        <span class="badge-birthday"><i class="bi bi-gift-fill"></i></span>
-                        {% endif %}
-                        {% if s.previous_absent %}
-                        <span class="badge-absent-warn" title="غیبت جلسه قبل" style="background:rgba(255,77,46,0.2);color:var(--primary);width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-size:0.75rem;">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                        </span>
-                        {% endif %}
-                    </div>
-                    <div class="att-meta"><span>{{ s.get_current_belt_display }}</span><span>{{ s.student_code }}</span></div>
-                </div>
-                <div class="att-check"><i class="bi bi-check-lg"></i></div>
+        {% if selected_shift %}
+        <div id="attendanceStats">
+            <div class="stats-bar">
+                <div class="stat-mini"><div class="stat-num green">{{ present_count }}</div><div class="stat-lbl">حاضر</div></div>
+                <div class="stat-mini"><div class="stat-num red">{{ absent_count }}</div><div class="stat-lbl">غایب</div></div>
+                <div class="stat-mini"><div class="stat-num yellow">{{ total_count }}</div><div class="stat-lbl">کل</div></div>
             </div>
-            {% empty %}
-            <div class="text-center py-4 text-muted">هیچ هنرجویی یافت نشد</div>
-            {% endfor %}
         </div>
-    </div>
-    
-    <div id="toast-container"></div>
-</main>
-
-{% include 'partials/_bottom_nav.html' %}
-{% include 'partials/_bottom_sheet.html' %}
-{% include 'partials/_toast.html' %}
+        
+        <form method="post" action="{% url 'students:attendance_save' %}" id="attendanceForm">
+            {% csrf_token %}
+            <input type="hidden" name="shift" value="{{ selected_shift.id }}">
+            
+            <div class="section-block animate__animated animate__fadeInUp">
+                <div class="section-head"><h3>هنرجویان {{ selected_shift.name }}</h3><span id="selectedCount" style="font-size:0.75rem;color:var(--accent);">۰ انتخاب شده</span></div>
+                
+                <div class="attendance-list" id="attendanceList">
+                    {% for s in students %}
+                    <div class="attendance-item {% if s.id in attended_today %}checked{% endif %}" data-id="{{ s.id }}" data-name="{{ s.user.get_full_name }}" data-birthday="{% if s.is_birthday_today %}true{% else %}false{% endif %}">
+                        <div class="att-item-avatar">
+                            {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}" alt="">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
+                        </div>
+                        <div class="att-item-info">
+                            <div class="att-name">
+                                {{ s.user.get_full_name }}
+                                {% if s.is_birthday_today %}<span class="badge-birthday"><i class="bi bi-gift-fill"></i></span>{% endif %}
+                                {% if s.previous_absent %}<span class="badge-absent-warn" title="غیبت جلسه قبل"><i class="bi bi-exclamation-triangle-fill"></i></span>{% endif %}
+                            </div>
+                            <div class="att-meta"><span>{{ s.get_current_belt_display }}</span><span>{{ s.student_code }}</span></div>
+                        </div>
+                        <div class="att-check"><i class="bi bi-check-lg"></i></div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted">هیچ هنرجویی در این شیفت ثبت‌نام نشده</div>
+                    {% endfor %}
+                </div>
+                
+                <input type="hidden" name="student_ids" id="studentIdsInput">
+                
+                <div class="btn-save-wrapper">
+                    <button type="submit" class="btn-save" id="btnSave"><i class="bi bi-cloud-check"></i> ذخیره حضور و غیاب</button>
+                </div>
+            </div>
+        </form>
+        {% else %}
+        <div class="text-center py-5 text-muted">لطفاً یک شیفت انتخاب کنید</div>
+        {% endif %}
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var countEl = document.getElementById('selectedCount');
+        if(countEl){
+            function updateCount(){
+                var checked = document.querySelectorAll('.attendance-item.checked').length;
+                countEl.textContent = checked + ' انتخاب شده';
+            }
+            updateCount();
+            document.getElementById('attendanceList').addEventListener('click', function(e){
+                var item = e.target.closest('.attendance-item');
+                if(!item) return;
+                item.classList.toggle('checked');
+                updateCount();
+            });
+        }
+        
+        document.getElementById('attendanceForm').addEventListener('submit', function(){
+            var ids = [];
+            document.querySelectorAll('.attendance-item.checked').forEach(function(item){
+                ids.push(parseInt(item.getAttribute('data-id')));
+            });
+            document.getElementById('studentIdsInput').value = JSON.stringify(ids);
+        });
+        
+        {% if messages %}{% for m in messages %}if(typeof showToast==='function'){showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');}{% endfor %}{% endif %}
+    });
+</script>
 {% endblock %}

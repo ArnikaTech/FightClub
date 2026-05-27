@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import View, ListView, DetailView, FormView
+from django.views.generic import TemplateView, View, ListView, DetailView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -257,43 +257,81 @@ class ContactCreateView(LoginRequiredMixin, View):
         return redirect('students:student_detail', pk=pk)
 
 
-class AttendanceView(LoginRequiredMixin, UserPassesTestMixin, ListView):
-    """صفحه ثبت حضور و غیاب"""
-    model = Student
+class AttendanceView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = 'students/attendance.html'
-    context_object_name = 'students'
     
     def test_func(self):
-        user = self.request.user
-        return user.is_super_manager or user.is_club_manager
-    
-    def get_queryset(self):
-        user = self.request.user
-        if user.is_super_manager:
-            return Student.objects.filter(is_active=True).select_related('user', 'club')
-        return Student.objects.filter(
-            club__memberships__user=user,
-            club__memberships__is_active=True,
-            is_active=True
-        ).select_related('user', 'club')
+        return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = jdatetime.date.today()
-        attended_ids = Attendance.objects.filter(date=today, status='present').values_list('student_id', flat=True)
-        
-        # جلسه قبل هر هنرجو
-        students = context['students']
-        for s in students:
-            last_att = s.attendances.exclude(date=today).order_by('-date').first()
-            s.previous_absent = (last_att and last_att.status == 'absent')
-        
-        context['attended_today'] = set(attended_ids)
         context['today'] = today
-        context['present_count'] = len(attended_ids)
-        context['total_count'] = self.get_queryset().count()
-        context['absent_count'] = context['total_count'] - context['present_count']
+        
+        # شیفت‌های فعال
+        shift_id = self.request.GET.get('shift')
+        context['shifts'] = Shift.objects.filter(is_active=True, class_group__is_active=True).select_related('class_group')
+        
+        if shift_id:
+            shift = get_object_or_404(Shift, pk=shift_id)
+            context['selected_shift'] = shift
+            
+            # هنرجویان ثبت‌نام شده در این شیفت
+            enrollments = Enrollment.objects.filter(shift=shift, is_active=True).select_related('student__user')
+            students = [e.student for e in enrollments]
+            
+            # وضعیت حضور امروز
+            attended_ids = Attendance.objects.filter(
+                shift=shift, date=today, status='present'
+            ).values_list('student_id', flat=True)
+            
+            context['students'] = students
+            context['attended_today'] = set(attended_ids)
+            context['present_count'] = len(attended_ids)
+            context['total_count'] = len(students)
+            context['absent_count'] = len(students) - len(attended_ids)
+        else:
+            context['students'] = []
+            context['attended_today'] = set()
+            context['present_count'] = 0
+            context['total_count'] = 0
+            context['absent_count'] = 0
+        
         return context
+
+
+class AttendanceSaveView(LoginRequiredMixin, View):
+    def post(self, request):
+        import json
+        student_ids_str = request.POST.get('student_ids', '[]')
+        shift_id = request.POST.get('shift')
+        
+        try:
+            student_ids = json.loads(student_ids_str)
+        except:
+            student_ids = []
+        
+        if not shift_id:
+            messages.error(request, 'شیفت را انتخاب کنید')
+            return redirect('students:attendance')
+        
+        shift = get_object_or_404(Shift, pk=shift_id)
+        date = jdatetime.date.today()
+        
+        # فقط هنرجویان ثبت‌نام شده در این شیفت
+        enrollments = Enrollment.objects.filter(shift=shift, is_active=True)
+        
+        for enrollment in enrollments:
+            status = 'present' if enrollment.student_id in student_ids else 'absent'
+            Attendance.objects.update_or_create(
+                student=enrollment.student,
+                shift=shift,
+                date=date,
+                defaults={'status': status}
+            )
+        
+        messages.success(request, f'حضور و غیاب {shift.name} ثبت شد')
+        return redirect(f'/students/attendance/?shift={shift_id}')
 
 
 class AttendanceToggleView(LoginRequiredMixin, View):
