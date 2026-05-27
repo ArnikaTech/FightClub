@@ -155,12 +155,8 @@ class Attendance(models.Model):
         ('late', 'تأخیر'),
     ]
     
-    student = models.ForeignKey(
-        Student,
-        on_delete=models.CASCADE,
-        related_name='attendances',
-        verbose_name='هنرجو'
-    )
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='attendances', verbose_name='هنرجو')
+    shift = models.ForeignKey('Shift', on_delete=models.PROTECT, related_name='attendances', verbose_name='شیفت', null=True, blank=True)
     date = jmodels.jDateField('تاریخ')
     status = models.CharField('وضعیت', max_length=10, choices=STATUS, default='present')
     created_at = models.DateTimeField('تاریخ ثبت', auto_now_add=True)
@@ -168,8 +164,79 @@ class Attendance(models.Model):
     class Meta:
         verbose_name = 'حضور و غیاب'
         verbose_name_plural = 'حضور و غیاب‌ها'
-        unique_together = ['student', 'date']
+        unique_together = ['student', 'shift', 'date']
         ordering = ['-date']
     
     def __str__(self):
         return f"{self.student} - {self.date} - {self.get_status_display()}"
+
+
+class ClassGroup(models.Model):
+    """کلاس/گروه آموزشی"""
+    GENDER_CHOICES = [
+        ('male', 'آقایان'),
+        ('female', 'بانوان'),
+        ('mixed', 'مختلط'),
+    ]
+    
+    club = models.ForeignKey(Club, on_delete=models.PROTECT, related_name='class_groups', verbose_name='باشگاه')
+    sport = models.ForeignKey(Sport, on_delete=models.PROTECT, related_name='class_groups', verbose_name='رشته ورزشی')
+    name = models.CharField('نام کلاس', max_length=200)
+    gender = models.CharField('جنسیت', max_length=10, choices=GENDER_CHOICES, default='mixed')
+    description = models.TextField('توضیحات', blank=True, null=True)
+    is_active = models.BooleanField('فعال', default=True)
+    created_at = models.DateTimeField('تاریخ ایجاد', auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'کلاس'
+        verbose_name_plural = 'کلاس‌ها'
+        ordering = ['club', 'sport', 'name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.club.name})"
+
+
+class Shift(models.Model):
+    """شیفت کلاس"""
+    DAY_CHOICES = [
+        ('saturday', 'شنبه'),
+        ('sunday', 'یکشنبه'),
+        ('monday', 'دوشنبه'),
+        ('tuesday', 'سه‌شنبه'),
+        ('wednesday', 'چهارشنبه'),
+        ('thursday', 'پنج‌شنبه'),
+        ('friday', 'جمعه'),
+    ]
+    
+    class_group = models.ForeignKey(ClassGroup, on_delete=models.CASCADE, related_name='shifts', verbose_name='کلاس')
+    name = models.CharField('نام شیفت', max_length=200, help_text='مثال: صبح ۸ تا ۱۰')
+    days = models.CharField('روزها', max_length=200, help_text='مثال: شنبه، دوشنبه')
+    start_time = models.TimeField('ساعت شروع')
+    end_time = models.TimeField('ساعت پایان')
+    is_active = models.BooleanField('فعال', default=True)
+    created_at = models.DateTimeField('تاریخ ایجاد', auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'شیفت'
+        verbose_name_plural = 'شیفت‌ها'
+        ordering = ['class_group', 'start_time']
+    
+    def __str__(self):
+        return f"{self.name} - {self.class_group.name}"
+
+
+class Enrollment(models.Model):
+    """ثبت‌نام هنرجو در شیفت"""
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='enrollments', verbose_name='هنرجو')
+    shift = models.ForeignKey(Shift, on_delete=models.PROTECT, related_name='enrollments', verbose_name='شیفت')
+    enrolled_at = jmodels.jDateField('تاریخ ثبت‌نام', auto_now_add=True)
+    is_active = models.BooleanField('فعال', default=True)
+    monthly_fee = models.PositiveIntegerField('شهریه ماهانه (تومان)', default=0)
+    
+    class Meta:
+        verbose_name = 'ثبت‌نام'
+        verbose_name_plural = 'ثبت‌نام‌ها'
+        unique_together = ['student', 'shift']
+    
+    def __str__(self):
+        return f"{self.student.user.get_full_name()} در {self.shift}"

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Student, StudentContact, Insurance, Attendance
+from .models import Student, StudentContact, Insurance, Attendance, ClassGroup, Shift, Enrollment
 
 
 class ContactInline(admin.TabularInline):
@@ -23,3 +23,22 @@ class StudentAdmin(admin.ModelAdmin):
 class AttendanceAdmin(admin.ModelAdmin):
     list_display = ['student', 'date', 'status']
     autocomplete_fields = ['student']
+
+
+@admin.register(ClassGroup)
+class ClassGroupAdmin(admin.ModelAdmin):
+    list_display = ['name', 'club', 'sport', 'gender', 'is_active']
+    search_fields = ['name']
+    autocomplete_fields = ['club', 'sport']
+
+@admin.register(Shift)
+class ShiftAdmin(admin.ModelAdmin):
+    list_display = ['name', 'class_group', 'start_time', 'end_time', 'is_active']
+    search_fields = ['name']
+    autocomplete_fields = ['class_group']
+
+@admin.register(Enrollment)
+class EnrollmentAdmin(admin.ModelAdmin):
+    list_display = ['student', 'shift', 'enrolled_at', 'is_active']
+    search_fields = ['student__user__first_name', 'student__user__last_name']
+    autocomplete_fields = ['student', 'shift']
