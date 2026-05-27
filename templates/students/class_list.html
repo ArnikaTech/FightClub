@@ -19,25 +19,44 @@
                 <div class="coach-info-page" style="flex:1;">
                     <div class="coach-name-page">{{ c.name }}</div>
                     <div class="coach-meta-page">
-                        <span>{{ c.sport.name }}</span>
-                        <span>{{ c.club.name }}</span>
-                        <span>{{ c.get_gender_display }}</span>
-                        <span>{{ c.shifts.count }} شیفت</span>
+                        <span>{{ c.sport.name }}</span><span>{{ c.club.name }}</span>
+                        <span>{{ c.get_gender_display }}</span><span>{{ c.shifts.count }} شیفت</span>
                     </div>
                 </div>
                 <div class="coach-actions">
-                    <a href="{% url 'students:shift_list' c.pk %}" class="coach-action-btn"><i class="bi bi-clock"></i></a>
+                    <a href="{% url 'students:shift_list' c.id %}" class="coach-action-btn"><i class="bi bi-clock"></i></a>
                     <button onclick="editClass({{ c.id }}, '{{ c.name|escapejs }}', {{ c.club_id }}, {{ c.sport_id }}, '{{ c.gender }}')" class="coach-action-btn edit"><i class="bi bi-pencil"></i></button>
                     <button onclick="confirmClassDelete('{% url 'students:class_delete' c.id %}', '{{ c.name|escapejs }}')" class="coach-action-btn delete"><i class="bi bi-trash"></i></button>
                 </div>
             </div>
             {% empty %}<div class="text-center py-5 text-muted" style="grid-column:1/-1;">کلاسی ثبت نشده</div>{% endfor %}
         </div>
+        
+        {% if inactive_classes %}
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">غیرفعال <span>{{ inactive_classes.count }} کلاس</span></h1></div>
+        </div>
+        <div class="coach-list-page">
+            {% for c in inactive_classes %}
+            <div class="coach-card-page animate__animated animate__fadeInUp" style="opacity:0.5;">
+                <div class="coach-avatar-page"><i class="bi bi-people-fill"></i></div>
+                <div class="coach-info-page" style="flex:1;">
+                    <div class="coach-name-page">{{ c.name }}</div>
+                    <div class="coach-meta-page"><span>{{ c.sport.name }}</span><span>{{ c.club.name }}</span></div>
+                </div>
+                <div class="coach-actions">
+                    <form method="post" action="{% url 'students:class_activate' c.id %}">
+                        {% csrf_token %}<button class="coach-action-btn edit" style="color:#34c759;"><i class="bi bi-arrow-repeat"></i></button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
     </main>
     {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
 </div>
 
-<!-- مودال -->
 <div class="modal-overlay" id="classModalOverlay"></div>
 <div class="modal-sheet" id="classModal">
     <div class="modal-handle"></div>
@@ -54,7 +73,6 @@
     </div>
 </div>
 
-<!-- مودال حذف -->
 <div class="modal-overlay" id="deleteClassModalOverlay"></div>
 <div class="modal-sheet" id="deleteClassModal">
     <div class="modal-handle"></div><div class="modal-title">تایید غیرفعال‌سازی</div>

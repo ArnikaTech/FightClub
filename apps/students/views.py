@@ -418,6 +418,15 @@ class StudentDeleteView(LoginRequiredMixin, View):
         return redirect('students:student_list')
 
 
+class ClassGroupActivateView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        class_group = get_object_or_404(ClassGroup, pk=pk)
+        class_group.is_active = True
+        class_group.save()
+        messages.success(request, f'کلاس {class_group.name} فعال شد')
+        return redirect('students:class_list')
+
+
 class ClassGroupListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = ClassGroup
     template_name = 'students/class_list.html'
@@ -436,6 +445,7 @@ class ClassGroupListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['inactive_classes'] = ClassGroup.objects.filter(is_active=False)    
         context['clubs'] = Club.objects.filter(is_active=True)
         context['sports'] = Sport.objects.all()
         return context
@@ -491,6 +501,15 @@ class ClassGroupDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
         return redirect('students:class_list')
 
 
+class ShiftActivateView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        shift = get_object_or_404(Shift, pk=pk)
+        shift.is_active = True
+        shift.save()
+        messages.success(request, f'شیفت {shift.name} فعال شد')
+        return redirect('students:shift_list', class_id=shift.class_group_id)
+
+
 class ShiftListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     template_name = 'students/shift_list.html'
     context_object_name = 'shifts'
@@ -505,6 +524,7 @@ class ShiftListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['class_group'] = self.class_group
+        context['inactive_shifts'] = self.class_group.shifts.filter(is_active=False)
         return context
 
 
