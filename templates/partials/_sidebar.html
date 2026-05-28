@@ -40,6 +40,7 @@
         <ul class="sidebar-nav">
             <li><a href="{% url 'students:attendance' %}" class="{% if request.resolver_match.url_name == 'attendance' %}active{% endif %}"><i class="bi bi-calendar-check-fill"></i> ثبت حضور</a></li>
             <li><a href="{% url 'students:absentees' %}" class="{% if request.resolver_match.url_name == 'absentees' %}active{% endif %}"><i class="bi bi-exclamation-triangle-fill"></i> پیگیری غیبت‌ها</a></li>
+            <li><a href="{% url 'students:attendance_history' %}" class="{% if request.resolver_match.url_name == 'attendance_history' %}active{% endif %}"><i class="bi bi-calendar-month"></i> تاریخچه ماهانه</a></li>
         </ul>
         
         {% if user.is_super_manager or user.is_club_manager %}

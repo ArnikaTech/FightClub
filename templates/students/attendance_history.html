@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load dict_filters %}
+{% block title %}تاریخچه حضور غیاب{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        <div class="page-header"><h1 class="page-title">📅 تاریخچه حضور غیاب</h1></div>
+        
+        <form method="get" class="date-card" style="flex-wrap:wrap;gap:8px;">
+            <select name="year" class="input-glass" style="width:auto;" onchange="this.form.submit()">
+                {% for y in years %}<option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>{% endfor %}
+            </select>
+            <select name="month" class="input-glass" style="width:auto;" onchange="this.form.submit()">
+                {% for m in months %}<option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ m }}</option>{% endfor %}
+            </select>
+            <select name="shift" class="input-glass" style="width:auto;" onchange="this.form.submit()">
+                <option value="">همه شیفت‌ها</option>
+                {% for sh in all_shifts %}<option value="{{ sh.id }}" {% if shift and shift.id == sh.id %}selected{% endif %}>{{ sh.name }}</option>{% endfor %}
+            </select>
+            <select name="student" class="input-glass" style="width:auto;" onchange="this.form.submit()">
+                <option value="">همه هنرجویان</option>
+                {% for s in all_students %}<option value="{{ s.id }}" {% if student_id == s.id|stringformat:'s' %}selected{% endif %}>{{ s.user.get_full_name }}</option>{% endfor %}
+            </select>
+        </form>
+        
+        <h3 style="text-align:center;margin:16px 0;">{{ month_name }}</h3>
+        
+        {% if attendance_data %}
+        <div style="overflow-x:auto;">
+            <table class="table table-dark table-striped">
+                <thead><tr><th>نام</th>{% for day in days %}<th style="text-align:center;font-size:0.7rem;">{{ day }}</th>{% endfor %}</tr></thead>
+                <tbody>
+                    {% for s in students %}
+                    <tr>
+                        <td>{{ s.user.get_full_name }}</td>
+                        {% for day in days %}
+                        <td style="text-align:center;">
+                            {% with row=attendance_data|get_item:s.id %}{% with val=row|get_item:day %}
+                            {% if val == 'present' %}✅{% elif val == 'absent' %}❌{% elif val == 'late' %}⏰{% else %}-{% endif %}
+                            {% endwith %}{% endwith %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">برای دیدن تاریخچه، لطفاً فیلترها را انتخاب کنید</div>
+        {% endif %}
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+{% endblock %}

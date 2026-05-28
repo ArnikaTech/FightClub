@@ -420,6 +420,73 @@ class AbsenteeListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return context
 
 
+class AttendanceHistoryView(LoginRequiredMixin, TemplateView):
+    template_name = 'students/attendance_history.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        today = jdatetime.date.today()
+        
+        year = int(self.request.GET.get('year', str(today.year)).replace(',', ''))
+        month = int(self.request.GET.get('month', str(today.month)).replace(',', ''))
+        shift_id = self.request.GET.get('shift')
+        student_id = self.request.GET.get('student')
+        
+        # روزهای ماه
+        if month <= 6: last_day = 31
+        elif month <= 11: last_day = 30
+        else: last_day = 29 if year % 4 != 0 else 30
+        
+        context['year'] = year
+        context['month'] = month
+        context['month_name'] = f'{year}/{month:02d}'
+        context['days'] = list(range(1, last_day + 1))
+        context['months'] = list(range(1, 13))
+        context['years'] = list(range(today.year - 2, today.year + 1))
+        
+        # همه هنرجویان (برای فیلتر)
+        if user.is_super_manager:
+            all_students = Student.objects.filter(is_active=True).select_related('user')
+            all_shifts = Shift.objects.filter(is_active=True).select_related('class_group')
+        elif user.is_club_manager:
+            clubs = Club.objects.filter(memberships__user=user, is_active=True)
+            all_students = Student.objects.filter(club__in=clubs, is_active=True).select_related('user')
+            all_shifts = Shift.objects.filter(class_group__club__in=clubs, is_active=True).select_related('class_group')
+        else:
+            all_students = Student.objects.filter(pk=user.student_profile.pk).select_related('user')
+            all_shifts = Shift.objects.none()
+        
+        context['all_students'] = all_students
+        context['all_shifts'] = all_shifts
+        
+        # فیلترها
+        students = all_students
+        shift = None
+        if shift_id:
+            shift = get_object_or_404(Shift, pk=shift_id)
+            enrolled_ids = Enrollment.objects.filter(shift=shift, is_active=True).values_list('student_id', flat=True)
+            students = students.filter(pk__in=enrolled_ids)
+        if student_id:
+            students = students.filter(pk=student_id)
+        
+        context['shift'] = shift
+        context['students'] = students
+        
+        # جدول
+        if students.exists():
+            attendance_data = {}
+            for s in students:
+                atts = Attendance.objects.filter(student=s, date__gte=jdatetime.date(year, month, 1), date__lte=jdatetime.date(year, month, last_day))
+                if shift: atts = atts.filter(shift=shift)
+                att_dict = {}
+                for att in atts: att_dict[att.date.day] = att.status
+                attendance_data[s.id] = att_dict
+            context['attendance_data'] = attendance_data
+        
+        return context
+
+
 class ContactEditView(LoginRequiredMixin, View):
     """ویرایش شماره تماس"""
     

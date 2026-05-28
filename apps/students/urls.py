@@ -20,6 +20,8 @@ urlpatterns = [
     path('attendance/', views.AttendanceView.as_view(), name='attendance'),
     path('absentees/', views.AbsenteeListView.as_view(), name='absentees'),
     path('attendance/save/', views.AttendanceSaveView.as_view(), name='attendance_save'),
+
+    path('attendance/history/', views.AttendanceHistoryView.as_view(), name='attendance_history'),
     path('attendance/toggle/<int:student_id>/', views.AttendanceToggleView.as_view(), name='attendance_toggle'),
 
     path('classes/', views.ClassGroupListView.as_view(), name='class_list'),
@@ -39,4 +41,6 @@ urlpatterns = [
     path('enrollments/<int:pk>/edit/', views.EnrollmentEditView.as_view(), name='enrollment_edit'),
     path('enrollments/<int:pk>/delete/', views.EnrollmentDeleteView.as_view(), name='enrollment_delete'),
     path('enrollments/<int:pk>/activate/', views.EnrollmentActivateView.as_view(), name='enrollment_activate'),
+
+    path('attendance/history/', views.AttendanceHistoryView.as_view(), name='attendance_history'),
 ]
