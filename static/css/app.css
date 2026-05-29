@@ -4440,7 +4440,6 @@ input[readonly] {
     display: none !important;
 }
 
-/* Select2 عرض برابر */
 .select2-filter + .select2-container {
     flex: 1 !important;
     min-width: 140px;
@@ -4453,5 +4452,17 @@ input[readonly] {
 @media (max-width: 767px) {
     .select2-filter + .select2-container {
         flex: 1 1 100% !important;
+    }
+}
+
+.select2-dashboard + .select2-container {
+    min-width: 250px;
+    max-width: 350px;
+}
+
+@media (max-width: 767px) {
+    .select2-dashboard + .select2-container {
+        min-width: 100%;
+        max-width: 100%;
     }
 }

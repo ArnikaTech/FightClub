@@ -44,14 +44,14 @@
         {% if user.is_super_manager or user.is_club_manager %}
         <!-- فیلتر باشگاه -->
         {% if user.is_super_manager and clubs %}
-        <form method="get" style="margin-bottom: 16px;">
-            <select name="club_id" class="input-glass" onchange="this.form.submit()" style="width:auto;">
-                <option value="">همه باشگاه‌ها</option>
-                {% for club in clubs %}
-                <option value="{{ club.id }}" {% if selected_club and selected_club.id == club.id %}selected{% endif %}>{{ club.name }}</option>
-                {% endfor %}
-            </select>
-        </form>
+        <form method="get" style="margin-bottom:16px;">
+    <select name="club_id" class="select2-dashboard" onchange="this.form.submit()">
+        <option value="">🏢 همه باشگاه‌ها</option>
+        {% for club in clubs %}
+        <option value="{{ club.id }}" {% if selected_club and selected_club.id == club.id %}selected{% endif %}>{{ club.name }}</option>
+        {% endfor %}
+    </select>
+</form>
         {% endif %}
         
         <!-- آمار -->
@@ -120,4 +120,15 @@
     </main>
     {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('.select2-dashboard').select2({
+            dir: 'rtl',
+            width: 'resolve',
+        });
+    });
+</script>
 {% endblock %}
