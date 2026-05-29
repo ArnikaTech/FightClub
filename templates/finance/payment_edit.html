@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load jformat %}
+{% load static %} {% load jformat %} {% load humanize %}
 
 {% block title %}ویرایش پرداخت | {{ site_settings.gym_name }}{% endblock %}
 {% block content %}
@@ -38,7 +37,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label-sm">مبلغ (تومان) *</label>
-                    <input type="text" name="amount" class="input-glass" value="{{ payment.amount }}" required>
+                    <input type="text" name="amount" class="input-glass" value="{{ payment.amount|intcomma }}" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label-sm">تاریخ پرداخت *</label>

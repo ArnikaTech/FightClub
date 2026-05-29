@@ -10,72 +10,66 @@
         {% include 'partials/_notif_bar.html' %}
         
         <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">ثبت حضور و غیاب</h1></div>
+        </div>
+        
+        <!-- انتخاب تاریخ و شیفت -->
+        <form method="get" class="date-card animate__animated animate__fadeIn" style="flex-wrap:wrap;gap:8px;align-items:end;">
             <div>
-                <h1 class="page-title">ثبت حضور و غیاب</h1>
-                <div class="page-subtitle">{{ today|jformat:"%Y/%m/%d" }}</div>
+                <label class="form-label-sm">تاریخ</label>
+                <input type="text" name="date" class="input-glass" value="{{ today|jformat:'%Y/%m/%d' }}" style="width:140px;">
             </div>
-        </div>
-        
-        <div class="date-card animate__animated animate__fadeIn">
-            <div class="date-icon"><i class="bi bi-calendar-check"></i></div>
-            <div class="date-text">{{ today|jformat:"%Y/%m/%d" }}<small>تاریخ امروز</small></div>
-        </div>
-        
-        <div style="display:flex;gap:8px;margin-bottom:16px;">
-            <form method="get" style="flex:1;">
-                <select name="shift" class="input-glass" onchange="this.form.submit()" style="width:100%;max-width:400px;">
+            <div style="flex:1;">
+                <label class="form-label-sm">شیفت</label>
+                <select name="shift" class="input-glass" onchange="this.form.submit()">
                     <option value="">-- انتخاب شیفت --</option>
                     {% for sh in shifts %}
-                    <option value="{{ sh.id }}" {% if selected_shift and selected_shift.id == sh.id %}selected{% endif %}>
-                        {{ sh.name }} - {{ sh.class_group.name }} ({{ sh.days }})
-                    </option>
+                    <option value="{{ sh.id }}" {% if selected_shift and selected_shift.id == sh.id %}selected{% endif %}>{{ sh.name }} - {{ sh.class_group.name }}</option>
                     {% endfor %}
                 </select>
-            </form>
-        </div>
+            </div>
+        </form>
         
         {% if selected_shift %}
-        <div id="attendanceStats">
-            <div class="stats-bar">
-                <div class="stat-mini"><div class="stat-num green">{{ present_count }}</div><div class="stat-lbl">حاضر</div></div>
-                <div class="stat-mini"><div class="stat-num red">{{ absent_count }}</div><div class="stat-lbl">غایب</div></div>
-                <div class="stat-mini"><div class="stat-num yellow">{{ total_count }}</div><div class="stat-lbl">کل</div></div>
-            </div>
+        <!-- آمار -->
+        <div class="stats-bar animate__animated animate__fadeInUp">
+            <div class="stat-mini"><div class="stat-num green">{{ present_count }}</div><div class="stat-lbl">حاضر</div></div>
+            <div class="stat-mini"><div class="stat-num red">{{ absent_count }}</div><div class="stat-lbl">غایب</div></div>
+            <div class="stat-mini"><div class="stat-num yellow">{{ total_count }}</div><div class="stat-lbl">کل</div></div>
         </div>
         
+        <!-- فرم حضور و غیاب -->
         <form method="post" action="{% url 'students:attendance_save' %}" id="attendanceForm">
             {% csrf_token %}
             <input type="hidden" name="shift" value="{{ selected_shift.id }}">
+            <input type="hidden" name="date" value="{{ today|jformat:'%Y/%m/%d' }}">
             
             <div class="section-block animate__animated animate__fadeInUp">
-                <div class="section-head"><h3>هنرجویان {{ selected_shift.name }}</h3><span id="selectedCount" style="font-size:0.75rem;color:var(--accent);">۰ انتخاب شده</span></div>
+                <div class="section-head">
+                    <h3>{{ selected_shift.name }} - {{ today|jformat:'%Y/%m/%d' }}</h3>
+                    <span id="selectedCount" style="font-size:0.75rem;color:var(--accent);">۰ انتخاب شده</span>
+                </div>
                 
                 <div class="attendance-list" id="attendanceList">
                     {% for s in students %}
-                    <div class="attendance-item {% if s.id in attended_today %}checked{% endif %}" data-id="{{ s.id }}" data-name="{{ s.user.get_full_name }}" data-birthday="{% if s.is_birthday_today %}true{% else %}false{% endif %}">
+                    <div class="attendance-item {% if s.id in attended_today %}checked{% endif %}" data-id="{{ s.id }}" data-name="{{ s.user.get_full_name }}">
                         <div class="att-item-avatar">
-                            {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}" alt="">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
+                            {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
                         </div>
                         <div class="att-item-info">
                             <div class="att-name">
                                 {{ s.user.get_full_name }}
                                 {% if s.is_birthday_today %}<span class="badge-birthday"><i class="bi bi-gift-fill"></i></span>{% endif %}
-                                {% if s.previous_absent %}<span class="badge-absent-warn" title="غیبت جلسه قبل"><i class="bi bi-exclamation-triangle-fill"></i></span>{% endif %}
                             </div>
                             <div class="att-meta"><span>{{ s.get_current_belt_display }}</span><span>{{ s.student_code }}</span></div>
                         </div>
                         <div class="att-check"><i class="bi bi-check-lg"></i></div>
                     </div>
-                    {% empty %}
-                    <div class="text-center py-4 text-muted">هیچ هنرجویی در این شیفت ثبت‌نام نشده</div>
-                    {% endfor %}
+                    {% empty %}<div class="text-center py-4 text-muted">هنرجویی در این شیفت ثبت‌نام نشده</div>{% endfor %}
                 </div>
                 
                 <input type="hidden" name="student_ids" id="studentIdsInput">
-                
-                <div class="btn-save-wrapper">
-                    <button type="submit" class="btn-save" id="btnSave"><i class="bi bi-cloud-check"></i> ذخیره حضور و غیاب</button>
-                </div>
+                <div class="btn-save-wrapper"><button type="submit" class="btn-save"><i class="bi bi-cloud-check"></i> ذخیره حضور و غیاب</button></div>
             </div>
         </form>
         {% else %}
@@ -88,31 +82,27 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var countEl = document.getElementById('selectedCount');
-        if(countEl){
-            function updateCount(){
-                var checked = document.querySelectorAll('.attendance-item.checked').length;
-                countEl.textContent = checked + ' انتخاب شده';
-            }
-            updateCount();
-            document.getElementById('attendanceList').addEventListener('click', function(e){
-                var item = e.target.closest('.attendance-item');
-                if(!item) return;
-                item.classList.toggle('checked');
-                updateCount();
-            });
+document.addEventListener('DOMContentLoaded', function() {
+    var countEl = document.getElementById('selectedCount');
+    if(countEl){
+        function updateCount(){
+            var checked = document.querySelectorAll('.attendance-item.checked').length;
+            countEl.textContent = checked + ' انتخاب شده';
         }
-        
-        document.getElementById('attendanceForm').addEventListener('submit', function(){
-            var ids = [];
-            document.querySelectorAll('.attendance-item.checked').forEach(function(item){
-                ids.push(parseInt(item.getAttribute('data-id')));
-            });
-            document.getElementById('studentIdsInput').value = JSON.stringify(ids);
+        updateCount();
+        document.getElementById('attendanceList').addEventListener('click', function(e){
+            var item = e.target.closest('.attendance-item');
+            if(!item) return;
+            item.classList.toggle('checked');
+            updateCount();
         });
-        
-        {% if messages %}{% for m in messages %}if(typeof showToast==='function'){showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');}{% endfor %}{% endif %}
+    }
+    document.getElementById('attendanceForm').addEventListener('submit', function(){
+        var ids = [];
+        document.querySelectorAll('.attendance-item.checked').forEach(function(item){ids.push(parseInt(item.getAttribute('data-id')));});
+        document.getElementById('studentIdsInput').value = JSON.stringify(ids);
     });
+    {% if messages %}{% for m in messages %}if(typeof showToast==='function'){showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');}{% endfor %}{% endif %}
+});
 </script>
 {% endblock %}

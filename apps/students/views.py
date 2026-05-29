@@ -265,22 +265,34 @@ class AttendanceView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        today = jdatetime.date.today()
-        context['today'] = today
         
-        # شیفت‌های فعال
-        shift_id = self.request.GET.get('shift')
+        # تاریخ
+        date_str = self.request.GET.get('date', '')
+        if date_str:
+            try:
+                parts = list(map(int, date_str.replace('/', '-').split('-')))
+                today = jdatetime.date(*parts)
+            except:
+                today = jdatetime.date.today()
+        else:
+            today = jdatetime.date.today()
+        
+        context['today'] = today
         context['shifts'] = Shift.objects.filter(is_active=True, class_group__is_active=True).select_related('class_group')
         
+        shift_id = self.request.GET.get('shift')
         if shift_id:
             shift = get_object_or_404(Shift, pk=shift_id)
             context['selected_shift'] = shift
             
-            # هنرجویان ثبت‌نام شده در این شیفت
-            enrollments = Enrollment.objects.filter(shift=shift, is_active=True).select_related('student__user')
+            # فقط هنرجویانی که قبل از تاریخ انتخاب شده ثبت‌نام کردن
+            enrollments = Enrollment.objects.filter(
+                shift=shift, is_active=True,
+                enrolled_at__lte=today
+            )
+
             students = [e.student for e in enrollments]
             
-            # وضعیت حضور امروز
             attended_ids = Attendance.objects.filter(
                 shift=shift, date=today, status='present'
             ).values_list('student_id', flat=True)
@@ -305,6 +317,7 @@ class AttendanceSaveView(LoginRequiredMixin, View):
         import json
         student_ids_str = request.POST.get('student_ids', '[]')
         shift_id = request.POST.get('shift')
+        date_str = request.POST.get('date')
         
         try:
             student_ids = json.loads(student_ids_str)
@@ -316,9 +329,17 @@ class AttendanceSaveView(LoginRequiredMixin, View):
             return redirect('students:attendance')
         
         shift = get_object_or_404(Shift, pk=shift_id)
-        date = jdatetime.date.today()
         
-        # فقط هنرجویان ثبت‌نام شده در این شیفت
+        # تاریخ
+        if date_str:
+            try:
+                parts = list(map(int, date_str.replace('/', '-').split('-')))
+                date = jdatetime.date(*parts)
+            except:
+                date = jdatetime.date.today()
+        else:
+            date = jdatetime.date.today()
+        
         enrollments = Enrollment.objects.filter(shift=shift, is_active=True)
         
         for enrollment in enrollments:
@@ -331,7 +352,7 @@ class AttendanceSaveView(LoginRequiredMixin, View):
             )
         
         messages.success(request, f'حضور و غیاب {shift.name} ثبت شد')
-        return redirect(f'/students/attendance/?shift={shift_id}')
+        return redirect(f'/students/attendance/?shift={shift_id}&date={date_str or ""}')
 
 
 class AttendanceToggleView(LoginRequiredMixin, View):
@@ -733,12 +754,22 @@ class EnrollmentCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
         student_id = request.POST.get('student')
         shift_id = request.POST.get('shift')
         monthly_fee = request.POST.get('monthly_fee', '0').replace(',', '')
+        enrolled_at_str = request.POST.get('enrolled_at', '')
+        
+        # تاریخ ثبت‌نام
+        if enrolled_at_str:
+            try:
+                parts = list(map(int, enrolled_at_str.replace('/', '-').split('-')))
+                enrolled_at = jdatetime.date(*parts)
+            except:
+                enrolled_at = jdatetime.date.today()
+        else:
+            enrolled_at = jdatetime.date.today()
         
         if student_id and shift_id:
             student = get_object_or_404(Student, pk=student_id)
             shift = get_object_or_404(Shift, pk=shift_id)
             
-            # چک کن قبلاً غیرفعال شده یا نه
             old_enrollment = Enrollment.objects.filter(student=student, shift=shift).first()
             if old_enrollment:
                 if old_enrollment.is_active:
@@ -746,12 +777,14 @@ class EnrollmentCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
                 else:
                     old_enrollment.is_active = True
                     old_enrollment.monthly_fee = int(monthly_fee) if monthly_fee else 0
+                    old_enrollment.enrolled_at = enrolled_at
                     old_enrollment.save()
                     messages.success(request, f'{student.user.get_full_name()} مجدداً در {shift.name} ثبت‌نام شد')
             else:
                 Enrollment.objects.create(
                     student=student, shift=shift,
-                    monthly_fee=int(monthly_fee) if monthly_fee else 0
+                    monthly_fee=int(monthly_fee) if monthly_fee else 0,
+                    enrolled_at=enrolled_at
                 )
                 messages.success(request, f'{student.user.get_full_name()} در {shift.name} ثبت‌نام شد')
         else:
@@ -764,21 +797,25 @@ class EnrollmentEditView(LoginRequiredMixin, View):
         enrollment = get_object_or_404(Enrollment, pk=pk)
         shift_id = request.POST.get('shift')
         monthly_fee = request.POST.get('monthly_fee', '0').replace(',', '')
+        enrolled_at_str = request.POST.get('enrolled_at', '')
         
         if shift_id:
-            # چک تکراری نبودن
             if str(enrollment.shift_id) != str(shift_id):
-                exists = Enrollment.objects.filter(
-                    student=enrollment.student, shift_id=shift_id
-                ).exclude(pk=pk).exists()
+                exists = Enrollment.objects.filter(student=enrollment.student, shift_id=shift_id).exclude(pk=pk).exists()
                 if exists:
                     messages.error(request, 'این هنرجو قبلاً در این شیفت ثبت‌نام شده')
                     return redirect('students:enrollment_list')
-            
             enrollment.shift_id = shift_id
         
         if monthly_fee:
             enrollment.monthly_fee = int(monthly_fee)
+        
+        if enrolled_at_str:
+            try:
+                parts = list(map(int, enrolled_at_str.replace('/', '-').split('-')))
+                enrollment.enrolled_at = jdatetime.date(*parts)
+            except:
+                pass
         
         enrollment.save()
         messages.success(request, 'ثبت‌نام بروزرسانی شد')

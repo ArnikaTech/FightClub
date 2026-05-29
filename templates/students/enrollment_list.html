@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %} {% load jformat %}
+{% load static %} {% load jformat %} {% load humanize %}
 
 {% block title %}ثبت‌نام‌ها | {{ site_settings.gym_name }}{% endblock %}
 
@@ -23,14 +23,15 @@
                     <div class="coach-meta-page">
                         <span>{{ e.shift.name }}</span>
                         <span>{{ e.shift.class_group.name }}</span>
-                        <span>{{ e.student.club.name }}</span>
+                        <span>{{ e.shift.class_group.club.name }}</span>
                         <span>{{ e.shift.days }}</span>
                         <span>{{ e.shift.start_time|time:"H:i" }}-{{ e.shift.end_time|time:"H:i" }}</span>
-                        {% if e.monthly_fee %}<span>{{ e.monthly_fee|floatformat:0 }} تومان</span>{% endif %}
+                        {% if e.monthly_fee %}<span>{{ e.monthly_fee|intcomma }} تومان</span>{% endif %}
+                        <span>📅 {{ e.enrolled_at|jformat:"%Y/%m/%d" }}</span>
                     </div>
                 </div>
                 <div class="coach-actions">
-                    <button onclick="editEnrollment({{ e.id }}, {{ e.shift_id }}, '{{ e.monthly_fee }}')" class="coach-action-btn edit"><i class="bi bi-pencil"></i></button>
+                    <button onclick="editEnrollment({{ e.id }}, {{ e.shift_id }}, {{ e.monthly_fee }}, '{{ e.enrolled_at|jformat:'%Y/%m/%d' }}')" class="coach-action-btn edit"><i class="bi bi-pencil"></i></button>
                     <button onclick="confirmDeleteEnrollment('{% url 'students:enrollment_delete' e.id %}', '{{ e.student.user.get_full_name|escapejs }}')" class="coach-action-btn delete"><i class="bi bi-trash"></i></button>
                 </div>
             </div>
@@ -80,6 +81,10 @@
             {% csrf_token %}
             <div class="modal-form-group"><label class="form-label-sm">هنرجو *</label><select name="student" class="input-glass" required><option value="">--</option>{% for s in students %}<option value="{{ s.id }}">{{ s.user.get_full_name }} ({{ s.club.name }})</option>{% endfor %}</select></div>
             <div class="modal-form-group"><label class="form-label-sm">شیفت *</label><select name="shift" class="input-glass" required><option value="">--</option>{% for sh in shifts %}<option value="{{ sh.id }}">{{ sh.name }} - {{ sh.class_group.name }}</option>{% endfor %}</select></div>
+            <div class="modal-form-group">
+                <label class="form-label-sm">تاریخ ثبت‌نام</label>
+                <input type="text" name="enrolled_at" class="input-glass" value="{{ today|jformat:'%Y/%m/%d' }}" placeholder="۱۴۰۵/۰۲/۱۹">
+            </div>
             <div class="modal-form-group"><label class="form-label-sm">شهریه ماهانه (تومان)</label><input type="text" name="monthly_fee" class="input-glass" placeholder="۰"></div>
             <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeEnrollmentModal()">انصراف</button><button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> ثبت</button></div>
         </form>
@@ -95,7 +100,8 @@
         <form method="post" id="editEnrollmentForm" action="">
             {% csrf_token %}
             <div class="modal-form-group"><label class="form-label-sm">شیفت *</label><select name="shift" id="editShift" class="input-glass" required>{% for sh in shifts %}<option value="{{ sh.id }}">{{ sh.name }} - {{ sh.class_group.name }}</option>{% endfor %}</select></div>
-            <div class="modal-form-group"><label class="form-label-sm">شهریه (تومان)</label><input type="text" name="monthly_fee" id="editFee" class="input-glass" value=""></div>
+            <div class="modal-form-group"><label class="form-label-sm">شهریه (تومان)</label><input type="text" name="monthly_fee" id="editFee" class="input-glass"></div>
+            <div class="modal-form-group"><label class="form-label-sm">تاریخ ثبت‌نام</label><input type="text" name="enrolled_at" id="editEnrolledAt" class="input-glass" placeholder="۱۴۰۴/۰۳/۲۱"></div>
             <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeEditEnrollmentModal()">انصراف</button><button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> ذخیره</button></div>
         </form>
     </div>
@@ -121,7 +127,14 @@
 <script>
     function openEnrollmentModal(){document.getElementById('enrollmentModalOverlay').classList.add('show');document.getElementById('enrollmentModal').classList.add('show');}
     function closeEnrollmentModal(){document.getElementById('enrollmentModalOverlay').classList.remove('show');document.getElementById('enrollmentModal').classList.remove('show');}
-    function editEnrollment(id, shiftId, fee){document.getElementById('editEnrollmentForm').action='/students/enrollments/'+id+'/edit/';document.getElementById('editShift').value=shiftId;document.getElementById('editFee').value=fee;document.getElementById('editEnrollmentModalOverlay').classList.add('show');document.getElementById('editEnrollmentModal').classList.add('show'); }
+    function editEnrollment(id, shiftId, fee, enrolledAt){
+        document.getElementById('editEnrollmentForm').action='/students/enrollments/'+id+'/edit/';
+        document.getElementById('editShift').value=shiftId;
+        document.getElementById('editFee').value=fee.toLocaleString();
+        document.getElementById('editEnrolledAt').value=enrolledAt;
+        document.getElementById('editEnrollmentModalOverlay').classList.add('show');
+        document.getElementById('editEnrollmentModal').classList.add('show');
+    }
     function closeEditEnrollmentModal(){document.getElementById('editEnrollmentModalOverlay').classList.remove('show');document.getElementById('editEnrollmentModal').classList.remove('show');}
     function confirmDeleteEnrollment(url,name){document.getElementById('deleteEnrollmentName').textContent=name;document.getElementById('deleteEnrollmentForm').action=url;document.getElementById('deleteEnrollmentModalOverlay').classList.add('show');document.getElementById('deleteEnrollmentModal').classList.add('show');}
     function closeDeleteEnrollmentModal(){document.getElementById('deleteEnrollmentModalOverlay').classList.remove('show');document.getElementById('deleteEnrollmentModal').classList.remove('show');}

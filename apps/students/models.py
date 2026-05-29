@@ -229,7 +229,7 @@ class Enrollment(models.Model):
     """ثبت‌نام هنرجو در شیفت"""
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='enrollments', verbose_name='هنرجو')
     shift = models.ForeignKey(Shift, on_delete=models.PROTECT, related_name='enrollments', verbose_name='شیفت')
-    enrolled_at = jmodels.jDateField('تاریخ ثبت‌نام', auto_now_add=True)
+    enrolled_at = jmodels.jDateField('تاریخ ثبت‌نام', default=jdatetime.date.today)
     is_active = models.BooleanField('فعال', default=True)
     monthly_fee = models.PositiveIntegerField('شهریه ماهانه (تومان)', default=0)
     

@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
+{% load humanize %}
+
 {% block title %}گزارش مالی | {{ site_settings.gym_name }}{% endblock %}
+
 {% block content %}
 <div class="dashboard-layout">
     {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
@@ -20,9 +23,9 @@
         </div>
         
         <div class="stats-grid">
-            <div class="stat-card"><div class="stat-icon green"><i class="bi bi-cash"></i></div><div class="stat-value">{{ total_income|floatformat:0 }}</div><div class="stat-label">کل دریافتی (تومان)</div></div>
-            <div class="stat-card"><div class="stat-icon red"><i class="bi bi-cash-stack"></i></div><div class="stat-value">{{ total_expense|floatformat:0 }}</div><div class="stat-label">کل پرداختی (تومان)</div></div>
-            <div class="stat-card"><div class="stat-icon {% if balance >= 0 %}blue{% else %}red{% endif %}"><i class="bi bi-wallet2"></i></div><div class="stat-value">{{ balance|floatformat:0 }}</div><div class="stat-label">موجودی</div></div>
+            <div class="stat-card"><div class="stat-icon green"><i class="bi bi-cash"></i></div><div class="stat-value">{{ total_income|intcomma }}</div><div class="stat-label">کل دریافتی (تومان)</div></div>
+            <div class="stat-card"><div class="stat-icon red"><i class="bi bi-cash-stack"></i></div><div class="stat-value">{{ total_expense|intcomma }}</div><div class="stat-label">کل پرداختی (تومان)</div></div>
+            <div class="stat-card"><div class="stat-icon {% if balance >= 0 %}blue{% else %}red{% endif %}"><i class="bi bi-wallet2"></i></div><div class="stat-value">{{ balance|intcomma }}</div><div class="stat-label">موجودی</div></div>
         </div>
     </main>
 </div>

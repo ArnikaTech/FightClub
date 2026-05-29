@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load jformat %}
+{% load static %} {% load jformat %} {% load humanize %}
 
 {% block title %}پرداختی‌ها | {{ site_settings.gym_name }}{% endblock %}
 {% block content %}
@@ -29,7 +28,7 @@
                 <div class="coach-info-page" style="flex:1;">
                     <div class="coach-name-page">{{ e.title }}</div>
                     <div class="coach-meta-page">
-                        <span>{{ e.amount|floatformat:0 }} تومان</span>
+                        <span>{{ e.amount|intcomma }} تومان</span>
                         <span>{{ e.expense_date|jformat:"%Y/%m/%d" }}</span>
                         <span>{{ e.get_category_display }}</span>
                         <span>{{ e.club.name }}</span>
