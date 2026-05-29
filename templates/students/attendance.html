@@ -56,7 +56,7 @@
                             {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
                         </div>
                         <div class="att-item-info">
-                            <div class="att-name">{{ s.user.get_full_name }}</div>
+                            <div class="att-name">{{ s.user.get_full_name }} {% if s.is_birthday_today %} <span class="birthday-icon"><i class="bi bi-gift-fill"></i></span>{% endif %}</div>
                             <div class="att-meta"><span>{{ s.get_current_belt_display }}</span><span>{{ s.student_code }}</span></div>
                         </div>
                         {% if s.contacts.exists %}

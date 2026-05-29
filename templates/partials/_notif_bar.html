@@ -1,13 +1,27 @@
-<div class="notif-bar-wrapper">
-    <div class="notif-bar">
-        <a href="{% url 'students:absentees' %}" class="notif-item warning" data-label="غایب‌ها">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            {% if critical_absences %}<span class="notif-badge">{{ critical_absences }}</span>{% endif %}
+<div class="notif-bar-wrapper" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+    <div class="notif-bar" style="flex-wrap:nowrap; min-width:max-content;">
+    <a href="{% url 'accounts:inbox' %}" class="notif-item message" data-label="">
+            <i class="bi bi-chat-dots-fill"></i>
+            {% if unread_count %}<span class="notif-badge">{{ unread_count }}</span>{% endif %}
         </a>
+        
+        <a href="{% url 'students:absentees' %}" class="notif-item warning" data-label="">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            {% if critical_count %}<span class="notif-badge">{{ critical_count }}</span>{% endif %}
+        </a>
+        
+        <a href="{% url 'students:student_list' %}" class="notif-item birthday" data-label="">
+            <i class="bi bi-gift-fill"></i>
+            {% if birthday_count %}<span class="notif-badge">{{ birthday_count }}</span>{% endif %}
+        </a>
+        
+        <a href="{% url 'students:student_list' %}?insurance=expired" class="notif-item success" data-label="">
+            <i class="bi bi-shield-x"></i>
+            {% if expired_insurance %}<span class="notif-badge">{{ expired_insurance }}</span>{% endif %}
+        </a>
+        
         <span class="notif-divider"></span>
-        <button class="theme-toggle" id="themeToggle" title="تغییر حالت">
-            <i class="bi bi-moon-fill icon-moon"></i><i class="bi bi-sun-fill icon-sun"></i>
-        </button>
+        <button class="theme-toggle" id="themeToggle"><i class="bi bi-moon-fill icon-moon"></i><i class="bi bi-sun-fill icon-sun"></i></button>
         <span class="notif-divider"></span>
         <button class="hamburger-btn" id="hamburgerBtn"><i class="bi bi-list"></i></button>
     </div>

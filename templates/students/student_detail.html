@@ -28,8 +28,8 @@
                 {% csrf_token %}
             </form>
             <div class="profile-name">
-                {{ student.user.get_full_name }}
                 {% if student.is_birthday_today %}<span class="birthday-icon"><i class="bi bi-gift-fill"></i></span>{% endif %}
+                {{ student.user.get_full_name }}
             </div>
             <div class="profile-role">{{ student.get_current_belt_display }}</div>
             <div class="profile-phone"><i class="bi bi-phone"></i> {{ student.user.phone }}</div>
@@ -49,7 +49,7 @@
             {% if student.sport %}<div class="info-row"><span class="info-label">رشته</span><span class="info-value">{{ student.sport.name }}</span></div>{% endif %}
             <div class="info-row">
                 <span class="info-label">تاریخ تولد</span>
-                <span class="info-value">{{ student.birth_date|jformat:"%Y/%m/%d"|default:"-" }} ({{ student.age|default:"-" }} سال){% if student.is_birthday_today %} <span class="birthday-icon"><i class="bi bi-gift-fill"></i></span> امروز{% endif %}</span>
+                <span class="info-value">{% if student.is_birthday_today %} <span class="birthday-icon"><i class="bi bi-gift-fill"></i></span>{% endif %} {{ student.birth_date|jformat:"%Y/%m/%d"|default:"-" }} ({{ student.age|default:"-" }} ساله)</span>
             </div>
             <div class="info-row"><span class="info-label">کمربند</span><span class="info-value"><span class="belt-dot" style="background:{{ student.belt_color }};"></span> {{ student.get_current_belt_display }}</span></div>
             <div class="info-row"><span class="info-label">تاریخ عضویت</span><span class="info-value">{{ student.joined_at|jformat:"%Y/%m/%d" }}</span></div>
