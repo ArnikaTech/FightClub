@@ -36,6 +36,7 @@ class Student(models.Model):
     )
     sport = models.ForeignKey(Sport, on_delete=models.PROTECT, null=True, blank=True, related_name='students', verbose_name='رشته ورزشی')
     birth_date = jmodels.jDateField('تاریخ تولد', null=True, blank=True)
+    address = models.TextField('نشانی', blank=True, null=True)
     student_code = models.CharField('کد هنرجویی', max_length=20, blank=True, unique=True)
     current_belt = models.CharField('کمربند فعلی', max_length=20, choices=BELTS, default='white')
     is_active = models.BooleanField('فعال', default=True)

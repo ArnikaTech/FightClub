@@ -132,7 +132,8 @@ class StudentCreateForm(forms.Form):
             birth_date=self.cleaned_data.get('birth_date'),
             student_code=student_code,
             current_belt=self.cleaned_data['current_belt'],
-            sport=self.cleaned_data.get('sport')
+            sport=self.cleaned_data.get('sport'),
+            address=self.cleaned_data.get('address', ''),
         )
 
         # ثبت‌نام در شیفت

@@ -61,14 +61,21 @@
                 {% if student.user.is_instructor %}<span class="info-badge coach">مربی</span>{% endif %}
                 {% if not student.user.is_super_manager and not student.user.is_club_manager and not student.user.is_instructor %}هنرجو{% endif %}
             </span></div>
-            <div class="info-row"><span class="info-label">وضعیت بیمه</span><span class="info-value">
-                {% with days=student.insurance_days_left %}
-                {% if days is not None %}
-                {% if days <= 7 %}<span style="color:#ff9800;">🟠 {{ days }} روز</span>
-                {% else %}<span style="color:#34c759;">🟢 {{ days }} روز</span>{% endif %}
-                {% else %}<span style="color:var(--primary);">🔴 منقضی</span>{% endif %}
-                {% endwith %}
-            </span></div>
+            <div class="info-row">
+                <span class="info-label">وضعیت بیمه</span>
+                <span class="info-value">
+                    {% with days=student.insurance_days_left %}
+                    {% if days is not None %}
+                    {% if days <= 7 %}<span style="color:#ff9800;">🟠 {{ days }} روز</span>
+                    {% else %}<span style="color:#34c759;">🟢 {{ days }} روز</span>{% endif %}
+                    {% else %}<span style="color:var(--primary);">🔴 منقضی</span>{% endif %}
+                    {% endwith %}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">نشانی</span>
+                <span class="info-value">{{ student.address|default:"-" }}</span>
+            </div>
         </div>
         
         <div class="info-card animate__animated animate__fadeInUp">

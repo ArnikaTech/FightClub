@@ -123,6 +123,7 @@ class StudentEditView(LoginRequiredMixin, View):
         user.first_name = first_name
         user.last_name = last_name
         user.national_code = request.POST.get('national_code', '').strip() or None
+        student.address = request.POST.get('address', '').strip()
         
         birth_date_str = request.POST.get('birth_date', '').strip()
         if birth_date_str:
