@@ -4,12 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
+    
     <title>{% block title %}باشگاه ستاره‌ها | هاپکیدو{% endblock %}</title>
     
     <link rel="stylesheet" href="{% static 'vendors/bootstrap/bootstrap.rtl.min.css' %}">
     <link rel="stylesheet" href="{% static 'vendors/bootstrap-icons/bootstrap-icons.css' %}">
     <link rel="stylesheet" href="{% static 'vendors/animate/animate.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendors/select2/select2.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
@@ -17,6 +18,8 @@
     {% block content %}{% endblock %}
     
     <script src="{% static 'vendors/bootstrap/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'vendors/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'vendors/select2/select2.min.js' %}"></script>
     <script src="{% static 'vendors/htmx/htmx.min.js' %}"></script>
     <script src="{% static 'js/app.js' %}"></script>
     {% block extra_js %}{% endblock %}

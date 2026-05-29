@@ -34,27 +34,39 @@
         </div>
         
         <!-- فیلترها -->
-        <div class="date-card animate__animated animate__fadeIn" style="margin-bottom:16px;">
-            <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;">
-                <input type="text" name="search" class="input-glass" placeholder="جستجو..." value="{{ request.GET.search }}" style="flex:1;min-width:120px;">
-                <select name="club" class="input-glass" style="width:auto;" onchange="this.form.submit()">
-                    <option value="">همه باشگاه‌ها</option>
+        <div class="date-card animate__animated animate__fadeIn" style="margin-bottom:16px;padding:12px 14px;">
+            <form method="get" class="date-card animate__animated animate__fadeIn" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;width:100%;align-items:center;">
+                <div style="position:relative;flex:1;min-width:160px;">
+                    <i class="bi bi-search" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);color:var(--text-muted);z-index:5;pointer-events:none;"></i>
+                    <input type="text" name="search" class="input-glass" placeholder="جستجو..." value="{{ request.GET.search }}" style="height:44px;padding-right:36px; border-radius:10px">
+                </div>
+                
+                <select name="club" class="select2-filter" style="min-width:160px;" onchange="this.form.submit()">
+                    <option value="">🏢 همه باشگاه‌ها</option>
                     {% for c in clubs %}<option value="{{ c.id }}" {% if request.GET.club == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
                 </select>
-                <select name="sport" class="input-glass" style="width:auto;" onchange="this.form.submit()">
-                    <option value="">همه رشته‌ها</option>
+                
+                <select name="sport" class="select2-filter" style="min-width:156px;" onchange="this.form.submit()">
+                    <option value="">🏅 همه رشته‌ها</option>
                     {% for sp in sports %}<option value="{{ sp.id }}" {% if request.GET.sport == sp.id|stringformat:'s' %}selected{% endif %}>{{ sp.name }}</option>{% endfor %}
                 </select>
-                <select name="belt" class="input-glass" style="width:auto;" onchange="this.form.submit()">
-                    <option value="">همه کمربندها</option>
+                
+                <select name="belt" class="select2-filter" style="min-width:160px;" onchange="this.form.submit()">
+                    <option value="">🥋 همه کمربندها</option>
                     {% for value, label in belt_choices %}<option value="{{ value }}" {% if request.GET.belt == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
                 </select>
-                <select name="insurance" class="input-glass" style="width:auto;" onchange="this.form.submit()">
-                    <option value="">همه وضعیت‌ها</option>
-                    <option value="active" {% if request.GET.insurance == 'active' %}selected{% endif %}>بیمه فعال</option>
-                    <option value="expired" {% if request.GET.insurance == 'expired' %}selected{% endif %}>بیمه منقضی</option>
+                
+                <select name="insurance" class="select2-filter" style="min-width:160px;" onchange="this.form.submit()">
+                    <option value="">🛡️ بیمه</option>
+                    <option value="active" {% if request.GET.insurance == 'active' %}selected{% endif %}>فعال</option>
+                    <option value="expired" {% if request.GET.insurance == 'expired' %}selected{% endif %}>منقضی</option>
                 </select>
-                {% if request.GET %}<a href="{% url 'students:student_list' %}" style="color:var(--text-muted);font-size:0.8rem;white-space:nowrap;"><i class="bi bi-x-circle"></i> حذف فیلترها</a>{% endif %}
+                
+                {% if request.GET %}
+                <a href="{% url 'students:student_list' %}" class="btn-glass" style="height:46px;display:flex;align-items:center;padding:0 14px;text-decoration:none;">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+                {% endif %}
             </form>
         </div>
         
@@ -67,9 +79,9 @@
                         {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}" alt="">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
                     </div>
                     <div class="coach-info-page">
-                        <div class="coach-name-page">{{ s.user.get_full_name }}{% if s.is_birthday_today %}<span class="badge-birthday"><i class="bi bi-gift-fill"></i></span>{% endif %}</div>
+                        <div class="coach-name-page">{{ s.user.get_full_name }} {% if s.is_birthday_today %}<span class="badge-birthday"><i class="bi bi-gift-fill"></i></span>{% endif %}</div>
                         <div class="coach-meta-page">
-                            <span>{{ s.student_code }}</span><span>{{ s.get_current_belt_display }}</span><span>{{ s.club.name }}</span>{% if s.sport %}<span>{{ s.sport.name }}</span>{% endif %}
+                            <span>{{ s.get_current_belt_display }}</span><span>{{ s.club.name }}</span>{% if s.sport %}<span>{{ s.sport.name }}</span>{% endif %}
                         </div>
                         <div class="coach-meta-page" style="margin-top:4px;">
                             {% with days=s.insurance_days_left %}
@@ -132,6 +144,16 @@
         }
         {% endfor %}
         {% endif %}
+    });
+    
+    $(document).ready(function() {
+        $('.select2-filter').select2({
+            dir: 'rtl',
+            width: 'resolve',
+            language: {
+                noResults: function() { return "موردی یافت نشد"; }
+            }
+        });
     });
 </script>
 {% endblock %}
