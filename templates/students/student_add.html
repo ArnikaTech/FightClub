@@ -83,8 +83,11 @@
                         {% endif %}
                     </div>
                     <div class="form-group">
-                        <label>تاریخ عضویت</label>
-                        <input type="text" name="joined_at" class="input-glass" value="{{ today|jformat:'%Y/%m/%d' }}" placeholder="1405/02/19">
+                        <label>تاریخ تولد</label>
+                        {{ form.birth_date }}
+                        {% if form.birth_date.errors %}
+                        <small class="text-danger">{{ form.birth_date.errors }}</small>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -105,20 +108,14 @@
                         {% endif %}
                     </div>
                     <div class="form-group">
+                        <label>ثبت‌نام در شیفت (اختیاری)</label>
+                        {{ form.shift }}
+                    </div>
+                    <div class="form-group">
                         <label>رشته ورزشی</label>
                         {{ form.sport }}
                         {% if form.sport.errors %}
                         <small class="text-danger">{{ form.sport.errors }}</small>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>تاریخ تولد</label>
-                        {{ form.birth_date }}
-                        {% if form.birth_date.errors %}
-                        <small class="text-danger">{{ form.birth_date.errors }}</small>
                         {% endif %}
                     </div>
                     <div class="form-group">
@@ -127,6 +124,13 @@
                         {% if form.current_belt.errors %}
                         <small class="text-danger">{{ form.current_belt.errors }}</small>
                         {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>تاریخ عضویت</label>
+                        <input type="text" name="joined_at" class="input-glass" value="{{ today|jformat:'%Y/%m/%d' }}" placeholder="1405/02/19">
                     </div>
                 </div>
             </div>

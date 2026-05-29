@@ -73,6 +73,30 @@
                 </div>
                 <div class="form-group"><label>یادداشت</label><textarea name="notes" class="input-glass" rows="2">{{ student.notes|default:'' }}</textarea></div>
             </div>
+
+            <div class="form-section animate__animated animate__fadeInUp">
+    <div class="form-section-title"><i class="bi bi-clock"></i> ثبت‌نام در شیفت</div>
+    
+    {% if student.enrollments.active %}
+    <div class="mb-3">
+        {% for e in student.enrollments.active %}
+        <span class="badge bg-success me-2">{{ e.shift.name }} - {{ e.shift.class_group.name }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="form-row">
+        <div class="form-group">
+            <label>افزودن شیفت جدید</label>
+            <select name="new_shift" class="input-glass">
+                <option value="">-- انتخاب کنید --</option>
+                {% for sh in shifts %}
+                <option value="{{ sh.id }}">{{ sh.name }} - {{ sh.class_group.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</div>
             
             {% if user.is_super_manager %}
             <div class="form-section animate__animated animate__fadeInUp">

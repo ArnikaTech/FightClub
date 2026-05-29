@@ -96,12 +96,14 @@ class StudentEditView(LoginRequiredMixin, View):
         selected_club = Club.objects.get(pk=club_id) if Club.objects.filter(pk=club_id).exists() else student.club
         
         clubs = Club.objects.filter(is_active=True)
+        shifts = Shift.objects.filter(is_active=True, class_group__is_active=True).select_related('class_group')
         sports = Sport.objects.all()
         belts = Student.BELTS
         
         return render(request, 'students/student_edit.html', {
             'student': student,
             'clubs': clubs,
+            'shifts': shifts,
             'sports': sports,
             'belts': belts,
             'selected_club': selected_club,
@@ -135,6 +137,16 @@ class StudentEditView(LoginRequiredMixin, View):
         student.sport_id = request.POST.get('sport') or None
         student.current_belt = request.POST.get('current_belt', student.current_belt)
         
+        # ثبت‌نام در شیفت جدید
+        new_shift_id = request.POST.get('new_shift')
+        if new_shift_id:
+            shift = get_object_or_404(Shift, pk=new_shift_id)
+            Enrollment.objects.get_or_create(
+                student=student,
+                shift=shift,
+                defaults={'enrolled_at': jdatetime.date.today()}
+    )
+        
         # تاریخ عضویت
         joined_at_str = request.POST.get('joined_at', '')
         if joined_at_str:
@@ -166,9 +178,10 @@ class StudentCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
         return user.is_super_manager or user.is_club_manager
     
     def form_valid(self, form):
-        form.save()
-        messages.success(self.request, 'هنرجو با موفقیت ثبت شد')
-        return super().form_valid(form)
+        student = form.save()
+        messages.success(self.request, f'{student.user.get_full_name()} با موفقیت ثبت شد')
+        # مستقیم بره صفحه ویرایش
+        return redirect('students:student_detail', pk=student.pk)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

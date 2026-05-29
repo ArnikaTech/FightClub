@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 
 from django_jalali.forms import jDateField
 from apps.clubs.models import Club, Sport
-from .models import Student
+from .models import Student, Shift, Enrollment
 import jdatetime
 
 User = get_user_model()
@@ -48,6 +48,12 @@ class StudentCreateForm(forms.Form):
     club = forms.ModelChoiceField(
         label='باشگاه',
         queryset=Club.objects.filter(is_active=True),
+        widget=forms.Select(attrs={'class': 'input-glass'})
+    )
+    shift = forms.ModelChoiceField(
+        label='ثبت‌نام در شیفت',
+        queryset=Shift.objects.filter(is_active=True, class_group__is_active=True),
+        required=False,
         widget=forms.Select(attrs={'class': 'input-glass'})
     )
     birth_date = forms.CharField(
@@ -128,6 +134,15 @@ class StudentCreateForm(forms.Form):
             current_belt=self.cleaned_data['current_belt'],
             sport=self.cleaned_data.get('sport')
         )
+
+        # ثبت‌نام در شیفت
+        shift = self.cleaned_data.get('shift')
+        if shift:
+            Enrollment.objects.get_or_create(
+                student=student,
+                shift=shift,
+                defaults={'enrolled_at': student.joined_at}
+            )
 
         joined_at_str = self.cleaned_data.get('joined_at', '')
         if joined_at_str:

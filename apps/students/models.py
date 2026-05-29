@@ -226,6 +226,11 @@ class Shift(models.Model):
         return f"{self.name} - {self.class_group.name}"
 
 
+class EnrollmentManager(models.Manager):
+    def active(self):
+        return self.filter(is_active=True)
+
+
 class Enrollment(models.Model):
     """ثبت‌نام هنرجو در شیفت"""
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='enrollments', verbose_name='هنرجو')
@@ -233,6 +238,8 @@ class Enrollment(models.Model):
     enrolled_at = jmodels.jDateField('تاریخ ثبت‌نام', default=jdatetime.date.today)
     is_active = models.BooleanField('فعال', default=True)
     monthly_fee = models.PositiveIntegerField('شهریه ماهانه (تومان)', default=0)
+
+    objects = EnrollmentManager()
     
     class Meta:
         verbose_name = 'ثبت‌نام'
