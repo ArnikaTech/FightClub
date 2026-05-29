@@ -43,4 +43,5 @@ urlpatterns = [
     path('enrollments/<int:pk>/activate/', views.EnrollmentActivateView.as_view(), name='enrollment_activate'),
 
     path('attendance/history/', views.AttendanceHistoryView.as_view(), name='attendance_history'),
+    path('<int:pk>/avatar/', views.StudentAvatarView.as_view(), name='student_avatar'),
 ]

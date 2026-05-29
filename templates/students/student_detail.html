@@ -14,10 +14,19 @@
         
         <div class="profile-header animate__animated animate__fadeIn">
             <div class="profile-avatar-wrapper">
-                <div class="profile-avatar">
-                    {% if student.user.avatar %}<img src="{{ student.user.avatar.url }}" alt="">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
-                </div>
-            </div>
+    <div class="profile-avatar">
+        {% if student.user.avatar %}<img src="{{ student.user.avatar.url }}">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
+    </div>
+    {% if user.is_super_manager or user.is_club_manager %}
+    <label class="avatar-edit-btn" style="cursor:pointer;">
+        <i class="bi bi-camera"></i>
+        <input type="file" form="avatarForm" name="avatar" accept="image/*" onchange="this.form.submit()" style="display:none;">
+    </label>
+    {% endif %}
+</div>
+<form id="avatarForm" method="post" action="{% url 'students:student_avatar' student.pk %}" enctype="multipart/form-data" style="display:none;">
+    {% csrf_token %}
+</form>
             <div class="profile-name">
                 {{ student.user.get_full_name }}
                 {% if student.is_birthday_today %}<span class="birthday-icon"><i class="bi bi-gift-fill"></i></span>{% endif %}

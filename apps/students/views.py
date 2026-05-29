@@ -189,6 +189,21 @@ class StudentCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
         return context
 
 
+class StudentAvatarView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        if not (request.user.is_super_manager or request.user.is_club_manager):
+            messages.error(request, 'دسترسی غیرمجاز')
+            return redirect('students:student_detail', pk=pk)
+        
+        student = get_object_or_404(Student, pk=pk)
+        avatar = request.FILES.get('avatar')
+        if avatar:
+            student.user.avatar = avatar
+            student.user.save()
+            messages.success(request, 'تصویر پروفایل بروزرسانی شد')
+        return redirect('students:student_detail', pk=pk)
+
+
 class ContactDeleteView(LoginRequiredMixin, View):
     def post(self, request, contact_pk):
         try:

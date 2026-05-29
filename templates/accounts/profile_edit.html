@@ -12,15 +12,12 @@
     {% csrf_token %}
     
     <!-- عکس -->
-    <p style="text-align:center;">
-        {% if user.avatar %}
-        <img src="{{ user.avatar.url }}" width="80" height="80" style="border-radius:50%;">
-        {% else %}
-        <span style="font-size:60px;">👤</span>
-        {% endif %}
-        <br>
-        <input type="file" name="avatar" accept="image/*">
-    </p>
+    {% if user.is_super_manager or user.is_club_manager %}
+<div class="text-center mb-3">
+    {% if user.avatar %}<img src="{{ user.avatar.url }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">{% else %}<i class="bi bi-person-fill" style="font-size:3rem;color:var(--text-muted);"></i>{% endif %}
+    <br><label class="mt-2" style="cursor:pointer;color:var(--accent);"><i class="bi bi-camera"></i> تغییر تصویر<input type="file" name="avatar" accept="image/*" style="display:none;"></label>
+</div>
+{% endif %}
     
     <p><label>نام:</label><input name="first_name" value="{{ user.first_name }}" required></p>
     <p><label>نام خانوادگی:</label><input name="last_name" value="{{ user.last_name }}" required></p>
