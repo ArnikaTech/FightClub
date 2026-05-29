@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load jformat %}
+{% load static %} {% load jformat %} {% load dict_filters %}
 
 {% block title %}پیگیری غیبت‌ها | {{ site_settings.gym_name }}{% endblock %}
 
@@ -36,7 +35,7 @@
             {% for item in absentees %}
             {% with s=item.student %}
             <div class="absentee-card animate__animated animate__fadeInUp">
-                <div class="att-item-avatar">
+                <div class="abs-avatar">
                     {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}" alt="">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
                 </div>
                 <div class="abs-info">
@@ -44,25 +43,24 @@
                         {{ s.user.get_full_name }}
                         {% if s.is_birthday_today %}<span class="badge-birthday"><i class="bi bi-gift-fill"></i></span>{% endif %}
                     </div>
-                    <div class="abs-meta"><span>{{ s.get_current_belt_display }}</span><span>{{ s.student_code }}</span><span>{{ s.club.name }}</span></div>
-                    {% if item.recent_absences %}
-                    <div class="abs-history">
-                        {% for date in item.recent_absences %}
-                        <span class="abs-history-item"><i class="bi bi-x-circle"></i> {{ date|jformat:"%Y/%m/%d" }}</span>
-                        {% endfor %}
+                    <div class="abs-meta">
+                        <span>{{ s.get_current_belt_display }}</span>
+                        <span>{{ s.club.name }}</span>
                     </div>
-                    {% endif %}
-                    {% if item.last_present_date %}
-                    <span class="abs-last-seen"><i class="bi bi-check-circle"></i> آخرین حضور: {{ item.last_present_date|jformat:"%Y/%m/%d" }}</span>
-                    {% endif %}
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;font-size:0.68rem;">
+                        {% if item.last_present_date %}
+                        <span style="color:#34c759;background:rgba(52,199,89,0.1);padding:2px 8px;border-radius:10px;">آخرین حضور: {{ item.last_present_date|jformat:"%Y/%m/%d" }}</span>
+                        {% endif %}
+                        {% if item.recent_absences %}
+                        <span style="color:var(--primary);background:rgba(255,77,46,0.1);padding:2px 8px;border-radius:10px;">آخرین غیبت: {{ item.recent_absences.0|jformat:"%Y/%m/%d" }}</span>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="abs-count"><span>{{ item.consecutive }}</span><small>جلسه</small></div>
                 {% if item.contacts %}
-                <div style="display:flex;flex-direction:column;gap:4px;">
-                    {% for contact in item.contacts %}
-                    <a href="tel:{{ contact.phone }}" class="abs-call" title="{{ contact.label|default:'والدین' }}"><i class="bi bi-telephone-fill"></i></a>
-                    {% endfor %}
-                </div>
+                <button onclick="event.stopPropagation(); event.preventDefault(); showContactModal({{ s.id }}, '{{ s.user.get_full_name|escapejs }}', {{ item.contacts|safe_json }})" class="abs-call">
+                    <i class="bi bi-telephone-fill"></i>
+                </button>
                 {% endif %}
             </div>
             {% endwith %}
@@ -74,5 +72,25 @@
     {% include 'partials/_bottom_nav.html' %}
     {% include 'partials/_bottom_sheet.html' %}
     {% include 'partials/_toast.html' %}
+    {% include 'partials/_contact_modal.html' %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function showContactModal(studentId, name, contacts){
+        document.getElementById('contactInfoTitle').textContent = '📞 ' + name;
+        var html = '';
+        contacts.forEach(function(c){
+            html += '<a href="tel:'+c.phone+'" class="bs-menu-item" style="margin-bottom:4px;"><div class="bs-icon"><i class="bi bi-telephone-fill"></i></div><span>'+c.label+': '+c.phone+'</span><i class="bi bi-chevron-left bs-arrow"></i></a>';
+        });
+        document.getElementById('contactInfoBody').innerHTML = html || '<p class="text-muted">شماره تماسی ثبت نشده</p>';
+        document.getElementById('contactInfoModalOverlay').classList.add('show');
+        document.getElementById('contactInfoModal').classList.add('show');
+    }
+    function closeContactInfoModal(){
+        document.getElementById('contactInfoModalOverlay').classList.remove('show');
+        document.getElementById('contactInfoModal').classList.remove('show');
+    }
+</script>
 {% endblock %}

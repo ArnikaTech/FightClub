@@ -1,0 +1,28 @@
+<!-- مودال تماس با والدین -->
+<div class="modal-overlay" id="contactInfoModalOverlay" onclick="closeContactInfoModal()"></div>
+<div class="modal-sheet" id="contactInfoModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="contactInfoTitle">📞 تماس با والدین</div>
+    <div class="modal-body" id="contactInfoBody"></div>
+</div>
+
+<script>
+    function showContactModal(studentId, name, contacts){
+        document.getElementById('contactInfoTitle').textContent = '📞 ' + name;
+        var html = '';
+        if(contacts.length === 0){
+            html = '<p class="text-center text-muted">شماره تماسی ثبت نشده</p>';
+        } else {
+            contacts.forEach(function(c){
+                html += '<a href="tel:'+c.phone+'" class="bs-menu-item" style="margin-bottom:4px;"><div class="bs-icon"><i class="bi bi-telephone-fill"></i></div><span>'+c.label+': '+c.phone+'</span><i class="bi bi-chevron-left bs-arrow"></i></a>';
+            });
+        }
+        document.getElementById('contactInfoBody').innerHTML = html;
+        document.getElementById('contactInfoModalOverlay').classList.add('show');
+        document.getElementById('contactInfoModal').classList.add('show');
+    }
+    function closeContactInfoModal(){
+        document.getElementById('contactInfoModalOverlay').classList.remove('show');
+        document.getElementById('contactInfoModal').classList.remove('show');
+    }
+</script>

@@ -454,6 +454,7 @@ ABSENTEES
 .absentee-list { display: flex; flex-direction: column; gap: 8px; }
 .absentee-card { display: flex; align-items: center; gap: 10px; background: var(--card-bg); border: 1px solid var(--border-glass); border-radius: 14px; padding: 13px 14px; }
 .abs-avatar { width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+.abs-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .abs-avatar i { font-size: 18px; color: var(--text-muted); }
 .abs-info { flex: 1; min-width: 0; }
 .abs-info .abs-name { font-size: var(--font-size-base); font-weight: 700; margin-bottom: 3px; }

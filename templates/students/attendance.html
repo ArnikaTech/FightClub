@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load jformat %}
+{% load static %} {% load jformat %} {% load dict_filters %}
 
 {% block title %}حضور و غیاب | {{ site_settings.gym_name }}{% endblock %}
 {% block content %}
@@ -57,12 +56,14 @@
                             {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
                         </div>
                         <div class="att-item-info">
-                            <div class="att-name">
-                                {{ s.user.get_full_name }}
-                                {% if s.is_birthday_today %}<span class="badge-birthday"><i class="bi bi-gift-fill"></i></span>{% endif %}
-                            </div>
+                            <div class="att-name">{{ s.user.get_full_name }}</div>
                             <div class="att-meta"><span>{{ s.get_current_belt_display }}</span><span>{{ s.student_code }}</span></div>
                         </div>
+                        {% if s.contacts.exists %}
+                        <button onclick="event.stopPropagation(); event.preventDefault(); showContactModal({{ s.id }}, '{{ s.user.get_full_name|escapejs }}', {{ s.contacts.all|safe_json }})" class="btn-call" style="margin-right:8px;">
+                            <i class="bi bi-telephone-fill"></i>
+                        </button>
+                        {% endif %}
                         <div class="att-check"><i class="bi bi-check-lg"></i></div>
                     </div>
                     {% empty %}<div class="text-center py-4 text-muted">هنرجویی در این شیفت ثبت‌نام نشده</div>{% endfor %}
@@ -78,31 +79,33 @@
     </main>
     {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
 </div>
+
+{% include 'partials/_contact_modal.html' %}
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var countEl = document.getElementById('selectedCount');
-    if(countEl){
-        function updateCount(){
-            var checked = document.querySelectorAll('.attendance-item.checked').length;
-            countEl.textContent = checked + ' انتخاب شده';
-        }
-        updateCount();
-        document.getElementById('attendanceList').addEventListener('click', function(e){
-            var item = e.target.closest('.attendance-item');
-            if(!item) return;
-            item.classList.toggle('checked');
+    document.addEventListener('DOMContentLoaded', function() {
+        var countEl = document.getElementById('selectedCount');
+        if(countEl){
+            function updateCount(){
+                var checked = document.querySelectorAll('.attendance-item.checked').length;
+                countEl.textContent = checked + ' انتخاب شده';
+            }
             updateCount();
+            document.getElementById('attendanceList').addEventListener('click', function(e){
+                var item = e.target.closest('.attendance-item');
+                if(!item) return;
+                item.classList.toggle('checked');
+                updateCount();
+            });
+        }
+        document.getElementById('attendanceForm').addEventListener('submit', function(){
+            var ids = [];
+            document.querySelectorAll('.attendance-item.checked').forEach(function(item){ids.push(parseInt(item.getAttribute('data-id')));});
+            document.getElementById('studentIdsInput').value = JSON.stringify(ids);
         });
-    }
-    document.getElementById('attendanceForm').addEventListener('submit', function(){
-        var ids = [];
-        document.querySelectorAll('.attendance-item.checked').forEach(function(item){ids.push(parseInt(item.getAttribute('data-id')));});
-        document.getElementById('studentIdsInput').value = JSON.stringify(ids);
+        {% if messages %}{% for m in messages %}if(typeof showToast==='function'){showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');}{% endfor %}{% endif %}
     });
-    {% if messages %}{% for m in messages %}if(typeof showToast==='function'){showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');}{% endfor %}{% endif %}
-});
 </script>
 {% endblock %}

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load jformat %}
+{% load jformat %} {% load dict_filters %}
 
 {% block title %}هنرجویان | {{ site_settings.gym_name }}{% endblock %}
 
@@ -74,14 +74,21 @@
                         <div class="coach-meta-page" style="margin-top:4px;">
                             {% with days=s.insurance_days_left %}
                             {% if days is not None %}
-                                {% if days <= 7 %}<span style="color:#ff9800;"><span class="status-dot" style="background:#ff9800;"></span> بیمه {{ days }} روز</span>
-                                {% else %}<span style="color:#34c759;"><span class="status-dot active"></span> بیمه {{ days }} روز</span>{% endif %}
+                            {% if days <= 7 %}<span style="color:#ff9800;"><span class="status-dot" style="background:#ff9800;"></span> بیمه {{ days }} روز</span>
+                            {% else %}<span style="color:#34c759;"><span class="status-dot active"></span> بیمه {{ days }} روز</span>{% endif %}
                             {% else %}<span style="color:var(--primary);"><span class="status-dot" style="background:var(--primary);"></span> بیمه منقضی</span>{% endif %}
                             {% endwith %}
                             {% if s.age %}<span>{{ s.age }} سال</span>{% endif %}
                         </div>
                     </div>
-                    <div class="coach-actions"><span class="coach-action-btn"><i class="bi bi-chevron-left"></i></span></div>
+                    <div class="coach-actions">
+                        {% if s.contacts.exists %}
+                        <button onclick="event.stopPropagation(); event.preventDefault(); showContactModal({{ s.id }}, '{{ s.user.get_full_name|escapejs }}', {{ s.contacts.all|safe_json }})" class="btn-call" style="pointer-events:auto;">
+                            <i class="bi bi-telephone-fill"></i>
+                        </button>
+                        {% endif %}
+                        <span class="coach-action-btn"><i class="bi bi-chevron-left"></i></span>
+                    </div>
                 </div>
             </a>
             {% endfor %}
@@ -106,24 +113,25 @@
     {% include 'partials/_bottom_nav.html' %}
     {% include 'partials/_bottom_sheet.html' %}
     {% include 'partials/_toast.html' %}
+    {% include 'partials/_contact_modal.html' %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    {% if messages %}
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if messages %}
         {% for m in messages %}
-            if (typeof showToast === 'function') {
-                showToast(
-                    '{% if m.tags == "success" %}bi-check-circle-fill{% elif m.tags == "error" %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %}',
-                    '{% if m.tags == "success" %}green{% elif m.tags == "error" %}red{% else %}blue{% endif %}',
-                    '{% if m.tags == "success" %}موفق{% elif m.tags == "error" %}خطا{% else %}توجه{% endif %}',
-                    '{{ m|escapejs }}'
-                );
-            }
+        if (typeof showToast === 'function') {
+            showToast(
+            '{% if m.tags == "success" %}bi-check-circle-fill{% elif m.tags == "error" %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %}',
+            '{% if m.tags == "success" %}green{% elif m.tags == "error" %}red{% else %}blue{% endif %}',
+            '{% if m.tags == "success" %}موفق{% elif m.tags == "error" %}خطا{% else %}توجه{% endif %}',
+            '{{ m|escapejs }}'
+            );
+        }
         {% endfor %}
-    {% endif %}
-});
+        {% endif %}
+    });
 </script>
 {% endblock %}
