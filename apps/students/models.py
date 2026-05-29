@@ -14,6 +14,7 @@ class Student(models.Model):
         ('green', 'سبز'),
         ('blue', 'آبی'),
         ('red', 'قرمز'),
+        ('black', 'مشکی'),
         ('black_1', 'دان ۱'),
         ('black_2', 'دان ۲'),
         ('black_3', 'دان ۳'),
@@ -38,7 +39,7 @@ class Student(models.Model):
     student_code = models.CharField('کد هنرجویی', max_length=20, blank=True, unique=True)
     current_belt = models.CharField('کمربند فعلی', max_length=20, choices=BELTS, default='white')
     is_active = models.BooleanField('فعال', default=True)
-    joined_at = jmodels.jDateField('تاریخ عضویت', auto_now_add=True)
+    joined_at = jmodels.jDateField('تاریخ عضویت', default=jdatetime.date.today)
     notes = models.TextField('یادداشت', blank=True, null=True)
     
     class Meta:

@@ -35,6 +35,12 @@
                     <div class="form-group"><label>کد ملی</label><input type="text" name="national_code" class="input-glass" value="{{ student.user.national_code|default:'' }}"></div>
                     <div class="form-group"><label>شماره موبایل</label><input type="text" class="input-glass" value="{{ student.user.phone }}" disabled style="opacity:0.6;"></div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>تاریخ عضویت</label>
+                        <input type="text" name="joined_at" class="input-glass" value="{{ student.joined_at|jformat:'%Y/%m/%d'|default:'' }}">
+                    </div>
+                </div>
             </div>
             
             <div class="form-section animate__animated animate__fadeInUp">
@@ -93,19 +99,19 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    {% if messages %}
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if messages %}
         {% for m in messages %}
-            if (typeof showToast === 'function') {
-                showToast(
-                    '{% if m.tags == "success" %}bi-check-circle-fill{% elif m.tags == "error" %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %}',
-                    '{% if m.tags == "success" %}green{% elif m.tags == "error" %}red{% else %}blue{% endif %}',
-                    '{% if m.tags == "success" %}موفق{% elif m.tags == "error" %}خطا{% else %}توجه{% endif %}',
-                    '{{ m|escapejs }}'
-                );
-            }
+        if (typeof showToast === 'function') {
+            showToast(
+            '{% if m.tags == "success" %}bi-check-circle-fill{% elif m.tags == "error" %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %}',
+            '{% if m.tags == "success" %}green{% elif m.tags == "error" %}red{% else %}blue{% endif %}',
+            '{% if m.tags == "success" %}موفق{% elif m.tags == "error" %}خطا{% else %}توجه{% endif %}',
+            '{{ m|escapejs }}'
+            );
+        }
         {% endfor %}
-    {% endif %}
-});
+        {% endif %}
+    });
 </script>
 {% endblock %}

@@ -38,6 +38,11 @@ class StudentCreateForm(forms.Form):
         required=False,
         widget=forms.TextInput(attrs={'class': 'input-glass', 'placeholder': 'اختیاری'})
     )
+    joined_at = forms.CharField(
+        label='تاریخ عضویت',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'input-glass', 'placeholder': '1405/02/19'})
+    )
     
     # اطلاعات هنرجویی
     club = forms.ModelChoiceField(
@@ -48,7 +53,7 @@ class StudentCreateForm(forms.Form):
     birth_date = forms.CharField(
         label='تاریخ تولد',
         required=False,
-        widget=forms.TextInput(attrs={'class': 'input-glass', 'placeholder': '۱۳۸۰/۰۱/۰۱'})
+        widget=forms.TextInput(attrs={'class': 'input-glass', 'placeholder': '1361۰/02/19'})
     )
     current_belt = forms.ChoiceField(
         label='کمربند فعلی',
@@ -65,7 +70,7 @@ class StudentCreateForm(forms.Form):
     def clean_phone(self):
         phone = self.cleaned_data['phone']
         if User.objects.filter(phone=phone).exists():
-            raise forms.ValidationError('این شماره موبایل قبلاً ثبت شده است')
+            raise forms.ValidationError('این شماره همراه قبلاً ثبت شده است')
         return phone
     
     def clean_birth_date(self):
@@ -123,4 +128,14 @@ class StudentCreateForm(forms.Form):
             current_belt=self.cleaned_data['current_belt'],
             sport=self.cleaned_data.get('sport')
         )
+
+        joined_at_str = self.cleaned_data.get('joined_at', '')
+        if joined_at_str:
+            try:
+                parts = list(map(int, joined_at_str.replace('/', '-').split('-')))
+                student.joined_at = jdatetime.date(*parts)
+            except:
+                pass
+        
+        student.save()
         return student

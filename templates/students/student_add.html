@@ -74,12 +74,18 @@
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label>کد ملی</label>
-                    {{ form.national_code }}
-                    {% if form.national_code.errors %}
-                    <small class="text-danger">{{ form.national_code.errors }}</small>
-                    {% endif %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>کد ملی</label>
+                        {{ form.national_code }}
+                        {% if form.national_code.errors %}
+                        <small class="text-danger">{{ form.national_code.errors }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label>تاریخ عضویت</label>
+                        <input type="text" name="joined_at" class="input-glass" value="{{ today|jformat:'%Y/%m/%d' }}" placeholder="1405/02/19">
+                    </div>
                 </div>
             </div>
             

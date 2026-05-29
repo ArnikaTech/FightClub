@@ -134,6 +134,16 @@ class StudentEditView(LoginRequiredMixin, View):
         student.club_id = request.POST.get('club', student.club_id)
         student.sport_id = request.POST.get('sport') or None
         student.current_belt = request.POST.get('current_belt', student.current_belt)
+        
+        # تاریخ عضویت
+        joined_at_str = request.POST.get('joined_at', '')
+        if joined_at_str:
+            try:
+                parts = list(map(int, joined_at_str.replace('/', '-').split('-')))
+                student.joined_at = jdatetime.date(*parts)
+            except:
+                pass
+        
         student.notes = request.POST.get('notes', '').strip()
         
         if request.user.is_super_manager:
