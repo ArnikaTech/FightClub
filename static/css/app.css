@@ -12,14 +12,14 @@ APP.CSS
     --card-bg: rgba(22, 24, 30, 0.95);
     --text-primary: #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.80);
-    --text-muted: rgba(255, 255, 255, 0.60);
-    --border-glass: rgba(255, 255, 255, 0.08);
+    --text-muted: rgba(255, 255, 255, 0.50);
+    --border-glass: rgba(255, 255, 255, 0.1);
     --input-bg: rgba(255, 255, 255, 0.05);
     --danger: #ff8a80;
     --danger-bg: rgba(255, 77, 46, 0.1);
     --danger-border: rgba(255, 77, 46, 0.3);
     --font-primary: 'Vazirmatn', 'Tahoma', system-ui, -apple-system, sans-serif;
-    --font-size-xs: 0.7rem;
+    --font-size-xs: 0.75rem;
     --font-size-sm: 0.78rem;
     --font-size-base: 0.85rem;
     --font-size-md: 0.9rem;
@@ -27,6 +27,60 @@ APP.CSS
     --font-size-xl: 1.15rem;
     --font-size-2xl: 1.35rem;
 }
+
+body.light-mode {
+    --bg-dark: #f0f0f5;
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --text-primary: #1a1a1c;
+    --text-secondary: rgba(0, 0, 0, 0.65);
+    --text-muted: rgba(0, 0, 0, 0.55);
+    --border-glass: rgba(0, 0, 0, 0.08);
+    --input-bg: rgba(0, 0, 0, 0.03);
+}
+
+/* Light mode overrides */
+body.light-mode .dashboard-sidebar { background: #ffffff; border-color: rgba(0,0,0,0.06); }
+body.light-mode .sidebar-nav li a { color: rgba(0,0,0,0.6); }
+body.light-mode .sidebar-nav li a:hover { background: rgba(0,0,0,0.03); color: #1a1a1c; }
+body.light-mode .sidebar-nav li a.active { background: rgba(255,77,46,0.1); color: var(--primary); }
+body.light-mode .sidebar-category { color: rgba(0,0,0,0.4); }
+body.light-mode .sidebar-logo { border-color: rgba(0,0,0,0.06); }
+body.light-mode .sidebar-logo .logo-text { color: #1a1a1c; }
+body.light-mode .sidebar-user { border-color: rgba(0,0,0,0.06); }
+body.light-mode .sidebar-user .user-name { color: #1a1a1c; }
+body.light-mode .sidebar-user .user-role { color: rgba(0,0,0,0.5); }
+body.light-mode .coach-card-page { background: #ffffff; border-color: rgba(0,0,0,0.06); }
+body.light-mode .coach-name-page { color: #1a1a1c; }
+body.light-mode .coach-meta-page span { color: rgba(0,0,0,0.55); }
+body.light-mode .info-card { background: #ffffff; border-color: rgba(0,0,0,0.06); }
+body.light-mode .info-label { color: rgba(0,0,0,0.5); }
+body.light-mode .info-value { color: #1a1a1c; }
+body.light-mode .stat-card { background: #ffffff; border-color: rgba(0,0,0,0.06); }
+body.light-mode .stat-label { color: rgba(0,0,0,0.5); }
+body.light-mode .stat-value { color: #1a1a1c; }
+body.light-mode .form-section { background: #ffffff; border-color: rgba(0,0,0,0.06); }
+body.light-mode .welcome-card { background: linear-gradient(135deg, rgba(255,77,46,0.06), rgba(255,184,0,0.04)); border-color: rgba(255,77,46,0.1); }
+body.light-mode .welcome-text { color: #1a1a1c; }
+body.light-mode .welcome-sub { color: rgba(0,0,0,0.5); }
+body.light-mode .input-glass { background: #ffffff; border-color: rgba(0,0,0,0.1); color: #1a1a1c; }
+body.light-mode .date-card { background: #ffffff; border-color: rgba(0,0,0,0.06); }
+body.light-mode .date-card .date-text { color: #1a1a1c; }
+body.light-mode .date-card .date-text small { color: rgba(0,0,0,0.5); }
+body.light-mode .profile-header { background: linear-gradient(135deg, rgba(255,77,46,0.08), rgba(255,184,0,0.05)); border-color: rgba(255,77,46,0.1); }
+body.light-mode .profile-name { color: #1a1a1c; }
+body.light-mode .profile-role { color: var(--primary); }
+body.light-mode .alert-card { background: rgba(255,77,46,0.05); border-color: rgba(255,77,46,0.15); }
+body.light-mode .alert-text { color: #1a1a1c; }
+body.light-mode .modal-sheet { background: #ffffff; }
+body.light-mode .modal-title { color: #1a1a1c; }
+body.light-mode .bottom-nav { background: #ffffff; border-color: rgba(0,0,0,0.06); }
+body.light-mode .bottom-nav a { color: rgba(0,0,0,0.5); }
+body.light-mode .bottom-nav a.active { color: var(--primary); }
+body.light-mode .mobile-nav { background: #ffffff; border-color: rgba(0,0,0,0.06); }
+body.light-mode .mobile-nav .nav-group-header { color: rgba(0,0,0,0.6); }
+body.light-mode .mobile-nav .nav-submenu a { color: rgba(0,0,0,0.5); }
+body.light-mode .mobile-nav .nav-submenu a:hover { color: #1a1a1c; }
+body.light-mode .notif-bar-wrapper { background: #ffffff; border-color: rgba(0,0,0,0.06); }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
