@@ -4466,3 +4466,14 @@ input[readonly] {
         max-width: 100%;
     }
 }
+
+/* Select2 global */
+select.input-glass + .select2-container {
+    width: 100% !important;
+}
+
+@media (min-width: 768px) {
+    select.input-glass + .select2-container {
+        max-width: 400px;
+    }
+}

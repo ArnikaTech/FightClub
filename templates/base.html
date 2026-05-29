@@ -23,5 +23,15 @@
     <script src="{% static 'vendors/htmx/htmx.min.js' %}"></script>
     <script src="{% static 'js/app.js' %}"></script>
     {% block extra_js %}{% endblock %}
+    <script>
+        $(document).ready(function() {
+            // همه selectهایی که کلاس input-glass دارن
+            $('select.input-glass').select2({
+                width: '100%',
+                dir: 'rtl',
+                language: { noResults: function() { return "موردی یافت نشد"; } }
+            });
+        });
+    </script>
 </body>
 </html>
