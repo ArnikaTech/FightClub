@@ -35,8 +35,8 @@ class StudentCreateForm(forms.Form):
     national_code = forms.CharField(
         label='کد ملی',
         max_length=10,
-        required=False,
-        widget=forms.TextInput(attrs={'class': 'input-glass', 'placeholder': 'اختیاری'})
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'input-glass', 'placeholder': 'کد ملی ۱۰ رقمی'})
     )
     joined_at = forms.CharField(
         label='تاریخ عضویت',
@@ -75,8 +75,8 @@ class StudentCreateForm(forms.Form):
     
     def clean_phone(self):
         phone = self.cleaned_data['phone']
-        if User.objects.filter(phone=phone).exists():
-            raise forms.ValidationError('این شماره همراه قبلاً ثبت شده است')
+        # if User.objects.filter(phone=phone).exists():
+        #     raise forms.ValidationError('این شماره همراه قبلاً ثبت شده است')
         return phone
     
     def clean_birth_date(self):
@@ -102,14 +102,27 @@ class StudentCreateForm(forms.Form):
             raise forms.ValidationError('تاریخ معتبر وارد کنید (مثال: ۱۳۸۰/۰۱/۰۱)')
     
     def save(self):
-        user = User.objects.create_user(
-            phone=self.cleaned_data['phone'],
-            password=self.cleaned_data['password'],
-            first_name=self.cleaned_data['first_name'],
-            last_name=self.cleaned_data['last_name'],
-            national_code=self.cleaned_data.get('national_code') or None
-        )
+        national_code = self.cleaned_data.get('national_code', '')
+        phone = self.cleaned_data['phone']
         
+        # اگر کد ملی قبلاً ثبت شده، از همون user استفاده کن
+        if national_code and User.objects.filter(national_code=national_code).exists():
+            user = User.objects.get(national_code=national_code)
+            user.first_name = self.cleaned_data['first_name']
+            user.last_name = self.cleaned_data['last_name']
+            user.phone = phone
+            user.set_password(self.cleaned_data['password'])
+            user.save()
+        else:
+            user = User.objects.create_user(
+                phone=phone,
+                password=self.cleaned_data['password'],
+                first_name=self.cleaned_data['first_name'],
+                last_name=self.cleaned_data['last_name'],
+                national_code=national_code or None
+            )
+        
+        # تولید کد هنرجویی
         last_student = Student.objects.order_by('-id').first()
         if last_student:
             try:
@@ -121,37 +134,13 @@ class StudentCreateForm(forms.Form):
             new_number = 1
         student_code = f"ST-{str(new_number).zfill(5)}"
         
-        # چک student_code یکتا باشه
-        while Student.objects.filter(student_code=student_code).exists():
-            new_number += 1
-            student_code = f"ST-{str(new_number).zfill(5)}"
-        
         student = Student.objects.create(
             user=user,
             club=self.cleaned_data['club'],
             birth_date=self.cleaned_data.get('birth_date'),
             student_code=student_code,
             current_belt=self.cleaned_data['current_belt'],
-            sport=self.cleaned_data.get('sport'),
-            address=self.cleaned_data.get('address', ''),
+            sport=self.cleaned_data.get('sport')
         )
-
-        # ثبت‌نام در شیفت
-        shift = self.cleaned_data.get('shift')
-        if shift:
-            Enrollment.objects.get_or_create(
-                student=student,
-                shift=shift,
-                defaults={'enrolled_at': student.joined_at}
-            )
-
-        joined_at_str = self.cleaned_data.get('joined_at', '')
-        if joined_at_str:
-            try:
-                parts = list(map(int, joined_at_str.replace('/', '-').split('-')))
-                student.joined_at = jdatetime.date(*parts)
-            except:
-                pass
         
-        student.save()
         return student

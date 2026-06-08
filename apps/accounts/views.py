@@ -65,16 +65,19 @@ class LoginView(View):
         return render(request, 'accounts/login.html')
     
     def post(self, request):
-        phone = request.POST.get('username')
+        national_code = request.POST.get('username')
         password = request.POST.get('password')
-        user = authenticate(request, username=phone, password=password)
         
-        if user:
-            login(request, user)
-            return redirect('accounts:dashboard')
+        try:
+            user = User.objects.get(national_code=national_code)
+            user = authenticate(request, username=user.phone, password=password)
+            if user:
+                login(request, user)
+                return redirect('accounts:dashboard')
+        except User.DoesNotExist:
+            pass
         
-        list(messages.get_messages(request))
-        messages.error(request, 'شماره همراه یا گذرواژه اشتباه است.')
+        messages.error(request, 'کد ملی یا گذرواژه اشتباه است!')
         return render(request, 'accounts/login.html')
 
 

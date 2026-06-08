@@ -27,7 +27,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField('نام', max_length=100)
     last_name = models.CharField('نام‌خانوادگی', max_length=100)
     birth_date = jmodels.jDateField('تاریخ تولد', null=True, blank=True)
-    national_code = models.CharField(max_length=10, blank=True, null=True)
+    national_code = models.CharField('کد ملی', max_length=10, unique=True, null=True, blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     is_super_manager = models.BooleanField('مدیر کل', default=False)
     is_club_manager = models.BooleanField('مدیر باشگاه', default=False)
