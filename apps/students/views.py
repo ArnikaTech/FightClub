@@ -9,6 +9,51 @@ import jdatetime
 from .forms import StudentCreateForm
 from .models import Student, Insurance, StudentContact, Attendance, ClassGroup, Shift, Enrollment
 from apps.clubs.models import Club, Sport
+from apps.finance.models import FeeDue
+
+
+def managed_clubs_for(user):
+    if user.is_super_manager:
+        return Club.objects.all()
+    if user.is_club_manager or user.is_instructor:
+        return Club.objects.filter(memberships__user=user, memberships__is_active=True).distinct()
+    return Club.objects.none()
+
+
+def visible_students_for(user):
+    if hasattr(user, 'student_profile'):
+        own_student = Student.objects.filter(pk=user.student_profile.pk)
+    else:
+        own_student = Student.objects.none()
+    if user.is_super_manager:
+        return Student.objects.all()
+    if user.is_club_manager or user.is_instructor:
+        return Student.objects.filter(club__in=managed_clubs_for(user)).distinct() | own_student
+    return own_student
+
+
+def managed_students_for(user):
+    if user.is_super_manager:
+        return Student.objects.all()
+    if user.is_club_manager or user.is_instructor:
+        return Student.objects.filter(club__in=managed_clubs_for(user)).distinct()
+    return Student.objects.none()
+
+
+def can_manage_students(user):
+    return user.is_super_manager or user.is_club_manager
+
+
+def can_manage_attendance(user):
+    return user.is_super_manager or user.is_club_manager
+
+
+def visible_shifts_for(user):
+    if user.is_super_manager:
+        return Shift.objects.all()
+    if user.is_club_manager or user.is_instructor:
+        return Shift.objects.filter(class_group__club__in=managed_clubs_for(user)).distinct()
+    return Shift.objects.none()
 
 
 class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
@@ -27,8 +72,7 @@ class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         if user.is_super_manager:
             qs = Student.objects.filter(is_active=(show == 'active')).select_related('user', 'club', 'sport').prefetch_related('insurances')
         else:
-            qs = Student.objects.filter(
-                club__memberships__user=user,
+            qs = visible_students_for(user).filter(
                 is_active=(show == 'active')
             ).select_related('user', 'club', 'sport').prefetch_related('insurances')
         
@@ -63,15 +107,18 @@ class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['today'] = jdatetime.date.today()
-        context['clubs'] = Club.objects.filter(is_active=True)
+        context['current_month'] = f"{jdatetime.date.today().year}/{jdatetime.date.today().month:02d}"
+        context['clubs'] = managed_clubs_for(self.request.user).filter(is_active=True)
         context['sports'] = Sport.objects.all()
         context['belt_choices'] = Student.BELTS
         return context
 
 
-class StudentActivateView(LoginRequiredMixin, View):
+class StudentActivateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return can_manage_students(self.request.user)
+
     def post(self, request, pk):
-        student = get_object_or_404(Student, pk=pk)
+        student = get_object_or_404(managed_students_for(request.user), pk=pk)
         student.is_active = True
         student.save()
         messages.success(request, f'{student.user.get_full_name()} فعال شد')
@@ -82,6 +129,9 @@ class StudentDetailView(LoginRequiredMixin, DetailView):
     model = Student
     template_name = 'students/student_detail.html'
     context_object_name = 'student'
+
+    def get_queryset(self):
+        return visible_students_for(self.request.user)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -89,14 +139,16 @@ class StudentDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class StudentEditView(LoginRequiredMixin, View):
+class StudentEditView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return can_manage_students(self.request.user)
+
     def get(self, request, pk):
-        student = get_object_or_404(Student, pk=pk)
+        student = get_object_or_404(managed_students_for(request.user), pk=pk)
         club_id = request.GET.get('club', student.club_id)
-        selected_club = Club.objects.get(pk=club_id) if Club.objects.filter(pk=club_id).exists() else student.club
+        clubs = managed_clubs_for(request.user).filter(is_active=True)
+        selected_club = clubs.filter(pk=club_id).first() or student.club
         
-        clubs = Club.objects.filter(is_active=True)
-        shifts = Shift.objects.filter(is_active=True, class_group__is_active=True).select_related('class_group')
+        shifts = visible_shifts_for(request.user).filter(is_active=True, class_group__is_active=True).select_related('class_group')
         sports = Sport.objects.all()
         belts = Student.BELTS
         
@@ -110,7 +162,7 @@ class StudentEditView(LoginRequiredMixin, View):
         })
     
     def post(self, request, pk):
-        student = get_object_or_404(Student, pk=pk)
+        student = get_object_or_404(managed_students_for(request.user), pk=pk)
         user = student.user
         
         first_name = request.POST.get('first_name', '').strip()
@@ -134,14 +186,16 @@ class StudentEditView(LoginRequiredMixin, View):
                 messages.error(request, 'تاریخ تولد نامعتبر است')
                 return redirect('students:student_edit', pk=pk)
         
-        student.club_id = request.POST.get('club', student.club_id)
+        club_id = request.POST.get('club')
+        if club_id:
+            student.club = get_object_or_404(managed_clubs_for(request.user), pk=club_id)
         student.sport_id = request.POST.get('sport') or None
         student.current_belt = request.POST.get('current_belt', student.current_belt)
         
         # ثبت‌نام در شیفت جدید
         new_shift_id = request.POST.get('new_shift')
         if new_shift_id:
-            shift = get_object_or_404(Shift, pk=new_shift_id)
+            shift = get_object_or_404(visible_shifts_for(request.user), pk=new_shift_id)
             Enrollment.objects.get_or_create(
                 student=student,
                 shift=shift,
@@ -192,11 +246,11 @@ class StudentCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
 
 class StudentAvatarView(LoginRequiredMixin, View):
     def post(self, request, pk):
-        if not (request.user.is_super_manager or request.user.is_club_manager):
+        if not can_manage_students(request.user):
             messages.error(request, 'دسترسی غیرمجاز')
             return redirect('students:student_detail', pk=pk)
         
-        student = get_object_or_404(Student, pk=pk)
+        student = get_object_or_404(managed_students_for(request.user), pk=pk)
         avatar = request.FILES.get('avatar')
         if avatar:
             student.user.avatar = avatar
@@ -208,7 +262,7 @@ class StudentAvatarView(LoginRequiredMixin, View):
 class ContactDeleteView(LoginRequiredMixin, View):
     def post(self, request, contact_pk):
         try:
-            contact = get_object_or_404(StudentContact, pk=contact_pk)
+            contact = get_object_or_404(StudentContact, pk=contact_pk, student__in=managed_students_for(request.user))
             student_pk = contact.student.pk
             contact.delete()
             messages.success(request, 'شماره تماس حذف شد')
@@ -221,7 +275,7 @@ class ContactDeleteView(LoginRequiredMixin, View):
 
 class InsuranceCreateView(LoginRequiredMixin, View):
     def post(self, request, pk):
-        student = get_object_or_404(Student, pk=pk)
+        student = get_object_or_404(managed_students_for(request.user), pk=pk)
         
         start_date = request.POST.get('start_date', '').strip()
         expiry_date = request.POST.get('expiry_date', '').strip()
@@ -258,7 +312,7 @@ class InsuranceCreateView(LoginRequiredMixin, View):
 
 class ContactCreateView(LoginRequiredMixin, View):
     def post(self, request, pk):
-        student = get_object_or_404(Student, pk=pk)
+        student = get_object_or_404(managed_students_for(request.user), pk=pk)
         
         phone = request.POST.get('phone', '').strip()
         contact_type = request.POST.get('contact_type', 'parent')
@@ -300,7 +354,7 @@ class AttendanceView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = 'students/attendance.html'
     
     def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
+        return can_manage_attendance(self.request.user)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -317,11 +371,11 @@ class AttendanceView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
             today = jdatetime.date.today()
         
         context['today'] = today
-        context['shifts'] = Shift.objects.filter(is_active=True, class_group__is_active=True).select_related('class_group')
+        context['shifts'] = visible_shifts_for(self.request.user).filter(is_active=True, class_group__is_active=True).select_related('class_group')
         
         shift_id = self.request.GET.get('shift')
         if shift_id:
-            shift = get_object_or_404(Shift, pk=shift_id)
+            shift = get_object_or_404(visible_shifts_for(self.request.user), pk=shift_id)
             context['selected_shift'] = shift
             
             # فقط هنرجویانی که قبل از تاریخ انتخاب شده ثبت‌نام کردن
@@ -351,7 +405,9 @@ class AttendanceView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         return context
 
 
-class AttendanceSaveView(LoginRequiredMixin, View):
+class AttendanceSaveView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return can_manage_attendance(self.request.user)
+
     def post(self, request):
         import json
         student_ids_str = request.POST.get('student_ids', '[]')
@@ -367,7 +423,7 @@ class AttendanceSaveView(LoginRequiredMixin, View):
             messages.error(request, 'شیفت را انتخاب کنید')
             return redirect('students:attendance')
         
-        shift = get_object_or_404(Shift, pk=shift_id)
+        shift = get_object_or_404(visible_shifts_for(request.user), pk=shift_id)
         
         # تاریخ
         if date_str:
@@ -379,7 +435,7 @@ class AttendanceSaveView(LoginRequiredMixin, View):
         else:
             date = jdatetime.date.today()
         
-        enrollments = Enrollment.objects.filter(shift=shift, is_active=True)
+        enrollments = Enrollment.objects.filter(shift=shift, is_active=True, student__in=managed_students_for(request.user))
         
         for enrollment in enrollments:
             status = 'present' if enrollment.student_id in student_ids else 'absent'
@@ -394,9 +450,11 @@ class AttendanceSaveView(LoginRequiredMixin, View):
         return redirect(f'/students/attendance/?shift={shift_id}&date={date_str or ""}')
 
 
-class AttendanceToggleView(LoginRequiredMixin, View):
+class AttendanceToggleView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return can_manage_attendance(self.request.user)
+
     def post(self, request, student_id):
-        student = get_object_or_404(Student, pk=student_id)
+        student = get_object_or_404(managed_students_for(request.user), pk=student_id)
         today = jdatetime.date.today()
         
         att, created = Attendance.objects.get_or_create(
@@ -409,10 +467,10 @@ class AttendanceToggleView(LoginRequiredMixin, View):
         # آمار جدید
         user = request.user
         if user.is_super_manager:
-            total = Student.objects.filter(is_active=True).count()
+            total = managed_students_for(user).filter(is_active=True).count()
         else:
-            total = Student.objects.filter(club__memberships__user=user, is_active=True).distinct().count()
-        present = Attendance.objects.filter(date=today, status='present').count()
+            total = managed_students_for(user).filter(is_active=True).distinct().count()
+        present = Attendance.objects.filter(student__in=managed_students_for(user), date=today, status='present').count()
         absent = total - present
         
         return render(request, 'students/_attendance_item.html', {
@@ -438,11 +496,7 @@ class AbsenteeListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         user = self.request.user
         if user.is_super_manager:
             return Student.objects.filter(is_active=True).select_related('user', 'club').prefetch_related('contacts', 'attendances')
-        return Student.objects.filter(
-            club__memberships__user=user,
-            club__memberships__is_active=True,
-            is_active=True
-        ).select_related('user', 'club').prefetch_related('contacts', 'attendances')
+        return managed_students_for(user).filter(is_active=True).select_related('user', 'club').prefetch_related('contacts', 'attendances')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -507,14 +561,13 @@ class AttendanceHistoryView(LoginRequiredMixin, TemplateView):
         
         # همه هنرجویان (برای فیلتر)
         if user.is_super_manager:
-            all_students = Student.objects.filter(is_active=True).select_related('user')
-            all_shifts = Shift.objects.filter(is_active=True).select_related('class_group')
+            all_students = visible_students_for(user).filter(is_active=True).select_related('user')
+            all_shifts = visible_shifts_for(user).filter(is_active=True).select_related('class_group')
         elif user.is_club_manager:
-            clubs = Club.objects.filter(memberships__user=user, is_active=True)
-            all_students = Student.objects.filter(club__in=clubs, is_active=True).select_related('user')
-            all_shifts = Shift.objects.filter(class_group__club__in=clubs, is_active=True).select_related('class_group')
+            all_students = visible_students_for(user).filter(is_active=True).select_related('user')
+            all_shifts = visible_shifts_for(user).filter(is_active=True).select_related('class_group')
         else:
-            all_students = Student.objects.filter(pk=user.student_profile.pk).select_related('user')
+            all_students = visible_students_for(user).filter(is_active=True).select_related('user')
             all_shifts = Shift.objects.none()
         
         context['all_students'] = all_students
@@ -524,7 +577,7 @@ class AttendanceHistoryView(LoginRequiredMixin, TemplateView):
         students = all_students
         shift = None
         if shift_id:
-            shift = get_object_or_404(Shift, pk=shift_id)
+            shift = get_object_or_404(all_shifts, pk=shift_id)
             enrolled_ids = Enrollment.objects.filter(shift=shift, is_active=True).values_list('student_id', flat=True)
             students = students.filter(pk__in=enrolled_ids)
         if student_id:
@@ -551,11 +604,11 @@ class ContactEditView(LoginRequiredMixin, View):
     """ویرایش شماره تماس"""
     
     def get(self, request, contact_pk):
-        contact = get_object_or_404(StudentContact, pk=contact_pk)
+        contact = get_object_or_404(StudentContact, pk=contact_pk, student__in=managed_students_for(request.user))
         return render(request, 'students/contact_edit.html', {'contact': contact})
     
     def post(self, request, contact_pk):
-        contact = get_object_or_404(StudentContact, pk=contact_pk)
+        contact = get_object_or_404(StudentContact, pk=contact_pk, student__in=managed_students_for(request.user))
         
         phone = request.POST.get('phone', '').strip()
         contact_type = request.POST.get('contact_type', 'parent')
@@ -574,18 +627,22 @@ class ContactEditView(LoginRequiredMixin, View):
         return redirect('students:student_detail', pk=contact.student.pk)
 
 
-class StudentDeleteView(LoginRequiredMixin, View):
+class StudentDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return can_manage_students(self.request.user)
+
     def post(self, request, pk):
-        student = get_object_or_404(Student, pk=pk)
+        student = get_object_or_404(managed_students_for(request.user), pk=pk)
         student.is_active = False
         student.save()
         messages.success(request, f'{student.user.get_full_name()} غیرفعال شد')
         return redirect('students:student_list')
 
 
-class ClassGroupActivateView(LoginRequiredMixin, View):
+class ClassGroupActivateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return can_manage_students(self.request.user)
+
     def post(self, request, pk):
-        class_group = get_object_or_404(ClassGroup, pk=pk)
+        class_group = get_object_or_404(ClassGroup, pk=pk, club__in=managed_clubs_for(request.user))
         class_group.is_active = True
         class_group.save()
         messages.success(request, f'کلاس {class_group.name} فعال شد')
@@ -604,14 +661,12 @@ class ClassGroupListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         user = self.request.user
         if user.is_super_manager:
             return ClassGroup.objects.filter(is_active=True).select_related('club', 'sport')
-        return ClassGroup.objects.filter(
-            club__memberships__user=user, is_active=True
-        ).select_related('club', 'sport').distinct()
+        return ClassGroup.objects.filter(club__in=managed_clubs_for(user), is_active=True).select_related('club', 'sport').distinct()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['inactive_classes'] = ClassGroup.objects.filter(is_active=False)    
-        context['clubs'] = Club.objects.filter(is_active=True)
+        context['inactive_classes'] = ClassGroup.objects.filter(club__in=managed_clubs_for(self.request.user), is_active=False)    
+        context['clubs'] = managed_clubs_for(self.request.user).filter(is_active=True)
         context['sports'] = Sport.objects.all()
         return context
 
@@ -628,8 +683,9 @@ class ClassGroupCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
         description = request.POST.get('description', '')
         
         if name and club_id and sport_id:
+            club = get_object_or_404(managed_clubs_for(request.user), pk=club_id)
             ClassGroup.objects.create(
-                name=name, club_id=club_id, sport_id=sport_id,
+                name=name, club=club, sport_id=sport_id,
                 gender=gender, description=description
             )
             messages.success(request, f'کلاس {name} ایجاد شد')
@@ -643,9 +699,11 @@ class ClassGroupEditView(LoginRequiredMixin, UserPassesTestMixin, View):
         return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def post(self, request, pk):
-        class_group = get_object_or_404(ClassGroup, pk=pk)
+        class_group = get_object_or_404(ClassGroup, pk=pk, club__in=managed_clubs_for(request.user))
         class_group.name = request.POST.get('name', class_group.name).strip()
-        class_group.club_id = request.POST.get('club', class_group.club_id)
+        club_id = request.POST.get('club')
+        if club_id:
+            class_group.club = get_object_or_404(managed_clubs_for(request.user), pk=club_id)
         class_group.sport_id = request.POST.get('sport', class_group.sport_id)
         class_group.gender = request.POST.get('gender', class_group.gender)
         class_group.description = request.POST.get('description', '')
@@ -659,16 +717,18 @@ class ClassGroupDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
         return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def post(self, request, pk):
-        class_group = get_object_or_404(ClassGroup, pk=pk)
+        class_group = get_object_or_404(ClassGroup, pk=pk, club__in=managed_clubs_for(request.user))
         class_group.is_active = False
         class_group.save()
         messages.success(request, f'کلاس {class_group.name} غیرفعال شد')
         return redirect('students:class_list')
 
 
-class ShiftActivateView(LoginRequiredMixin, View):
+class ShiftActivateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return can_manage_students(self.request.user)
+
     def post(self, request, pk):
-        shift = get_object_or_404(Shift, pk=pk)
+        shift = get_object_or_404(visible_shifts_for(request.user), pk=pk)
         shift.is_active = True
         shift.save()
         messages.success(request, f'شیفت {shift.name} فعال شد')
@@ -683,7 +743,7 @@ class ShiftListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def get_queryset(self):
-        self.class_group = get_object_or_404(ClassGroup, pk=self.kwargs['class_id'])
+        self.class_group = get_object_or_404(ClassGroup, pk=self.kwargs['class_id'], club__in=managed_clubs_for(self.request.user))
         return self.class_group.shifts.filter(is_active=True)
     
     def get_context_data(self, **kwargs):
@@ -698,7 +758,7 @@ class ShiftCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
         return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def post(self, request, class_id):
-        class_group = get_object_or_404(ClassGroup, pk=class_id)
+        class_group = get_object_or_404(ClassGroup, pk=class_id, club__in=managed_clubs_for(request.user))
         name = request.POST.get('name', '').strip()
         start_time = request.POST.get('start_time')
         end_time = request.POST.get('end_time')
@@ -730,7 +790,7 @@ class ShiftEditView(LoginRequiredMixin, UserPassesTestMixin, View):
         return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def post(self, request, pk):
-        shift = get_object_or_404(Shift, pk=pk)
+        shift = get_object_or_404(visible_shifts_for(request.user), pk=pk)
         shift.name = request.POST.get('name', shift.name).strip()
         shift.days = request.POST.get('days', shift.days).strip()
         shift.start_time = request.POST.get('start_time') or shift.start_time
@@ -745,7 +805,7 @@ class ShiftDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
         return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def post(self, request, pk):
-        shift = get_object_or_404(Shift, pk=pk)
+        shift = get_object_or_404(visible_shifts_for(request.user), pk=pk)
         class_id = shift.class_group_id
         shift.is_active = False
         shift.save()
@@ -753,9 +813,11 @@ class ShiftDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
         return redirect('students:shift_list', class_id=class_id)
 
 
-class EnrollmentActivateView(LoginRequiredMixin, View):
+class EnrollmentActivateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return can_manage_students(self.request.user)
+
     def post(self, request, pk):
-        enrollment = get_object_or_404(Enrollment, pk=pk)
+        enrollment = get_object_or_404(Enrollment, pk=pk, student__in=managed_students_for(request.user))
         enrollment.is_active = True
         enrollment.save()
         messages.success(request, f'ثبت‌نام {enrollment.student.user.get_full_name()} فعال شد')
@@ -771,15 +833,15 @@ class EnrollmentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def get_queryset(self):
-        return Enrollment.objects.filter(is_active=True).select_related(
+        return Enrollment.objects.filter(student__in=managed_students_for(self.request.user), is_active=True).select_related(
             'student__user', 'student__club', 'shift__class_group__sport', 'shift__class_group__club'
         )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['students'] = Student.objects.filter(is_active=True).select_related('user', 'club')
-        context['shifts'] = Shift.objects.filter(is_active=True, class_group__is_active=True).select_related('class_group')
-        context['inactive_enrollments'] = Enrollment.objects.filter(is_active=False).select_related(
+        context['students'] = managed_students_for(self.request.user).filter(is_active=True).select_related('user', 'club')
+        context['shifts'] = visible_shifts_for(self.request.user).filter(is_active=True, class_group__is_active=True).select_related('class_group')
+        context['inactive_enrollments'] = Enrollment.objects.filter(student__in=managed_students_for(self.request.user), is_active=False).select_related(
             'student__user', 'student__club', 'shift__class_group__sport', 'shift__class_group__club'
         )
         return context
@@ -806,8 +868,8 @@ class EnrollmentCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
             enrolled_at = jdatetime.date.today()
         
         if student_id and shift_id:
-            student = get_object_or_404(Student, pk=student_id)
-            shift = get_object_or_404(Shift, pk=shift_id)
+            student = get_object_or_404(managed_students_for(request.user), pk=student_id)
+            shift = get_object_or_404(visible_shifts_for(request.user), pk=shift_id)
             
             old_enrollment = Enrollment.objects.filter(student=student, shift=shift).first()
             if old_enrollment:
@@ -831,15 +893,18 @@ class EnrollmentCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
         return redirect('students:enrollment_list')
 
 
-class EnrollmentEditView(LoginRequiredMixin, View):
+class EnrollmentEditView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return can_manage_students(self.request.user)
+
     def post(self, request, pk):
-        enrollment = get_object_or_404(Enrollment, pk=pk)
+        enrollment = get_object_or_404(Enrollment, pk=pk, student__in=managed_students_for(request.user))
         shift_id = request.POST.get('shift')
         monthly_fee = request.POST.get('monthly_fee', '0').replace(',', '')
         enrolled_at_str = request.POST.get('enrolled_at', '')
         
         if shift_id:
             if str(enrollment.shift_id) != str(shift_id):
+                get_object_or_404(visible_shifts_for(request.user), pk=shift_id)
                 exists = Enrollment.objects.filter(student=enrollment.student, shift_id=shift_id).exclude(pk=pk).exists()
                 if exists:
                     messages.error(request, 'این هنرجو قبلاً در این شیفت ثبت‌نام شده')
@@ -866,7 +931,7 @@ class EnrollmentDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
         return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def post(self, request, pk):
-        enrollment = get_object_or_404(Enrollment, pk=pk)
+        enrollment = get_object_or_404(Enrollment, pk=pk, student__in=managed_students_for(request.user))
         enrollment.is_active = False
         enrollment.save()
         messages.success(request, f'ثبت‌نام {enrollment.student.user.get_full_name()} لغو شد')

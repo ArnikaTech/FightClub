@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.conf import settings
@@ -11,6 +12,21 @@ from .models import Province, City, Club, Sport
 from .models import ClubMembership
 from apps.accounts.models import User
 
+
+def managed_clubs_for(user):
+    if user.is_super_manager:
+        return Club.objects.all()
+    if user.is_club_manager:
+        return Club.objects.filter(memberships__user=user, memberships__is_active=True).distinct()
+    return Club.objects.none()
+
+
+def active_managed_clubs_for(user):
+    return managed_clubs_for(user).filter(is_active=True)
+
+
+def can_manage_clubs(user):
+    return user.is_super_manager or user.is_club_manager
 
 
 # ========== استان‌ها ==========
@@ -126,11 +142,11 @@ class ClubListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def test_func(self): return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def get_queryset(self):
-        return Club.objects.filter(is_active=True).select_related('province', 'city')
+        return active_managed_clubs_for(self.request.user).select_related('province', 'city')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['inactive_clubs'] = Club.objects.filter(is_active=False)
+        context['inactive_clubs'] = managed_clubs_for(self.request.user).filter(is_active=False)
         context['provinces'] = Province.objects.all()
         return context
 
@@ -149,16 +165,19 @@ class ClubCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
         return redirect('clubs:club_list')
 
 
-class ClubEditView(LoginRequiredMixin, View):
+class ClubEditView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return can_manage_clubs(self.request.user)
+
     def post(self, request, pk):
-        club = get_object_or_404(Club, pk=pk)
+        club = get_object_or_404(managed_clubs_for(request.user), pk=pk)
         club.name = request.POST.get('name', '').strip()
         club.phone = request.POST.get('phone', '').strip()
         club.address = request.POST.get('address', '').strip()
-        province_id = request.POST.get('province')
-        city_id = request.POST.get('city')
-        if province_id: club.province_id = province_id
-        if city_id: club.city_id = city_id
+        if request.user.is_super_manager:
+            province_id = request.POST.get('province')
+            city_id = request.POST.get('city')
+            if province_id: club.province_id = province_id
+            if city_id: club.city_id = city_id
         club.save()
         messages.success(request, 'باشگاه بروزرسانی شد')
         return redirect('clubs:club_list')
@@ -169,8 +188,13 @@ class ClubDetailView(LoginRequiredMixin, DetailView):
     template_name = 'clubs/club_detail.html'
     context_object_name = 'club'
 
+    def get_queryset(self):
+        return managed_clubs_for(self.request.user)
 
-class ClubDeleteView(LoginRequiredMixin, View):
+
+class ClubDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return self.request.user.is_super_manager
+
     def post(self, request, pk):
         club = get_object_or_404(Club, pk=pk)
         club.is_active = False
@@ -179,7 +203,9 @@ class ClubDeleteView(LoginRequiredMixin, View):
         return redirect('clubs:club_list')
 
 
-class ClubActivateView(LoginRequiredMixin, View):
+class ClubActivateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return self.request.user.is_super_manager
+
     def post(self, request, pk):
         club = get_object_or_404(Club, pk=pk)
         club.is_active = True
@@ -188,8 +214,9 @@ class ClubActivateView(LoginRequiredMixin, View):
         return redirect('clubs:club_list')
 
 
+@login_required
 def club_detail_ajax(request, pk):
-    club = get_object_or_404(Club, pk=pk)
+    club = get_object_or_404(managed_clubs_for(request.user), pk=pk)
     coaches = club.memberships.filter(is_active=True).select_related('user')
     return JsonResponse({
         'name': club.name,
@@ -202,9 +229,10 @@ def club_detail_ajax(request, pk):
     })
 
 
+@login_required
 def club_info_partial(request):
     club_id = request.GET.get('club')
-    club = get_object_or_404(Club, pk=club_id)
+    club = get_object_or_404(managed_clubs_for(request.user), pk=club_id)
     return render(request, 'clubs/_club_info.html', {'club': club})
 
 
@@ -217,16 +245,20 @@ class CoachListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def test_func(self): return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def get_queryset(self):
-        return ClubMembership.objects.filter(is_active=True).select_related('user', 'club')
+        return ClubMembership.objects.filter(
+            club__in=managed_clubs_for(self.request.user), is_active=True
+        ).select_related('user', 'club')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['users'] = User.objects.filter(is_active=True)
-        context['clubs'] = Club.objects.filter(is_active=True)
+        context['clubs'] = active_managed_clubs_for(self.request.user)
         return context
 
 
-class CoachCreateView(LoginRequiredMixin, View):
+class CoachCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return can_manage_clubs(self.request.user)
+
     def post(self, request):
         user_id = request.POST.get('user_id')
         club_id = request.POST.get('club_id')
@@ -234,7 +266,7 @@ class CoachCreateView(LoginRequiredMixin, View):
         
         if user_id and club_id:
             user = get_object_or_404(User, pk=user_id)
-            club = get_object_or_404(Club, pk=club_id)
+            club = get_object_or_404(active_managed_clubs_for(request.user), pk=club_id)
             user.is_instructor = True
             user.save()
             
@@ -251,12 +283,15 @@ class CoachCreateView(LoginRequiredMixin, View):
         return redirect('clubs:coach_list')
 
 
-class CoachEditView(LoginRequiredMixin, View):
+class CoachEditView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return can_manage_clubs(self.request.user)
+
     def post(self, request, pk):
-        membership = get_object_or_404(ClubMembership, pk=pk)
+        membership = get_object_or_404(ClubMembership, pk=pk, club__in=managed_clubs_for(request.user))
         user_id = request.POST.get('user_id')
         club_id = request.POST.get('club_id')
         role = request.POST.get('role')
+        club = get_object_or_404(active_managed_clubs_for(request.user), pk=club_id)
         
         # چک تکراری نبودن در باشگاه جدید
         if str(membership.club_id) != str(club_id) or str(membership.user_id) != str(user_id):
@@ -266,16 +301,18 @@ class CoachEditView(LoginRequiredMixin, View):
                 return redirect('clubs:coach_list')
         
         membership.user_id = user_id
-        membership.club_id = club_id
+        membership.club = club
         membership.role = role
         membership.save()
         messages.success(request, 'بروزرسانی شد')
         return redirect('clubs:coach_list')
 
 
-class CoachDeleteView(LoginRequiredMixin, View):
+class CoachDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self): return can_manage_clubs(self.request.user)
+
     def post(self, request, pk):
-        membership = get_object_or_404(ClubMembership, pk=pk)
+        membership = get_object_or_404(ClubMembership, pk=pk, club__in=managed_clubs_for(request.user))
         name = membership.user.get_full_name()
         membership.is_active = False
         membership.save()

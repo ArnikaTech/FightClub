@@ -56,8 +56,33 @@
                             {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
                         </div>
                         <div class="att-item-info">
-                            <div class="att-name">{{ s.user.get_full_name }} {% if s.is_birthday_today %} <span class="birthday-icon"><i class="bi bi-gift-fill"></i></span>{% endif %}</div>
-                            <div class="att-meta"><span>{{ s.get_current_belt_display }}</span><span>{{ s.student_code }}</span></div>
+                            <div class="att-name">
+                                {{ s.user.get_full_name }} 
+                                
+                                {% if s.is_birthday_today %} 
+                                <span class="birthday-icon"><i class="bi bi-gift-fill"></i></span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="att-meta">
+                                {% if s.current_monthly_status == 'debtor' %}
+                                <span class="" style="color:var(--primary);" title="بدهکار">
+                                    <i class="bi bi-exclamation-triangle-fill"></i> بدهکار
+                                </span>
+                                {% elif s.current_monthly_status == 'paid' %}
+                                <!-- <span style="color:#34c759;margin-right:4px;" title="پرداخت شده">
+                                    <i class="bi bi-check-circle-fill"></i> 
+                                </span> -->
+                                {% endif %}
+                                
+                                {% with days=s.insurance_days_left %}
+                                {% if days is not None %}
+                                {% if days <= 7 %}<span style="color:#ff9800;"><span class="status-dot" style="background:#ff9800;"></span> بیمه {{ days }} روز</span>
+                                {% else %}<span style="color:#34c759;"><span class="status-dot active"></span> بیمه {{ days }} روز</span>{% endif %}
+                                {% else %}<span style="color:var(--primary);"><span class="status-dot" style="background:var(--primary);"></span> بیمه منقضی</span>{% endif %}
+                                {% endwith %}
+                                
+                            </div>
                         </div>
                         {% if s.contacts.exists %}
                         <button onclick="event.stopPropagation(); event.preventDefault(); showContactModal({{ s.id }}, '{{ s.user.get_full_name|escapejs }}', {{ s.contacts.all|safe_json }})" class="btn-call" style="margin-right:8px;">

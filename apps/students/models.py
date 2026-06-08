@@ -97,6 +97,25 @@ class Student(models.Model):
         if len(recent) < days:
             return 0
         return sum(1 for a in recent if a.status == 'absent')
+    
+    def current_monthly_status(self):
+        """وضعیت پرداخت ماه جاری - بدون نیاز به FeeDue"""
+        import jdatetime
+        today = jdatetime.date.today()
+        current_month = f"{today.year}/{today.month:02d}"
+        
+        # چک کن آیا پرداختی برای این ماه داره؟
+        from apps.finance.models import FeeDue
+        due = FeeDue.objects.filter(student=self, month=current_month, is_paid=True).first()
+        
+        if due:
+            return "paid"
+        
+        # اگر عضو باشگاه هست و هیچ پرداختی نداره = بدهکار
+        if self.is_active:
+            return "debtor"
+        
+        return "clear"
 
 
 class StudentContact(models.Model):

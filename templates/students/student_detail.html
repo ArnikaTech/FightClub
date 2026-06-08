@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load jformat %}
+{% load static %} {% load jformat %} {% load humanize %}
 
 {% block title %}{{ student.user.get_full_name }} | {{ site_settings.gym_name }}{% endblock %}
 
@@ -79,6 +78,30 @@
         </div>
         
         <div class="info-card animate__animated animate__fadeInUp">
+    <div class="info-title"><i class="bi bi-cash-coin"></i> تاریخچه شهریه</div>
+    <div style="max-height:200px;overflow-y:auto;">
+        {% for due in student.fee_dues.all %}
+        <div class="info-row">
+            <span class="info-label">{{ due.month }}</span>
+            <span class="info-value">
+                {{ due.amount|intcomma }} تومان
+                {% if due.is_paid %}
+                <!-- <span class="status-dot active"></span> -->
+                 -
+                <small style="color:var(--text-muted);">{{ due.paid_at|jformat:"%Y/%m/%d"|default:'' }}</small>
+                {% else %}
+                <span class="status-dot" style="background:var(--primary);"></span>
+                <span style="color:var(--primary);font-size:0.75rem;">بدهکار</span>
+                {% endif %}
+            </span>
+        </div>
+        {% empty %}
+        <div class="text-center py-3 text-muted">تاریخچه‌ای ثبت نشده</div>
+        {% endfor %}
+    </div>
+</div>
+        
+        <div class="info-card animate__animated animate__fadeInUp">
             <div class="info-title"><i class="bi bi-shield-check"></i> تاریخچه بیمه</div>
             {% for insurance in student.insurances.all %}
             <div class="info-row">
@@ -116,6 +139,7 @@
         </div>
         
         <div class="profile-actions animate__animated animate__fadeInUp">
+            <button onclick="openFeeModal()" class="profile-action-btn"><i class="bi bi-cash-coin"></i><span>ثبت شهریه</span><i class="bi bi-chevron-left action-arrow"></i></button>
             <button onclick="openInsuranceModal()" class="profile-action-btn"><i class="bi bi-shield-plus"></i><span>تمدید بیمه</span><i class="bi bi-chevron-left action-arrow"></i></button>
             <button onclick="openContactModal()" class="profile-action-btn"><i class="bi bi-person-plus"></i><span>ثبت شماره والدین</span><i class="bi bi-chevron-left action-arrow"></i></button>
             <a href="{% url 'students:student_edit' student.pk %}" class="profile-action-btn"><i class="bi bi-pencil"></i><span>ویرایش</span><i class="bi bi-chevron-left action-arrow"></i></a>
@@ -140,6 +164,27 @@
         </form>
     </div>
 </div>
+
+<!-- مودال ثبت شهریه -->
+<div class="modal-overlay" id="feeModalOverlay" onclick="closeFeeModal()"></div>
+<div class="modal-sheet" id="feeModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">ثبت شهریه</div>
+    <div class="modal-body">
+        <form method="post" action="{% url 'finance:fee_add' student.pk %}">
+            {% csrf_token %}
+            <div class="modal-form-group"><label class="form-label-sm">ماه (مثلاً ۱۴۰۴/۰۶) *</label><input type="text" name="month" class="input-glass" value="{{ today|jformat:'%Y/%m' }}" required></div>
+            <div class="modal-form-group"><label class="form-label-sm">مبلغ (تومان) *</label><input type="text" name="amount" class="input-glass" required></div>
+            <div class="modal-form-group"><label class="form-label-sm">تاریخ پرداخت</label><input type="text" name="paid_at" class="input-glass" placeholder="۱۴۰۴/۰۳/۲۱"></div>
+            <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeFeeModal()">انصراف</button><button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> ثبت</button></div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openFeeModal(){ document.getElementById('feeModalOverlay').classList.add('show'); document.getElementById('feeModal').classList.add('show'); }
+    function closeFeeModal(){ document.getElementById('feeModalOverlay').classList.remove('show'); document.getElementById('feeModal').classList.remove('show'); }
+</script>
 
 <div class="modal-overlay" id="contactModalOverlay" onclick="closeContactModal()"></div>
 <div class="modal-sheet" id="contactModal"><div class="modal-handle"></div><div class="modal-title">ثبت شماره والدین</div>

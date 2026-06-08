@@ -4,11 +4,49 @@ from django.contrib.auth import login, logout, authenticate, update_session_auth
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse
+from django.db import models
 
 import jdatetime
 from apps.students.models import Student, Attendance
 from apps.clubs.models import Club
 from .models import User, Message
+
+
+def managed_clubs_for(user):
+    if user.is_super_manager:
+        return Club.objects.all()
+    if user.is_club_manager or user.is_instructor:
+        return Club.objects.filter(memberships__user=user, memberships__is_active=True).distinct()
+    return Club.objects.none()
+
+
+def visible_students_for(user):
+    if user.is_super_manager:
+        return Student.objects.all()
+    if user.is_club_manager or user.is_instructor:
+        return Student.objects.filter(club__in=managed_clubs_for(user)).distinct()
+    try:
+        return Student.objects.filter(pk=user.student_profile.pk)
+    except Student.DoesNotExist:
+        return Student.objects.none()
+
+
+def allowed_receivers_for(user):
+    if user.is_super_manager:
+        return User.objects.filter(is_active=True)
+    if user.is_club_manager or user.is_instructor:
+        clubs = managed_clubs_for(user)
+        return User.objects.filter(
+            models.Q(student_profile__club__in=clubs) |
+            models.Q(club_memberships__club__in=clubs),
+            is_active=True
+        ).distinct()
+    clubs = Club.objects.filter(students__user=user)
+    return User.objects.filter(club_memberships__club__in=clubs, is_active=True).distinct()
+
+
+def visible_messages_for(user):
+    return Message.objects.filter(models.Q(sender=user) | models.Q(receiver=user))
 
 
 class LandingView(TemplateView):
@@ -53,13 +91,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         if user.is_super_manager:
             clubs = Club.objects.filter(is_active=True)
             if club_id:
-                students = Student.objects.filter(club_id=club_id, is_active=True)
-                selected_club = Club.objects.get(pk=club_id) if Club.objects.filter(pk=club_id).exists() else None
+                selected_club = clubs.filter(pk=club_id).first()
+                students = Student.objects.filter(club=selected_club, is_active=True) if selected_club else Student.objects.none()
             else:
                 students = Student.objects.filter(is_active=True)
                 selected_club = None
         elif user.is_club_manager:
-            clubs = Club.objects.filter(memberships__user=user, is_active=True)
+            clubs = managed_clubs_for(user).filter(is_active=True)
             students = Student.objects.filter(club__in=clubs, is_active=True).distinct()
             selected_club = None
         else:
@@ -226,22 +264,7 @@ class SentView(LoginRequiredMixin, ListView):
 class ComposeView(LoginRequiredMixin, View):
     def get(self, request):
         user = request.user
-        
-        if user.is_super_manager:
-            receivers = User.objects.filter(is_active=True)
-        elif user.is_club_manager:
-            clubs = Club.objects.filter(memberships__user=user, is_active=True)
-            receivers = User.objects.filter(student_profile__club__in=clubs, is_active=True).distinct()
-        elif user.is_instructor:
-            clubs = Club.objects.filter(memberships__user=user, is_active=True)
-            receivers = User.objects.filter(student_profile__club__in=clubs, is_active=True).distinct()
-        else:
-            clubs = Club.objects.filter(students__user=user)
-            receivers = User.objects.filter(
-                club_memberships__club__in=clubs, is_active=True
-            ).distinct()
-        
-        return render(request, 'accounts/compose.html', {'receivers': receivers})
+        return render(request, 'accounts/compose.html', {'receivers': allowed_receivers_for(user)})
     
     def post(self, request):
         receiver_id = request.POST.get('receiver')
@@ -250,10 +273,14 @@ class ComposeView(LoginRequiredMixin, View):
         body = request.POST.get('body', '').strip()
         
         if receiver_id and subject and body:
+            receiver = get_object_or_404(allowed_receivers_for(request.user), pk=receiver_id)
+            student = None
+            if student_id:
+                student = get_object_or_404(visible_students_for(request.user), pk=student_id)
             Message.objects.create(
                 sender=request.user,
-                receiver_id=receiver_id,
-                student_id=student_id or None,
+                receiver=receiver,
+                student=student,
                 subject=subject,
                 body=body
             )
@@ -268,6 +295,9 @@ class ThreadView(LoginRequiredMixin, DetailView):
     model = Message
     template_name = 'accounts/thread.html'
     context_object_name = 'message'
+
+    def get_queryset(self):
+        return visible_messages_for(self.request.user)
     
     def get_object(self):
         msg = super().get_object()
@@ -295,7 +325,7 @@ class ThreadView(LoginRequiredMixin, DetailView):
 
 class ReplyView(LoginRequiredMixin, View):
     def post(self, request, pk):
-        parent = get_object_or_404(Message, pk=pk)
+        parent = get_object_or_404(visible_messages_for(request.user), pk=pk)
         body = request.POST.get('body', '').strip()
         
         if body:
@@ -320,12 +350,12 @@ class BulkMessageView(LoginRequiredMixin, View):
             coaches = User.objects.filter(is_instructor=True, is_active=True)
             managers = User.objects.filter(is_club_manager=True, is_active=True)
         elif user.is_club_manager:
-            clubs = Club.objects.filter(memberships__user=user, is_active=True)
+            clubs = managed_clubs_for(user).filter(is_active=True)
             students = Student.objects.filter(club__in=clubs, is_active=True).select_related('user', 'club')
             coaches = User.objects.filter(club_memberships__club__in=clubs, is_instructor=True, is_active=True).distinct()
             managers = User.objects.none()
         elif user.is_instructor:
-            clubs = Club.objects.filter(memberships__user=user, is_active=True)
+            clubs = managed_clubs_for(user).filter(is_active=True)
             students = Student.objects.filter(club__in=clubs, is_active=True).select_related('user', 'club')
             coaches = User.objects.none()
             managers = User.objects.none()
@@ -355,7 +385,7 @@ class BulkMessageView(LoginRequiredMixin, View):
         
         # ارسال به هنرجویان
         for student_id in student_ids:
-            student = Student.objects.get(pk=student_id)
+            student = get_object_or_404(visible_students_for(request.user), pk=student_id)
             Message.objects.create(sender=request.user, receiver=student.user, student=student, subject=subject, body=body)
             count += 1
             
@@ -367,13 +397,13 @@ class BulkMessageView(LoginRequiredMixin, View):
         
         # ارسال به مربیان
         for coach_id in coach_ids:
-            coach = User.objects.get(pk=coach_id)
+            coach = get_object_or_404(allowed_receivers_for(request.user), pk=coach_id)
             Message.objects.create(sender=request.user, receiver=coach, subject=subject, body=body)
             count += 1
         
         # ارسال به مدیران
         for manager_id in manager_ids:
-            manager = User.objects.get(pk=manager_id)
+            manager = get_object_or_404(allowed_receivers_for(request.user), pk=manager_id)
             Message.objects.create(sender=request.user, receiver=manager, subject=subject, body=body)
             count += 1
         

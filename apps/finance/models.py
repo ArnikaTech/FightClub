@@ -56,3 +56,20 @@ class Expense(models.Model):
     
     def __str__(self):
         return f"{self.title} - {self.amount:,} تومان"
+
+
+class FeeDue(models.Model):
+    student = models.ForeignKey('students.Student', on_delete=models.CASCADE, related_name='fee_dues')
+    month = models.CharField('ماه', max_length=7, help_text='مثلاً: 1404/03')
+    amount = models.PositiveIntegerField('مبلغ (تومان)', default=0)
+    is_paid = models.BooleanField('پرداخت شد؟', default=False)
+    paid_at = jmodels.jDateField('تاریخ پرداخت', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'سررسید شهریه'
+        verbose_name_plural = 'سررسیدهای شهریه'
+        unique_together = ['student', 'month']
+
+    def __str__(self):
+        return f"{self.student.user.get_full_name()} - {self.month}"

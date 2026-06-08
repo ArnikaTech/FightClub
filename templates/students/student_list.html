@@ -84,13 +84,27 @@
                             <span>{{ s.get_current_belt_display }}</span><span>{{ s.club.name }}</span>{% if s.sport %}<span>{{ s.sport.name }}</span>{% endif %}
                         </div>
                         <div class="coach-meta-page" style="margin-top:4px;">
+                            
+                            {% if s.current_monthly_status == 'debtor' %}
+                            <span style="color:var(--primary);margin-right:4px;" title="بدهکار">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                بدهکار
+                            </span>
+                            {% elif s.current_monthly_status == 'paid' %}
+                            <!-- <span style="color:#34c759;margin-right:4px;" title="پرداخت شده">
+                                <i class="bi bi-check-circle-fill"></i>
+                                بستانکار
+                            </span> -->
+                            {% endif %}
+
                             {% with days=s.insurance_days_left %}
                             {% if days is not None %}
                             {% if days <= 7 %}<span style="color:#ff9800;"><span class="status-dot" style="background:#ff9800;"></span> بیمه {{ days }} روز</span>
                             {% else %}<span style="color:#34c759;"><span class="status-dot active"></span> بیمه {{ days }} روز</span>{% endif %}
                             {% else %}<span style="color:var(--primary);"><span class="status-dot" style="background:var(--primary);"></span> بیمه منقضی</span>{% endif %}
                             {% endwith %}
-                            {% if s.age %}<span>{{ s.age }} سال</span>{% endif %}
+                            
+                            {% if s.age %}<span>{{ s.age }} ساله</span>{% endif %}
                         </div>
                     </div>
                     <div class="coach-actions">
