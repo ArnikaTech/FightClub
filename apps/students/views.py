@@ -813,17 +813,6 @@ class ShiftDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
         return redirect('students:shift_list', class_id=class_id)
 
 
-class EnrollmentActivateView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self): return can_manage_students(self.request.user)
-
-    def post(self, request, pk):
-        enrollment = get_object_or_404(Enrollment, pk=pk, student__in=managed_students_for(request.user))
-        enrollment.is_active = True
-        enrollment.save()
-        messages.success(request, f'ثبت‌نام {enrollment.student.user.get_full_name()} فعال شد')
-        return redirect('students:enrollment_list')
-
-
 class EnrollmentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     template_name = 'students/enrollment_list.html'
     context_object_name = 'enrollments'
@@ -841,9 +830,6 @@ class EnrollmentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['students'] = managed_students_for(self.request.user).filter(is_active=True).select_related('user', 'club')
         context['shifts'] = visible_shifts_for(self.request.user).filter(is_active=True, class_group__is_active=True).select_related('class_group')
-        context['inactive_enrollments'] = Enrollment.objects.filter(student__in=managed_students_for(self.request.user), is_active=False).select_related(
-            'student__user', 'student__club', 'shift__class_group__sport', 'shift__class_group__club'
-        )
         return context
 
 
@@ -931,8 +917,18 @@ class EnrollmentDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
         return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def post(self, request, pk):
-        enrollment = get_object_or_404(Enrollment, pk=pk, student__in=managed_students_for(request.user))
-        enrollment.is_active = False
-        enrollment.save()
-        messages.success(request, f'ثبت‌نام {enrollment.student.user.get_full_name()} لغو شد')
+        enrollment = get_object_or_404(Enrollment, pk=pk)
+        name = enrollment.student.user.get_full_name()
+        
+        # اول attendanceهای مرتبط با این شیفت و هنرجو رو پاک کن
+        from .models import Attendance
+        Attendance.objects.filter(
+            student=enrollment.student,
+            shift=enrollment.shift
+        ).delete()
+        
+        # بعد enrollment رو پاک کن
+        enrollment.delete()
+        
+        messages.success(request, f'ثبت‌نام {name} و حضور و غیاب‌های مرتبط حذف شد')
         return redirect('students:enrollment_list')

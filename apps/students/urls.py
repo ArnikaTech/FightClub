@@ -41,7 +41,6 @@ urlpatterns = [
     path('enrollments/add/', views.EnrollmentCreateView.as_view(), name='enrollment_add'),
     path('enrollments/<int:pk>/edit/', views.EnrollmentEditView.as_view(), name='enrollment_edit'),
     path('enrollments/<int:pk>/delete/', views.EnrollmentDeleteView.as_view(), name='enrollment_delete'),
-    path('enrollments/<int:pk>/activate/', views.EnrollmentActivateView.as_view(), name='enrollment_activate'),
 
     path('attendance/history/', views.AttendanceHistoryView.as_view(), name='attendance_history'),
     path('<int:pk>/avatar/', views.StudentAvatarView.as_view(), name='student_avatar'),

@@ -38,28 +38,6 @@
             {% empty %}<div class="text-center py-5 text-muted" style="grid-column:1/-1;">ثبت‌نامی انجام نشده</div>{% endfor %}
         </div>
         
-        {% if inactive_enrollments %}
-        <div class="page-header animate__animated animate__fadeIn">
-            <div><h1 class="page-title">لغو شده <span>{{ inactive_enrollments.count }} نفر</span></h1></div>
-        </div>
-        <div class="coach-list-page">
-            {% for e in inactive_enrollments %}
-            <div class="coach-card-page animate__animated animate__fadeInUp" style="opacity:0.5;">
-                <div class="coach-avatar-page"><i class="bi bi-person-fill"></i></div>
-                <div class="coach-info-page" style="flex:1;">
-                    <div class="coach-name-page">{{ e.student.user.get_full_name }}</div>
-                    <div class="coach-meta-page"><span>{{ e.shift.name }}</span><span>{{ e.shift.class_group.name }}</span></div>
-                </div>
-                <div class="coach-actions">
-                    <form method="post" action="{% url 'students:enrollment_activate' e.id %}">
-                        {% csrf_token %}<button class="coach-action-btn edit" style="color:#34c759;"><i class="bi bi-arrow-repeat"></i></button>
-                    </form>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        
         {% if is_paginated %}
         <div class="animate__animated animate__fadeInUp" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:24px;padding:12px;background:var(--card-bg);border:1px solid var(--border-glass);border-radius:14px;">
             {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;"><i class="bi bi-chevron-right"></i> قبلی</a>{% endif %}
