@@ -293,3 +293,29 @@ class FeeAddView(LoginRequiredMixin, View):
 
         messages.success(request, f'شهریه {month} ثبت شد')
         return redirect('students:student_detail', pk=student.pk)
+
+
+class FeeEditView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        due = get_object_or_404(FeeDue, pk=pk)
+        due.amount = int(request.POST.get('amount', '0').replace(',', ''))
+        due.month = request.POST.get('month', due.month)
+        paid_at_str = request.POST.get('paid_at')
+        if paid_at_str:
+            try:
+                parts = list(map(int, paid_at_str.replace('/', '-').split('-')))
+                due.paid_at = jdatetime.date(*parts)
+            except:
+                pass
+        due.save()
+        messages.success(request, 'شهریه بروزرسانی شد')
+        return redirect('students:student_detail', pk=due.student.pk)
+
+
+class FeeDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        due = get_object_or_404(FeeDue, pk=pk)
+        student_pk = due.student.pk
+        due.delete()
+        messages.success(request, 'شهریه حذف شد')
+        return redirect('students:student_detail', pk=student_pk)
