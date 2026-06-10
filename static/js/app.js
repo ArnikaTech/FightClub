@@ -5,6 +5,74 @@ APP.JS
 document.addEventListener('DOMContentLoaded', function() {
     
     // ============================================================
+    // ۰. PWA: نصب، سرویس‌ورکر و وضعیت اتصال
+    // ============================================================
+    var deferredInstallPrompt = null;
+    var installButton = document.querySelector('[data-pwa-install]');
+    var updateToastShown = false;
+
+    function pwaToast(icon, color, text, sub) {
+        if (window.showToast) {
+            window.showToast(icon, color, text, sub);
+        }
+    }
+
+    function updateConnectionState() {
+        document.body.classList.toggle('app-offline', !navigator.onLine);
+        if (!navigator.onLine) {
+            pwaToast('bi-wifi-off', 'red', 'حالت آفلاین', 'اطلاعات ذخیره‌شده همچنان در دسترس است');
+        } else {
+            pwaToast('bi-wifi', 'green', 'آنلاین شدید', 'ارتباط دوباره برقرار شد');
+        }
+    }
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+                .then(function(registration) {
+                    registration.addEventListener('updatefound', function() {
+                        var newWorker = registration.installing;
+                        if (!newWorker) return;
+                        newWorker.addEventListener('statechange', function() {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller && !updateToastShown) {
+                                updateToastShown = true;
+                                pwaToast('bi-arrow-repeat', 'yellow', 'نسخه جدید آماده است', 'برای بروزرسانی صفحه را دوباره باز کنید');
+                            }
+                        });
+                    });
+                })
+                .catch(function(error) {
+                    console.warn('Service worker registration failed:', error);
+                });
+        });
+
+        navigator.serviceWorker.addEventListener('controllerchange', function() {
+            if (!updateToastShown) return;
+            window.location.reload();
+        });
+    }
+
+    window.addEventListener('beforeinstallprompt', function(event) {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        if (installButton) installButton.hidden = false;
+    });
+
+    if (installButton) {
+        installButton.addEventListener('click', function() {
+            if (!deferredInstallPrompt) return;
+            deferredInstallPrompt.prompt();
+            deferredInstallPrompt.userChoice.finally(function() {
+                deferredInstallPrompt = null;
+                installButton.hidden = true;
+            });
+        });
+    }
+
+    window.addEventListener('online', updateConnectionState);
+    window.addEventListener('offline', updateConnectionState);
+    
+    // ============================================================
     // ۱. ذرات شناور (landing)
     // ============================================================
     var particlesContainer = document.getElementById('particlesContainer');

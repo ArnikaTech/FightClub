@@ -4290,3 +4290,43 @@ select.input-glass + .select2-container {
         max-width: 400px;
     }
 }
+
+/* PWA */
+.pwa-install-btn {
+    position: fixed;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: calc(78px + env(safe-area-inset-bottom));
+    z-index: 2000;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    padding: 11px 16px;
+    background: linear-gradient(135deg, var(--primary), #ff8a65);
+    color: #fff;
+    box-shadow: 0 14px 30px rgba(255, 77, 46, 0.28);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pwa-install-btn[hidden] {
+    display: none !important;
+}
+
+body.app-offline::before {
+    content: "آفلاین";
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2500;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(255, 77, 46, 0.95);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+}

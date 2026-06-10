@@ -2,9 +2,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from apps.core import views as core_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('manifest.json', core_views.manifest, name='manifest'),
+    path('service-worker.js', core_views.service_worker, name='service_worker'),
 ]
 
 # Third party
