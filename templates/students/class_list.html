@@ -73,9 +73,27 @@
     document.addEventListener('DOMContentLoaded', function() {
         {% if messages %}{% for m in messages %}if(typeof showToast==='function'){showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');}{% endfor %}{% endif %}
     });
-    function openClassModal(){document.getElementById('classModalTitle').textContent='کلاس جدید';document.getElementById('classForm').action='{% url "students:class_add" %}';document.getElementById('className').value='';document.getElementById('classClub').value='';document.getElementById('classSport').value='';document.getElementById('classGender').value='mixed';document.getElementById('classModalOverlay').classList.add('show');document.getElementById('classModal').classList.add('show');}
+    function openClassModal(){
+        document.getElementById('classModalTitle').textContent='کلاس جدید';
+        document.getElementById('classForm').action='{% url "students:class_add" %}';
+        document.getElementById('className').value='';
+        $('#classClub').val('').trigger('change');
+        $('#classSport').val('').trigger('change');
+        $('#classGender').val('mixed').trigger('change');
+        document.getElementById('classModalOverlay').classList.add('show');
+        document.getElementById('classModal').classList.add('show');
+    }
     function closeClassModal(){document.getElementById('classModalOverlay').classList.remove('show');document.getElementById('classModal').classList.remove('show');}
-    function editClass(id,name,club,sport,gender){document.getElementById('classModalTitle').textContent='ویرایش کلاس';document.getElementById('classForm').action='/students/classes/'+id+'/edit/';document.getElementById('className').value=name;document.getElementById('classClub').value=club;document.getElementById('classSport').value=sport;document.getElementById('classGender').value=gender;document.getElementById('classModalOverlay').classList.add('show');document.getElementById('classModal').classList.add('show');}
+    function editClass(id,name,club,sport,gender){
+        document.getElementById('classModalTitle').textContent='ویرایش کلاس';
+        document.getElementById('classForm').action='/students/classes/'+id+'/edit/';
+        document.getElementById('className').value=name;
+        document.getElementById('classClub').value=club;
+        document.getElementById('classSport').value=sport;
+        document.getElementById('classGender').value=gender;
+        document.getElementById('classModalOverlay').classList.add('show');
+        document.getElementById('classModal').classList.add('show');
+    }
     function confirmClassDelete(url,name){document.getElementById('deleteClassName').textContent=name;document.getElementById('deleteClassForm').action=url;document.getElementById('deleteClassModalOverlay').classList.add('show');document.getElementById('deleteClassModal').classList.add('show');}
     function closeClassDeleteModal(){document.getElementById('deleteClassModalOverlay').classList.remove('show');document.getElementById('deleteClassModal').classList.remove('show');}
 </script>
