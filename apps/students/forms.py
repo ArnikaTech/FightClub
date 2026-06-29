@@ -1,6 +1,5 @@
 from django import forms
 from django.contrib.auth import get_user_model
-
 from django_jalali.forms import jDateField
 from apps.clubs.models import Club, Sport
 from .models import Student, Shift, Enrollment
@@ -59,7 +58,7 @@ class StudentCreateForm(forms.Form):
     birth_date = forms.CharField(
         label='تاریخ تولد',
         required=False,
-        widget=forms.TextInput(attrs={'class': 'input-glass', 'placeholder': '1361۰/02/19'})
+        widget=forms.TextInput(attrs={'class': 'input-glass', 'placeholder': '1361/02/19'})
     )
     current_belt = forms.ChoiceField(
         label='کمربند فعلی',
@@ -72,25 +71,27 @@ class StudentCreateForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': 'input-glass'})
     )
+    address = forms.CharField(
+        label='آدرس',
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'input-glass', 'rows': 2, 'placeholder': 'آدرس محل سکونت'})
+    )
     
-    def clean_phone(self):
-        phone = self.cleaned_data['phone']
-        # if User.objects.filter(phone=phone).exists():
-        #     raise forms.ValidationError('این شماره همراه قبلاً ثبت شده است')
-        return phone
+    def clean_national_code(self):
+        national_code = self.cleaned_data['national_code']
+        if User.objects.filter(national_code=national_code).exists():
+            raise forms.ValidationError('این کد ملی قبلاً ثبت شده است')
+        return national_code
     
     def clean_birth_date(self):
         value = self.cleaned_data.get('birth_date')
         if not value:
             return None
         
-        # تبدیل اعداد فارسی به انگلیسی
         persian_digits = '۰۱۲۳۴۵۶۷۸۹'
         english_digits = '0123456789'
         trans = str.maketrans(persian_digits, english_digits)
         value = value.translate(trans)
-        
-        # پاک کردن فاصله‌ها
         value = value.replace(' ', '').replace('،', '/')
         
         try:
@@ -105,22 +106,13 @@ class StudentCreateForm(forms.Form):
         national_code = self.cleaned_data.get('national_code', '')
         phone = self.cleaned_data['phone']
         
-        # اگر کد ملی قبلاً ثبت شده، از همون user استفاده کن
-        if national_code and User.objects.filter(national_code=national_code).exists():
-            user = User.objects.get(national_code=national_code)
-            user.first_name = self.cleaned_data['first_name']
-            user.last_name = self.cleaned_data['last_name']
-            user.phone = phone
-            user.set_password(self.cleaned_data['password'])
-            user.save()
-        else:
-            user = User.objects.create_user(
-                phone=phone,
-                password=self.cleaned_data['password'],
-                first_name=self.cleaned_data['first_name'],
-                last_name=self.cleaned_data['last_name'],
-                national_code=national_code or None
-            )
+        user = User.objects.create_user(
+            phone=phone,
+            password=self.cleaned_data['password'],
+            first_name=self.cleaned_data['first_name'],
+            last_name=self.cleaned_data['last_name'],
+            national_code=national_code or None
+        )
         
         # تولید کد هنرجویی
         last_student = Student.objects.order_by('-id').first()
@@ -134,13 +126,37 @@ class StudentCreateForm(forms.Form):
             new_number = 1
         student_code = f"ST-{str(new_number).zfill(5)}"
         
+        # تاریخ عضویت
+        joined_at = None
+        joined_at_str = self.cleaned_data.get('joined_at', '')
+        if joined_at_str:
+            try:
+                parts = list(map(int, joined_at_str.replace('/', '-').split('-')))
+                joined_at = jdatetime.date(*parts)
+            except:
+                pass
+        
         student = Student.objects.create(
             user=user,
             club=self.cleaned_data['club'],
             birth_date=self.cleaned_data.get('birth_date'),
             student_code=student_code,
             current_belt=self.cleaned_data['current_belt'],
-            sport=self.cleaned_data.get('sport')
+            sport=self.cleaned_data.get('sport'),
+            address=self.cleaned_data.get('address', ''),
         )
+        
+        if joined_at:
+            student.joined_at = joined_at
+            student.save()
+        
+        # ثبت‌نام در شیفت
+        shift = self.cleaned_data.get('shift')
+        if shift:
+            Enrollment.objects.get_or_create(
+                student=student,
+                shift=shift,
+                defaults={'enrolled_at': joined_at or jdatetime.date.today()}
+            )
         
         return student

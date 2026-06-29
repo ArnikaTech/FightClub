@@ -1,259 +1,257 @@
-# Arnika - Comprehensive Martial Arts Club Management System 🥋
+# آرنیکا - سیستم جامع مدیریت باشگاه‌های رزمی 🥋
 
 ![Django](https://img.shields.io/badge/Django-6.0-green)
 ![Python](https://img.shields.io/badge/Python-3.14+-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple)
 
-**Version:** 2.1  
-**Date:** May 2026  
-**Repository:** [github.com/4uth0r/FightClub](https://github.com/4uth0r/FightClub)
-
-> 📖 [README in Persian (فارسی)](README-fa.md)
+**نسخه:** ۲.۱  
+**تاریخ:** اردیبهشت ۱۴۰۵  
+**مخزن:** [github.com/4uth0r/FightClub](https://github.com/4uth0r/FightClub)
 
 ---
 
-## 📋 Table of Contents
+## 📋 فهرست
 
-- [Overview](#overview)
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Technologies](#technologies)
-- [Installation](#installation)
-- [User Roles](#user-roles)
-- [Settings](#settings)
-- [Demo](#demo)
-
----
-
-## Overview
-
-**Arnika** is a comprehensive web-based management system for martial arts clubs (Hapkido, Karate, Boxing, etc.). It enables complete management of students, classes, shifts, attendance, tuition fees, insurance, and parent communication.
-
-### 🎯 Purpose
-Replace paper-based and fragmented systems with a unified, fast, and reliable platform for daily club operations.
+- [معرفی](#معرفی)
+- [امکانات](#امکانات)
+- [ساختار پروژه](#ساختار-پروژه)
+- [تکنولوژی‌ها](#تکنولوژی‌ها)
+- [نصب و راه‌اندازی](#نصب-و-راه‌اندازی)
+- [نقش‌های کاربری](#نقش‌های-کاربری)
+- [تنظیمات](#تنظیمات)
+- [دمو](#دمو)
 
 ---
 
-## Features
+## معرفی
 
-### 👥 Student Management
-- **Registration** with National ID (unique) and Phone (shareable for siblings)
-- **Complete Profile:** name, national ID, birth date (Jalali), address, belt, club, sport
-- **Photo upload** by managers
-- **Parent contacts:** multiple numbers with labels (father, mother, emergency)
-- **Soft Delete** with recovery option
-- **Search & Filter:** by name, club, sport, belt, insurance status
+**آرنیکا** یک سیستم مدیریت جامع تحت وب برای باشگاه‌های رزمی (هاپکیدو، کاراته، بوکس و...) است. این سیستم امکان مدیریت کامل هنرجوها کلاس‌ها، شیفت‌ها، حضور و غیاب، شهریه، بیمه و ارتباط با والدین را فراهم می‌کند.
 
-### 🏢 Club Management
-- **Provinces & Cities:** hierarchical management (full CRUD)
-- **Clubs:** create, edit, deactivate, view details
-- **Coaches:** assign coaches to clubs with roles (manager/instructor/assistant)
-- **Sports:** define various martial arts (Hapkido, Boxing, Karate)
-
-### 📅 Classes & Shifts
-- **Classes:** grouped by club, sport, and gender (Male/Female/Mixed)
-- **Shifts:** define weekdays, start and end times
-- **Enrollment:** register students in shifts with date and tuition fee
-- **Hard Delete:** remove incorrect enrollments completely
-
-### ✅ Attendance
-- **Daily check-in** with shift selection
-- **Custom date** for recording and editing
-- **Warning icon** for previous session absence
-- **Monthly history** with Jalali calendar (Desktop: table, Mobile: cards)
-- **Filter:** year, month, shift, student
-
-### 📊 Absence Tracking
-- **Consecutive absences:** display number of missed sessions
-- **Direct call button** to parents
-- **Contact modal:** show all parent numbers with labels
-- **Last attendance and absence** in card
-
-### 💰 Financial Management
-- **Tuition:** monthly recording with amount and date
-- **Payment history** in student profile
-- **Debtor icon** (⚠️) on student names
-- **Alert** on detail page
-- **Income & Expenses** (separate management)
-- **Financial report** (total income - expenses = balance)
-
-### 🛡️ Insurance
-- **Register & renew** insurance with Jalali dates
-- **Insurance history**
-- **Status display:** active (remaining days), expired (red)
-- **Warning** in profile and student list
-
-### 📨 Internal Messaging
-- **Inbox & Sent**
-- **New message** to any user
-- **Bulk message** to students, coaches, managers
-- **Reply & Thread** view
-- **Read/Unread status**
-
-### 👑 User Roles
-- **Super Manager:** full access to all sections
-- **Club Manager:** manage own club, coaches, students
-- **Student:** view profile, attendance history, payments
-
-### 🎨 User Interface
-- **Dark & Light theme** (toggle button)
-- **Fully Responsive** (Mobile-First Design)
-- **Select2** for searchable dropdowns
-- **Toast** notifications
-- **Glass-modal** forms
-- **HTMX** for live updates (attendance)
-- **Bootstrap 5 RTL** fully Persian
-
-### ⚙️ Settings
-- **Logo & Organization Name**
-- **Phone & Central Address**
-- **Social Networks** (add, edit, delete)
-- **Content:** About Us, Membership Terms, Working Hours
+### 🎯 هدف
+جایگزینی سیستم‌های کاغذی و پراکنده با یک پلتفرم یکپارچه، سریع و قابل اعتماد برای مدیریت روزمره باشگاه.
 
 ---
 
-## Project Structure
+## امکانات
+
+### 👥 مدیریت هنرجوها
+- **ثبت‌نام** با کد ملی (یکتا) و شماره همراه (قابل اشتراک برای خواهر/برادر)
+- **پروفایل کامل:** نام، کد ملی، تاریخ تولد (خورشیدی)، آدرس، کمربند، باشگاه، رشته ورزشی
+- **آپلود عکس** پروفایل توسط مدیرها
+- **شماره تماس والدین:** ثبت چند شماره با برچسب (پدر، مادر، اضطراری)
+- **غیرفعال‌سازی** (Soft Delete) با قابلیت بازیابی
+- **جستجو و فیلتر:** بر اساس نام، باشگاه، رشته، کمربند، وضعیت بیمه
+
+### 🏢 مدیریت باشگاه‌ها
+- **استان و شهر:** مدیریت سلسله‌مراتبی (CRUD کامل)
+- **باشگاه‌ها:** ثبت، ویرایش، غیرفعال‌سازی، مشاهده جزئیات
+- **مربی‌ها:** اختصاص مربی به باشگاه با نقش (مدیر/مربی/کمک‌مربی)
+- **رشته‌های ورزشی:** تعریف رشته‌های مختلف (هاپکیدو، بوکس، کاراته)
+
+### 📅 کلاس‌ها و شیفت‌ها
+- **کلاس‌ها:** گروه‌بندی بر اساس باشگاه، رشته و جنسیت (آقایان/بانوان/مختلط)
+- **شیفت‌ها:** تعریف روزهای هفته، ساعت شروع و پایان
+- **ثبت‌نام:** ثبت‌نام هنرجو در شیفت با تاریخ و شهریه
+- **حذف کامل:** امکان حذف ثبت‌نام اشتباه
+
+### ✅ حضور و غیاب
+- **ثبت روزانه** با انتخاب شیفت
+- **انتخاب تاریخ** دلخواه برای ثبت و ویرایش
+- **آیکون هشدار** غیبت جلسه قبل
+- **تاریخچه ماهانه** با جدول خورشیدی (دسکتاپ: جدول، موبایل: کارت)
+- **فیلتر:** سال، ماه، شیفت، هنرجو
+
+### 📊 پیگیری غیبت‌ها
+- **غیبت متوالی:** نمایش تعداد جلسه‌های غیبت
+- **دکمه تماس مستقیم** با والدین
+- **مودال تماس:** نمایش همه شماره‌های والدین با برچسب
+- **آخرین حضور و غیبت** در کارت
+
+### 💰 مدیریت مالی
+- **شهریه:** ثبت ماهانه با مبلغ و تاریخ
+- **تاریخچه پرداخت‌ها** در پروفایل هنرجو
+- **آیکون بدهکاری** (⚠️) روی اسم هنرجوها بدهکار
+- **هشدار** در صفحه جزئیات
+- **دریافتی‌ها و هزینه‌ها** (مدیریت جداگانه)
+- **گزارش مالی** (جمع دریافتی - پرداختی = موجودی)
+
+### 🛡️ بیمه
+- **ثبت و تمدید** بیمه با تاریخ خورشیدی
+- **تاریخچه بیمه‌ها**
+- **نمایش وضعیت:** فعال (روزهای باقی‌مانده)، منقضی (قرمز)
+- **هشدار** در پروفایل و فهرست هنرجوها
+
+### 📨 پیام‌رسان داخلی
+- **صندوق ورودی و ارسال شده**
+- **پیام جدید** به هر کاربر
+- **پیام گروهی** به هنرجوها، مربی‌ها، مدیرها
+- **پاسخ و مکالمه** (Thread)
+- **وضعیت خوانده/نخوانده**
+
+### 👑 نقش‌های کاربری
+- **مدیر کل:** دسترسی کامل به همه بخش‌ها
+- **مدیر باشگاه:** مدیریت باشگاه خود، مربی‌ها، هنرجوها
+- **هنرجو:** مشاهده پروفایل، تاریخچه حضور غیاب، پرداخت
+
+### 🎨 رابط کاربری
+- **قالب تاریک و روشن** (قابل تغییر با دکمه)
+- **کاملاً واکنش‌گرا** (Mobile-First Design)
+- **Select2** برای جستجو در منوهای کشویی
+- **Toast** برای اعلان‌های موقت
+- **مودال‌های شیشه‌ای** برای فرم‌ها
+- **DataTable** برای جداول (در نسخه‌های قبلی)
+- **HTMX** برای به‌روزرسانی زنده (حضور و غیاب)
+- **Bootstrap 5 RTL** کاملاً فارسی
+
+### ⚙️ تنظیمات
+- **لوگو و نام مجموعه**
+- **شماره تماس و آدرس مرکزی**
+- **شبکه‌های اجتماعی** (افزودن، ویرایش، حذف)
+- **محتوا:** درباره ما، شرایط عضویت، ساعات کاری
+
+---
+
+## ساختار پروژه
 FightClub/
 ├── apps/
-│   ├── accounts/      # Users, authentication, messages
-│   ├── clubs/         # Provinces, cities, clubs, coaches, sports
-│   ├── students/      # Students, classes, shifts, attendance, insurance
-│   ├── finance/       # Tuition, income, expenses, reports
-│   └── core/          # Site settings, social networks
-├── templates/         # HTML templates
-│   ├── partials/      # Sidebar, menu, modals, toast
-│   ├── accounts/      # Landing, login, dashboard, profile
-│   ├── students/      # Students, classes, attendance
-│   ├── clubs/         # Clubs, coaches, provinces
-│   ├── finance/       # Financial
-│   └── core/          # Settings
+│ ├── accounts/ # کاربرها، احراز هویت، پیام‌ها
+│ ├── clubs/ # استان، شهر، باشگاه، مربی، رشته
+│ ├── students/ # هنرجو، کلاس، شیفت، حضور غیاب، بیمه
+│ ├── finance/ # شهریه، دریافتی، هزینه، گزارش
+│ └── core/ # تنظیمات وب‌سایت، شبکه‌های‌اجتماعی
+├── templates/ # قالب‌های HTML
+│ ├── partials/ # سایدبار، منو، مودال، toast
+│ ├── accounts/ # لندینگ، لاگین، داشبورد، پروفایل
+│ ├── students/ # هنرجوها، کلاس‌ها، حضور غیاب
+│ ├── clubs/ # باشگاه‌ها، مربی‌ها، استان‌ها
+│ ├── finance/ # مالی
+│ └── core/ # تنظیمات
 ├── static/
-│   ├── css/           # app.css
-│   ├── js/            # app.js
-│   └── vendors/       # Bootstrap, Bootstrap Icons, Animate.css, HTMX, Select2
-├── media/             # Uploaded files
-├── config/            # Django settings
+│ ├── css/ # app.css
+│ ├── js/ # app.js
+│ └── vendors/ # Bootstrap, Bootstrap Icons, Animate.css, HTMX, Select2
+├── media/ # فایل‌های آپلودی
+├── config/ # تنظیمات Django
 ├── requirements.txt
 └── manage.py
 
 ---
 
-## Technologies
+## تکنولوژی‌ها
 
-| Technology | Usage |
-|------------|-------|
-| **python 3.12+** | Programming Language |
-| **django 6.0** | Main Framework |
-| **pillow** | Image Processing |
-| **django-jalali** | Jalali Calendar |
-| **django-environ** | Environment Variables |
-| **SQLite** | Database (upgradable to PostgreSQL) |
-| **Bootstrap 5.3 RTL** | UI Framework |
-| **Bootstrap Icons** | Icons |
-| **Select2** | Searchable Dropdowns |
-| **Animate.css** | Animations |
-| **jQuery** | Select2 Dependency |
+| تکنولوژی | کاربرد |
+|-----------|--------|
+| **python 3.12+** | زبان برنامه‌نویسی |
+| **django 6.0** | فریم‌ورک اصلی |
+| **pillow** | نگاره‌ها |
+| **django-jalali** | تاریخ خورشیدی |
+| **django-environ** | مدیریت متغیرهای محیطی |
+| **SQLite** | پایگاه داده (قابل ارتقا به PostgreSQL) |
+| **Bootstrap 5.3 RTL** | رابط کاربری |
+| **Bootstrap Icons** | آیکون‌ها |
+| **Select2** | جستجو در dropdown |
+| **Animate.css** | انیمیشن‌ها |
+| **jQuery** | پیش‌نیاز Select2 |
 
 ---
 
-## Installation
+## نصب و راه‌اندازی
 
-### Prerequisites
+### پیش‌نیازها
 - Python 3.10+
-- pip or uv
+- pip یا uv
 - Git
 
-### Steps
+### مراحل نصب
 
 ```bash
-# Clone the repository
+# کلون پروژه
 git clone https://github.com/4uth0r/FightClub.git
 cd FightClub
 
-# Create virtual environment
+# ساخت محیط مجازی
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
 # venv\Scripts\activate  # Windows
 
-# Install dependencies
+# نصب وابستگی‌ها
 pip install -r requirements.txt
 
-# Create database
+# ساخت دیتابیس
 python manage.py migrate
 
-# Create superuser
+# ساخت ابرکاربر
 python manage.py createsuperuser
 
-# Run
+# اجرا
 python manage.py runserver
 
-Default Login
+اطلاعات ورود پیش‌فرض
 
-    URL: http://localhost:8000
+    آدرس: http://localhost:8000
 
-    Login: with National ID and Password
+    ورود: با کد ملی و رمز عبور
 
-    Admin Panel: http://localhost:8000/admin
+    پنل ادمین: http://localhost:8000/admin
 
-User Roles
-👑 Super Manager
+نقش‌های کاربری
+👑 مدیر کل
 
-    Full access to all sections
+    دسترسی کامل به همه بخش‌ها
 
-    Manage provinces, cities, clubs
+    مدیریت استان‌ها، شهرها، باشگاه‌ها
 
-    Assign coach and manager roles
+    تعیین نقش مربیان و مدیرها
 
-    View all students, classes, financial data
+    مشاهده همه هنرجوها، کلاس‌ها، مالی
 
-🏢 Club Manager
+🏢 مدیر باشگاه
 
-    Manage own club
+    مدیریت باشگاه خود
 
-    Register and manage students
+    ثبت و مدیریت هنرجوها
 
-    Attendance, classes, shifts
+    حضور و غیاب، کلاس‌ها، شیفت‌ها
 
-    View club financial data
+    مشاهده مالی باشگاه خود
 
-👤 Student
+👤 هنرجو
 
-    View own profile
+    مشاهده پروفایل خود
 
-    Attendance history
+    تاریخچه حضور و غیاب
 
-    Tuition payment
+    پرداخت شهریه
 
-    Messages
+    پیام‌ها
 
-Settings
+تنظیمات
 
-Settings section (Super Manager only) includes:
+بخش تنظیمات (فقط مدیر کل) شامل:
 
-    Organization Name - displayed across all pages
+    نام مجموعه - در همه صفحات نمایش داده می‌شود
 
-    Logo - image upload
+    لوگو - آپلود تصویر
 
-    Phone & Address - contact information
+    شماره تماس و آدرس - اطلاعات تماس
 
-    Working Hours
+    ساعات کاری
 
-    About Us - introduction text
+    درباره ما - متن معرفی
 
-    Membership Terms - rules
+    شرایط عضویت - قوانین
 
-    Social Networks - add/remove links (Instagram, Telegram, WhatsApp, YouTube, Website)
+    شبکه‌های اجتماعی - افزودن/حذف لینک‌ها (اینستاگرام، تلگرام، واتساپ، یوتیوب، وب‌سایت)
 
-License
+مجوز
 
-MIT License - Free for commercial and personal use.
-Developer
+MIT License - برای استفاده تجاری و شخصی آزاد است.
+توسعه‌دهنده
+حمید رضا بردرانی
 
-Hamid Reza Bardarani
+Full Stack Developer:
+ایمیل: [little4uth0r@gmail.com]
+گیت‌هاب: github.com/4uth0r
 
-Full Stack Developer
-Email: [little4uth0r@gmail.com]
-GitHub: github.com/4uth0r
-
-Built with ❤️ for the Martial Arts Community
+ساخته شده با ❤️ برای جامعه رزمی ایران

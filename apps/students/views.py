@@ -70,11 +70,13 @@ class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         show = self.request.GET.get('show', 'active')
         
         if user.is_super_manager:
-            qs = Student.objects.filter(is_active=(show == 'active')).select_related('user', 'club', 'sport').prefetch_related('insurances')
+            qs = Student.objects.filter(
+                is_active=(show == 'active')
+            ).select_related('user', 'club', 'sport').prefetch_related('insurances').order_by('user__first_name', 'user__last_name')
         else:
             qs = visible_students_for(user).filter(
                 is_active=(show == 'active')
-            ).select_related('user', 'club', 'sport').prefetch_related('insurances')
+            ).select_related('user', 'club', 'sport').prefetch_related('insurances').order_by('user__first_name', 'user__last_name')
         
         # فیلترها
         club_id = self.request.GET.get('club')
