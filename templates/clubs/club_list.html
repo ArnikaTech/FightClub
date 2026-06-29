@@ -28,24 +28,6 @@
             </div>
             {% empty %}<div class="text-center py-5 text-muted" style="grid-column:1/-1;">باشگاه فعالی نیست</div>{% endfor %}
         </div>
-        
-        {% if inactive_clubs %}
-        <div class="page-header animate__animated animate__fadeIn">
-            <h4 style="margin-top:20px;color:var(--text-muted);">غیرفعال ({{ inactive_clubs.count }})</h4>
-        </div>
-        <div class="coach-list-page">
-            {% for club in inactive_clubs %}
-            <div class="coach-card-page animate__animated animate__fadeInUp" style="opacity:0.5;">
-                <div class="coach-avatar-page"><i class="bi bi-building"></i></div>
-                <div class="coach-info-page" style="flex:1;"><div class="coach-name-page">{{ club.name }}</div><div class="coach-meta-page"><span>{{ club.city.name }}</span></div></div>
-                <div class="coach-actions">
-                    <button onclick="event.stopPropagation(); openClubDetail({{ club.id }})" class="coach-action-btn"><i class="bi bi-eye"></i></button>
-                    <form method="post" action="{% url 'clubs:club_activate' club.pk %}" style="display:inline;">{% csrf_token %}<button class="coach-action-btn edit" style="color:#34c759;"><i class="bi bi-arrow-repeat"></i></button></form>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
     </main>
     {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
 </div>
@@ -84,16 +66,16 @@
     </div>
 </div>
 
-<!-- مودال غیرفعال‌سازی -->
+<!-- مودال حذف -->
 <div class="modal-overlay" id="deleteClubModalOverlay"></div>
 <div class="modal-sheet" id="deleteClubModal">
     <div class="modal-handle"></div>
-    <div class="modal-title">تایید غیرفعال‌سازی</div>
+    <div class="modal-title">تایید حذف</div>
     <div class="modal-body text-center">
         <i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;color:var(--primary);"></i>
-        <p class="mt-3">آیا از غیرفعال کردن "<span id="deleteClubName"></span>" مطمئن هستید؟</p>
+        <p class="mt-3">آیا از حذف کردن "<span id="deleteClubName"></span>" مطمئن هستید؟</p>
         <div class="modal-btn-row mt-3"><button type="button" class="btn-cancel-sm" onclick="closeClubDeleteModal()">انصراف</button>
-            <form id="deleteClubForm" method="post" style="flex:1;">{% csrf_token %}<button class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> غیرفعال</button></form>
+            <form id="deleteClubForm" method="post" style="flex:1;">{% csrf_token %}<button class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> حذف</button></form>
         </div>
     </div>
 </div>

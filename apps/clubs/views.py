@@ -146,7 +146,6 @@ class ClubListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['inactive_clubs'] = managed_clubs_for(self.request.user).filter(is_active=False)
         context['provinces'] = Province.objects.all()
         return context
 
@@ -194,12 +193,20 @@ class ClubDetailView(LoginRequiredMixin, DetailView):
 
 class ClubDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self): return self.request.user.is_super_manager
-
+    
     def post(self, request, pk):
         club = get_object_or_404(Club, pk=pk)
-        club.is_active = False
-        club.save()
-        messages.success(request, f'باشگاه {club.name} غیرفعال شد')
+        name = club.name
+        
+        # چک کن هنرجو یا کلاس فعال داره؟
+        if club.students.filter(is_active=True).exists():
+            messages.error(request, f'باشگاه "{name}" هنرجوی فعال دارد. ابتدا هنرجویان را غیرفعال کنید.')
+        elif club.class_groups.filter(is_active=True).exists():
+            messages.error(request, f'باشگاه "{name}" کلاس فعال دارد. ابتدا کلاس‌ها را حذف کنید.')
+        else:
+            club.delete()
+            messages.success(request, f'باشگاه "{name}" حذف شد')
+        
         return redirect('clubs:club_list')
 
 
@@ -357,6 +364,13 @@ class SportDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
     
     def post(self, request, pk):
         sport = get_object_or_404(Sport, pk=pk)
-        sport.delete()
-        messages.success(request, 'رشته حذف شد')
+        name = sport.name
+        
+        # چک کن توی کلاس‌ها استفاده شده
+        if sport.class_groups.exists():
+            messages.error(request, f'رشته "{name}" در کلاس‌ها استفاده شده. ابتدا کلاس‌ها را حذف کنید.')
+        else:
+            sport.delete()
+            messages.success(request, f'رشته "{name}" حذف شد')
+        
         return redirect('clubs:sport_list')
