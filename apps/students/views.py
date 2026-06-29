@@ -246,6 +246,28 @@ class StudentCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
         return context
 
 
+class StudentDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        student = get_object_or_404(Student, pk=pk)
+        name = student.user.get_full_name()
+        
+        # چک کن enrollment فعال داره؟
+        if student.enrollments.filter(is_active=True).exists():
+            messages.error(request, f'{name} در کلاس‌ها ثبت‌نام شده. ابتدا ثبت‌نام‌ها را حذف کنید.')
+        elif student.attendances.exists():
+            messages.error(request, f'{name} حضور و غیاب ثبت شده دارد. ابتدا حضور و غیاب‌ها را حذف کنید.')
+        elif student.payments.exists():
+            messages.error(request, f'{name} پرداختی ثبت شده دارد. ابتدا پرداختی‌ها را حذف کنید.')
+        else:
+            user = student.user
+            student.delete()
+            if not user.student_profiles.exists():
+                user.delete()
+            messages.success(request, f'{name} حذف شد')
+        
+        return redirect('students:student_list')
+
+
 class StudentAvatarView(LoginRequiredMixin, View):
     def post(self, request, pk):
         if not can_manage_students(request.user):
@@ -714,15 +736,20 @@ class ClassGroupEditView(LoginRequiredMixin, UserPassesTestMixin, View):
         return redirect('students:class_list')
 
 
-class ClassGroupDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
-    
+class ClassGroupDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk):
-        class_group = get_object_or_404(ClassGroup, pk=pk, club__in=managed_clubs_for(request.user))
-        class_group.is_active = False
-        class_group.save()
-        messages.success(request, f'کلاس {class_group.name} غیرفعال شد')
+        class_group = get_object_or_404(ClassGroup, pk=pk)
+        name = class_group.name
+        
+        # چک کن شیفت فعال داره؟
+        if class_group.shifts.filter(is_active=True).exists():
+            messages.error(request, f'کلاس "{name}" شیفت فعال دارد. ابتدا شیفت‌ها را غیرفعال کنید.')
+        elif class_group.shifts.filter(enrollments__is_active=True).exists():
+            messages.error(request, f'کلاس "{name}" هنرجوی ثبت‌نام شده دارد. ابتدا ثبت‌نام‌ها را حذف کنید.')
+        else:
+            class_group.delete()
+            messages.success(request, f'کلاس "{name}" حذف شد')
+        
         return redirect('students:class_list')
 
 
@@ -802,16 +829,21 @@ class ShiftEditView(LoginRequiredMixin, UserPassesTestMixin, View):
         return redirect('students:shift_list', class_id=shift.class_group_id)
 
 
-class ShiftDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
-    
+class ShiftDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk):
-        shift = get_object_or_404(visible_shifts_for(request.user), pk=pk)
+        shift = get_object_or_404(Shift, pk=pk)
+        name = shift.name
         class_id = shift.class_group_id
-        shift.is_active = False
-        shift.save()
-        messages.success(request, 'شیفت غیرفعال شد')
+        
+        # چک کن enrollment فعال داره؟
+        if shift.enrollments.filter(is_active=True).exists():
+            messages.error(request, f'شیفت "{name}" هنرجوی ثبت‌نام شده دارد. ابتدا ثبت‌نام‌ها را حذف کنید.')
+        elif shift.attendances.exists():
+            messages.error(request, f'شیفت "{name}" حضور و غیاب ثبت شده دارد. ابتدا حضور و غیاب‌ها را حذف کنید.')
+        else:
+            shift.delete()
+            messages.success(request, f'شیفت "{name}" حذف شد')
+        
         return redirect('students:shift_list', class_id=class_id)
 
 

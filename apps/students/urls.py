@@ -29,13 +29,11 @@ urlpatterns = [
     path('classes/add/', views.ClassGroupCreateView.as_view(), name='class_add'),
     path('classes/<int:pk>/edit/', views.ClassGroupEditView.as_view(), name='class_edit'),
     path('classes/<int:pk>/delete/', views.ClassGroupDeleteView.as_view(), name='class_delete'),
-    path('classes/<int:pk>/activate/', views.ClassGroupActivateView.as_view(), name='class_activate'),
 
     path('classes/<int:class_id>/shifts/', views.ShiftListView.as_view(), name='shift_list'),
     path('classes/<int:class_id>/shifts/add/', views.ShiftCreateView.as_view(), name='shift_add'),
     path('shifts/<int:pk>/edit/', views.ShiftEditView.as_view(), name='shift_edit'),
     path('shifts/<int:pk>/delete/', views.ShiftDeleteView.as_view(), name='shift_delete'),
-    path('shifts/<int:pk>/activate/', views.ShiftActivateView.as_view(), name='shift_activate'),
 
     path('enrollments/', views.EnrollmentListView.as_view(), name='enrollment_list'),
     path('enrollments/add/', views.EnrollmentCreateView.as_view(), name='enrollment_add'),

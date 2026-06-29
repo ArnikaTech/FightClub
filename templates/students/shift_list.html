@@ -36,28 +36,6 @@
             </div>
             {% empty %}<div class="text-center py-5 text-muted" style="grid-column:1/-1;">شیفتی ثبت نشده</div>{% endfor %}
         </div>
-        
-        {% if inactive_shifts %}
-        <div class="page-header animate__animated animate__fadeIn">
-            <div><h1 class="page-title">غیرفعال <span>{{ inactive_shifts.count }} شیفت</span></h1></div>
-        </div>
-        <div class="coach-list-page">
-            {% for s in inactive_shifts %}
-            <div class="coach-card-page animate__animated animate__fadeInUp" style="opacity:0.5;">
-                <div class="coach-avatar-page"><i class="bi bi-clock"></i></div>
-                <div class="coach-info-page" style="flex:1;">
-                    <div class="coach-name-page">{{ s.name }}</div>
-                    <div class="coach-meta-page"><span>{{ s.days }}</span></div>
-                </div>
-                <div class="coach-actions">
-                    <form method="post" action="{% url 'students:shift_activate' s.id %}">
-                        {% csrf_token %}<button class="coach-action-btn edit" style="color:#34c759;"><i class="bi bi-arrow-repeat"></i></button>
-                    </form>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
     </main>
     {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
 </div>
@@ -94,12 +72,12 @@
 
 <div class="modal-overlay" id="deleteShiftModalOverlay" onclick="closeShiftDeleteModal()"></div>
 <div class="modal-sheet" id="deleteShiftModal">
-    <div class="modal-handle"></div><div class="modal-title">تایید غیرفعال‌سازی</div>
+    <div class="modal-handle"></div><div class="modal-title">تایید حذف</div>
     <div class="modal-body text-center">
         <i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;color:var(--primary);"></i>
-        <p class="mt-3">آیا از غیرفعال کردن "<span id="deleteShiftName"></span>" مطمئن هستید؟</p>
+        <p class="mt-3">آیا از حذف کردن "<span id="deleteShiftName"></span>" مطمئن هستید؟</p>
         <div class="modal-btn-row mt-3"><button type="button" class="btn-cancel-sm" onclick="closeShiftDeleteModal()">انصراف</button>
-            <form id="deleteShiftForm" method="post" style="flex:1;">{% csrf_token %}<button class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> غیرفعال</button></form>
+            <form id="deleteShiftForm" method="post" style="flex:1;">{% csrf_token %}<button class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> حذف</button></form>
         </div>
     </div>
 </div>
