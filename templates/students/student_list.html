@@ -18,15 +18,6 @@
                 <div class="page-subtitle">{{ today|jformat:"%Y/%m/%d" }}</div>
             </div>
             <div style="display:flex;gap:8px;">
-                {% if request.GET.show == 'inactive' %}
-                <a href="{% url 'students:student_list' %}" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
-                    <i class="bi bi-eye"></i><span class="btn-add-text">فعال‌ها</span>
-                </a>
-                {% else %}
-                <a href="?show=inactive" class="btn-add" style="background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-secondary);">
-                    <i class="bi bi-eye-slash"></i><span class="btn-add-text">غیرفعال‌ها</span>
-                </a>
-                {% endif %}
                 <a href="{% url 'students:student_add' %}" class="btn-add">
                     <i class="bi bi-plus-lg"></i><span class="btn-add-text">هنرجو جدید</span>
                 </a>
@@ -74,7 +65,7 @@
         <div class="coach-list-page">
             {% for s in students %}
             <a href="{% url 'students:student_detail' s.pk %}" style="text-decoration:none;color:inherit;">
-                <div class="coach-card-page animate__animated animate__fadeInUp" style="{% if not s.is_active %}opacity:0.5;{% endif %}">
+                <div class="coach-card-page animate__animated animate__fadeInUp">
                     <div class="coach-avatar-page">
                         {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}" alt="">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
                     </div>

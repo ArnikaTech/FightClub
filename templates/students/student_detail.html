@@ -133,7 +133,12 @@
             {% for enrollment in student.enrollments.active %}
             <div class="info-row">
                 <span class="info-label">{{ enrollment.shift.class_group.name }}</span>
-                <span class="info-value">{{ enrollment.shift.name }} ({{ enrollment.shift.days }} - {{ enrollment.shift.start_time|time:"H:i" }}-{{ enrollment.shift.end_time|time:"H:i" }})</span>
+                <span class="info-value">
+                    {{ enrollment.shift.name }} ({{ enrollment.shift.days }})
+                    <button onclick="confirmDeleteEnrollment({{ enrollment.id }}, '{{ enrollment.shift.name|escapejs }}')" class="btn-call" style="background:rgba(255,77,46,0.15);color:var(--primary);margin-right:8px;">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </span>
             </div>
             {% empty %}
             <div class="text-center py-3 text-muted">در هیچ کلاسی ثبت‌نام نشده</div>
@@ -160,14 +165,10 @@
             <button onclick="openInsuranceModal()" class="profile-action-btn"><i class="bi bi-shield-plus"></i><span>تمدید بیمه</span><i class="bi bi-chevron-left action-arrow"></i></button>
             <button onclick="openContactModal()" class="profile-action-btn"><i class="bi bi-person-plus"></i><span>ثبت شماره والدین</span><i class="bi bi-chevron-left action-arrow"></i></button>
             <a href="{% url 'students:student_edit' student.pk %}" class="profile-action-btn"><i class="bi bi-pencil"></i><span>ویرایش</span><i class="bi bi-chevron-left action-arrow"></i></a>
+            <button onclick="openDeleteStudentModal()" class="profile-action-btn" style="color:var(--danger);">
+                <i class="bi bi-person-x"></i><span>حذف هنرجو</span><i class="bi bi-chevron-left action-arrow"></i>
+            </button>
             <a href="{% url 'students:student_list' %}" class="profile-action-btn" style="background:var(--input-bg);"><i class="bi bi-arrow-right"></i><span>بازگشت</span><i class="bi bi-chevron-left action-arrow"></i></a>
-            {% if student.is_active %}
-            <button onclick="openDeleteStudentModal()" class="profile-action-btn" style="color:var(--danger);"><i class="bi bi-person-x"></i><span>غیرفعال کردن</span><i class="bi bi-chevron-left action-arrow"></i></button>
-            {% else %}
-            <form method="post" action="{% url 'students:student_activate' student.pk %}" style="display:contents;">
-                {% csrf_token %}<button type="submit" class="profile-action-btn" style="color:#34c759;"><i class="bi bi-arrow-repeat"></i><span>فعال‌سازی</span><i class="bi bi-chevron-left action-arrow"></i></button>
-            </form>
-            {% endif %}
         </div>
     </main>
     
@@ -261,14 +262,34 @@
 </div>
 
 <div class="modal-overlay" id="deleteStudentModalOverlay" onclick="closeDeleteStudentModal()"></div>
-<div class="modal-sheet" id="deleteStudentModal"><div class="modal-handle"></div><div class="modal-title">تایید غیرفعال‌سازی</div>
+<div class="modal-sheet" id="deleteStudentModal"><div class="modal-handle"></div><div class="modal-title">تایید حذف</div>
 <div class="modal-body text-center">
     <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; color: var(--primary);"></i>
-    <p class="mt-3">آیا از غیرفعال کردن {{ student.user.get_full_name }} مطمئن هستید؟</p>
+    <p class="mt-3">آیا از حذف {{ student.user.get_full_name }} مطمئن هستید؟</p>
     <div class="modal-btn-row mt-3"><button type="button" class="btn-cancel-sm" onclick="closeDeleteStudentModal()">انصراف</button>
-        <form method="post" action="{% url 'students:student_delete' student.pk %}" style="flex:1;">{% csrf_token %}<button type="submit" class="btn-submit-sm" style="width:100%;"><i class="bi bi-person-x"></i> غیرفعال</button></form>
+        <form method="post" action="{% url 'students:student_delete' student.pk %}" style="flex:1;">
+            {% csrf_token %}
+            <button type="submit" class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> حذف</button>
+        </form>
     </div>
 </div>
+</div>
+
+<div class="modal-overlay" id="deleteEnrollmentModalOverlay" onclick="closeDeleteEnrollmentModal()"></div>
+<div class="modal-sheet" id="deleteEnrollmentModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">تایید حذف</div>
+    <div class="modal-body text-center">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;color:var(--primary);"></i>
+        <p class="mt-3">آیا از حذف ثبت‌نام "<span id="deleteEnrollmentName"></span>" مطمئن هستید؟</p>
+        <div class="modal-btn-row mt-3">
+            <button type="button" class="btn-cancel-sm" onclick="closeDeleteEnrollmentModal()">انصراف</button>
+            <form id="deleteEnrollmentForm" method="post" style="flex:1;">
+                {% csrf_token %}
+                <button type="submit" class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> حذف</button>
+            </form>
+        </div>
+    </div>
 </div>
 
 {% include 'partials/_bottom_nav.html' %}
@@ -334,6 +355,16 @@
     function closeDeleteFeeModal(){
         document.getElementById('deleteFeeModalOverlay').classList.remove('show');
         document.getElementById('deleteFeeModal').classList.remove('show');
+    }
+    function confirmDeleteEnrollment(id, name){
+        document.getElementById('deleteEnrollmentName').textContent = name;
+        document.getElementById('deleteEnrollmentForm').action = '/students/enrollments/' + id + '/delete/';
+        document.getElementById('deleteEnrollmentModalOverlay').classList.add('show');
+        document.getElementById('deleteEnrollmentModal').classList.add('show');
+    }
+    function closeDeleteEnrollmentModal(){
+        document.getElementById('deleteEnrollmentModalOverlay').classList.remove('show');
+        document.getElementById('deleteEnrollmentModal').classList.remove('show');
     }
 </script>
 {% endblock %}

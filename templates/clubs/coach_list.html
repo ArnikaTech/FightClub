@@ -68,20 +68,29 @@
 
 {% block extra_js %}
 <script>
-function openCoachModal(){document.getElementById('coachModalTitle').textContent='مربی جدید';document.getElementById('coachForm').action='{% url "clubs:coach_add" %}';document.getElementById('coachMembershipId').value='';document.getElementById('coachUser').value='';document.getElementById('coachClub').value='';document.getElementById('coachRole').value='instructor';document.getElementById('coachModalOverlay').classList.add('show');document.getElementById('coachModal').classList.add('show');}
-function closeCoachModal(){document.getElementById('coachModalOverlay').classList.remove('show');document.getElementById('coachModal').classList.remove('show');}
-function openCoachEdit(membershipId,userId,clubId,role){
-    document.getElementById('coachModalTitle').textContent='ویرایش مربی';
-    document.getElementById('coachForm').action='/clubs/coaches/'+membershipId+'/edit/';
-    document.getElementById('coachMembershipId').value=membershipId;
-    document.getElementById('coachUser').value=userId;
-    document.getElementById('coachClub').value=clubId;
-    document.getElementById('coachRole').value=role;
-    document.getElementById('coachModalOverlay').classList.add('show');
-    document.getElementById('coachModal').classList.add('show');
-}
-function confirmCoachDelete(url,name){document.getElementById('deleteCoachName').textContent=name;document.getElementById('deleteCoachForm').action=url;document.getElementById('deleteCoachModalOverlay').classList.add('show');document.getElementById('deleteCoachModal').classList.add('show');}
-function closeCoachDeleteModal(){document.getElementById('deleteCoachModalOverlay').classList.remove('show');document.getElementById('deleteCoachModal').classList.remove('show');}
-document.addEventListener('DOMContentLoaded',function(){ {% if messages %}{% for m in messages %}if(typeof showToast==='function'){showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');}{% endfor %}{% endif %}});
+    function openCoachModal(){
+        document.getElementById('coachModalTitle').textContent='مربی جدید';
+        document.getElementById('coachForm').action='{% url "clubs:coach_add" %}';
+        document.getElementById('coachMembershipId').value='';
+        $('#coachUser').val('').trigger('change');
+        $('#coachClub').val('').trigger('change');
+        $('#coachRole').val('instructor').trigger('change');
+        document.getElementById('coachModalOverlay').classList.add('show');
+        document.getElementById('coachModal').classList.add('show');
+    }
+    function closeCoachModal(){document.getElementById('coachModalOverlay').classList.remove('show');document.getElementById('coachModal').classList.remove('show');}
+    function openCoachEdit(membershipId,userId,clubId,role){
+        document.getElementById('coachModalTitle').textContent='ویرایش مربی';
+        document.getElementById('coachForm').action='/clubs/coaches/'+membershipId+'/edit/';
+        document.getElementById('coachMembershipId').value=membershipId;
+        document.getElementById('coachUser').value=userId;
+        document.getElementById('coachClub').value=clubId;
+        document.getElementById('coachRole').value=role;
+        document.getElementById('coachModalOverlay').classList.add('show');
+        document.getElementById('coachModal').classList.add('show');
+    }
+    function confirmCoachDelete(url,name){document.getElementById('deleteCoachName').textContent=name;document.getElementById('deleteCoachForm').action=url;document.getElementById('deleteCoachModalOverlay').classList.add('show');document.getElementById('deleteCoachModal').classList.add('show');}
+    function closeCoachDeleteModal(){document.getElementById('deleteCoachModalOverlay').classList.remove('show');document.getElementById('deleteCoachModal').classList.remove('show');}
+    document.addEventListener('DOMContentLoaded',function(){ {% if messages %}{% for m in messages %}if(typeof showToast==='function'){showToast('{% if m.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if m.tags == "success" %}green{% else %}red{% endif %}','{% if m.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ m|escapejs }}');}{% endfor %}{% endif %}});
 </script>
 {% endblock %}

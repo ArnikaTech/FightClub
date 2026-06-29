@@ -67,16 +67,8 @@ class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     
     def get_queryset(self):
         user = self.request.user
-        show = self.request.GET.get('show', 'active')
-        
         if user.is_super_manager:
-            qs = Student.objects.filter(
-                is_active=(show == 'active')
-            ).select_related('user', 'club', 'sport').prefetch_related('insurances').order_by('user__first_name', 'user__last_name')
-        else:
-            qs = visible_students_for(user).filter(
-                is_active=(show == 'active')
-            ).select_related('user', 'club', 'sport').prefetch_related('insurances').order_by('user__first_name', 'user__last_name')
+            qs = Student.objects.filter(is_active=True).order_by('user__first_name', 'user__last_name')
         
         # فیلترها
         club_id = self.request.GET.get('club')
@@ -251,20 +243,22 @@ class StudentDeleteView(LoginRequiredMixin, View):
         student = get_object_or_404(Student, pk=pk)
         name = student.user.get_full_name()
         
-        # چک کن enrollment فعال داره؟
+        # چک وابستگی‌ها
         if student.enrollments.filter(is_active=True).exists():
             messages.error(request, f'{name} در کلاس‌ها ثبت‌نام شده. ابتدا ثبت‌نام‌ها را حذف کنید.')
-        elif student.attendances.exists():
-            messages.error(request, f'{name} حضور و غیاب ثبت شده دارد. ابتدا حضور و غیاب‌ها را حذف کنید.')
-        elif student.payments.exists():
-            messages.error(request, f'{name} پرداختی ثبت شده دارد. ابتدا پرداختی‌ها را حذف کنید.')
-        else:
-            user = student.user
-            student.delete()
-            if not user.student_profiles.exists():
-                user.delete()
-            messages.success(request, f'{name} حذف شد')
+            return redirect('students:student_detail', pk=pk)
         
+        if student.attendances.exists():
+            messages.error(request, f'{name} حضور و غیاب ثبت شده دارد. ابتدا حضور و غیاب‌ها را حذف کنید.')
+            return redirect('students:student_detail', pk=pk)
+        
+        if student.payments.exists():
+            messages.error(request, f'{name} پرداختی ثبت شده دارد. ابتدا پرداختی‌ها را حذف کنید.')
+            return redirect('students:student_detail', pk=pk)
+        
+        # حذف
+        student.delete()
+        messages.success(request, f'{name} با موفقیت حذف شد')
         return redirect('students:student_list')
 
 
@@ -649,17 +643,6 @@ class ContactEditView(LoginRequiredMixin, View):
         
         messages.success(request, 'شماره تماس بروزرسانی شد')
         return redirect('students:student_detail', pk=contact.student.pk)
-
-
-class StudentDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self): return can_manage_students(self.request.user)
-
-    def post(self, request, pk):
-        student = get_object_or_404(managed_students_for(request.user), pk=pk)
-        student.is_active = False
-        student.save()
-        messages.success(request, f'{student.user.get_full_name()} غیرفعال شد')
-        return redirect('students:student_list')
 
 
 class ClassGroupActivateView(LoginRequiredMixin, UserPassesTestMixin, View):
