@@ -6,7 +6,7 @@ from django.db.models import Sum
 
 import jdatetime
 from .models import Payment, Expense, FeeDue
-from apps.students.models import Student
+from apps.students.models import Student, Enrollment
 from apps.clubs.models import Club
 from apps.finance.models import Payment
 
@@ -319,3 +319,61 @@ class FeeDeleteView(LoginRequiredMixin, View):
         due.delete()
         messages.success(request, 'شهریه حذف شد')
         return redirect('students:student_detail', pk=student_pk)
+
+
+class DebtorListView(LoginRequiredMixin, ListView):
+    template_name = 'finance/debtor_list.html'
+    context_object_name = 'debtors'
+    paginate_by = 20
+
+    def get_queryset(self):
+        # 1. گرفتن ماه انتخاب شده از URL (با فرمت YYYY/MM)
+        month_param = self.request.GET.get('month')
+        today = jdatetime.date.today()
+        
+        if month_param:
+            try:
+                year, month = map(int, month_param.split('/'))
+                self.selected_month = f"{year}/{month:02d}"
+            except (ValueError, TypeError):
+                self.selected_month = f"{today.year}/{today.month:02d}"
+        else:
+            self.selected_month = f"{today.year}/{today.month:02d}"
+
+        # 2. پیدا کردن هنرجویان فعالی که برای این ماه پول ندادن
+        active_students = Student.objects.filter(
+            is_active=True, 
+            enrollments__is_active=True
+        ).distinct()
+        
+        paid_ids = FeeDue.objects.filter(
+            month=self.selected_month,
+            is_paid=True
+        ).values_list('student_id', flat=True)
+
+        return active_students.exclude(id__in=paid_ids).order_by('user__first_name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['selected_month'] = self.selected_month
+        context['months'] = self.get_last_12_months()
+        
+        # نمایش تعداد واقعی کل بدهکاران (نه فقط همین صفحه)
+        context['total_debtors'] = self.object_list.count() if self.object_list else 0
+        # توجه: در ListView، self.object_list همان کوئری فیلتر شده است، اما اگر paginate_by فعال باشد،
+        # تعداد واقعی کل آیتم‌ها در context['paginator'].count موجود است.
+        
+        return context
+
+    def get_last_12_months(self):
+        """ساخت لیست ۱۲ ماه اخیر برای dropdown"""
+        today = jdatetime.date.today()
+        months = []
+        for i in range(12):
+            d = jdatetime.date(today.year, today.month, 1)
+            if i > 0:
+                # رفتن به ماه قبل
+                for _ in range(i):
+                    d = d - jdatetime.timedelta(days=d.day)
+            months.append(f"{d.year}/{d.month:02d}")
+        return months

@@ -45,6 +45,7 @@
         <ul class="sidebar-nav">
             <li><a href="{% url 'finance:payment_list' %}" class="{% if request.resolver_match.url_name == 'payment_list' %}active{% endif %}"><i class="bi bi-cash"></i> دریافتی‌ها</a></li>
             <li><a href="{% url 'finance:expense_list' %}" class="{% if request.resolver_match.url_name == 'expense_list' %}active{% endif %}"><i class="bi bi-cash-stack"></i> پرداختی‌ها</a></li>
+            <li><a href="{% url 'finance:debtor_list' %}" class="{% if request.resolver_match.url_name == 'debtor_list' %}active{% endif %}"><i class="bi bi-exclamation-triangle"></i> بدهکاران</a></li>
             <li><a href="{% url 'finance:report' %}" class="{% if request.resolver_match.url_name == 'report' %}active{% endif %}"><i class="bi bi-bar-chart"></i> گزارش</a></li>
         </ul>
         {% endif %}

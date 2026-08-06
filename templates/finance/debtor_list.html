@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load jformat %}
+
+{% block title %}بدهکاران | {{ site_settings.gym_name }}{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        
+        <div class="page-header animate__animated animate__fadeIn">
+            <div><h1 class="page-title">⚠️ بدهکاران</h1></div>
+        </div>
+        
+        <form method="get" class="date-card" style="margin-bottom:16px;">
+            <select name="month" class="input-glass" onchange="this.form.submit()" style="width:auto;">
+                {% for m in months %}
+                <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ m }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        
+        <div class="alert-card">
+            <div class="alert-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div class="alert-text">
+                <strong>{{ page_obj.paginator.count }}</strong> هنرجو برای ماه {{ selected_month }} بدهی دارند.
+            </div>
+        </div>
+        
+        <div class="coach-list-page">
+            {% for s in debtors %}
+            <a href="{% url 'students:student_detail' s.id %}" style="text-decoration:none;color:inherit;">
+                <div class="coach-card-page animate__animated animate__fadeInUp">
+                    <div class="coach-avatar-page">
+                        {% if s.user.avatar %}<img src="{{ s.user.avatar.url }}">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
+                    </div>
+                    <div class="coach-info-page" style="flex:1;">
+                        <div class="coach-name-page">{{ s.user.get_full_name }}</div>
+                        <div class="coach-meta-page">
+                            <span>{{ s.student_code }}</span>
+                            <span>{{ s.club.name }}</span>
+                        </div>
+                    </div>
+                    <div class="coach-actions">
+                        <span class="btn-call" style="background:rgba(255,77,46,0.15);color:var(--primary);"><i class="bi bi-cash-coin"></i></span>
+                    </div>
+                </div>
+            </a>
+            {% empty %}
+            <div class="text-center py-5 text-muted" style="grid-column:1/-1;">🎉 بدهکاری برای این ماه وجود ندارد</div>
+            {% endfor %}
+        </div>
+        
+        {% if is_paginated %}
+        <div class="animate__animated animate__fadeInUp" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:24px;padding:12px;background:var(--card-bg);border:1px solid var(--border-glass);border-radius:14px;">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&month={{ selected_month }}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;">
+                <i class="bi bi-chevron-right"></i> قبلی
+            </a>
+            {% endif %}
+            
+            <span style="color:var(--text-secondary);font-size:0.85rem;">
+                صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&month={{ selected_month }}" class="btn-glass" style="padding:8px 16px;text-decoration:none;border-radius:10px;">
+                بعدی <i class="bi bi-chevron-left"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+{% endblock %}
