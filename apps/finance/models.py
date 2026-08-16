@@ -60,7 +60,7 @@ class Expense(models.Model):
 
 class FeeDue(models.Model):
     student = models.ForeignKey('students.Student', on_delete=models.CASCADE, related_name='fee_dues')
-    month = models.CharField('ماه', max_length=7, help_text='مثلاً: 1404/03')
+    month = models.CharField('ماه', max_length=7, help_text='مثلاً: 1405/05')
     amount = models.PositiveIntegerField('مبلغ (تومان)', default=0)
     is_paid = models.BooleanField('پرداخت شد؟', default=False)
     paid_at = jmodels.jDateField('تاریخ پرداخت', null=True, blank=True)
