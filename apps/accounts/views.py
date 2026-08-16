@@ -7,9 +7,10 @@ from django.urls import reverse
 from django.db import models
 
 import jdatetime
-from apps.students.models import Student, Attendance
+from apps.students.models import Student, Attendance, Enrollment
 from apps.clubs.models import Club
 from .models import User, Message
+from apps.finance.models import FeeDue
 
 
 def managed_clubs_for(user):
@@ -412,3 +413,161 @@ class BulkMessageView(LoginRequiredMixin, View):
         
         messages.success(request, f'پیام به {count} نفر ارسال شد')
         return redirect('accounts:sent_messages')
+
+
+class PortalView(LoginRequiredMixin, View):
+    """پنل والدین/هنرجو"""
+    
+    def get(self, request):
+        user = request.user
+        
+        # آیا خودش هنرجوست؟
+        try:
+            own_student = user.student_profile
+        except:
+            own_student = None
+        
+        # آیا والدین هست؟ (فرزندان)
+        children = []
+        if hasattr(user, 'children'):
+            children = user.children.filter(is_active=True)
+        
+        # اگر فقط خودش هنرجوست و فرزندی نداره
+        if own_student and not children:
+            return redirect('accounts:portal_student', pk=own_student.pk)
+        
+        # اگر فرزندان داره
+        context = {
+            'own_student': own_student,
+            'children': children,
+        }
+        return render(request, 'accounts/portal.html', context)
+
+
+class PortalStudentView(LoginRequiredMixin, View):
+    """نمایش وضعیت یک هنرجو برای والدین"""
+    
+    def get(self, request, pk):
+        student = get_object_or_404(Student, pk=pk)
+        
+        # چک دسترسی: یا خودشه یا فرزندشه
+        user = request.user
+        has_access = False
+        try:
+            if user.student_profile == student:
+                has_access = True
+        except:
+            pass
+        
+        if user.children.filter(pk=pk).exists():
+            has_access = True
+        
+        if not has_access and not user.is_super_manager:
+            messages.error(request, 'دسترسی غیرمجاز')
+            return redirect('accounts:portal')
+        
+        # وضعیت کمربند
+        belt = student.current_belt
+        belt_color = student.belt_color()
+        
+        # حضور و غیاب ماهانه
+        current_month_attendance = student.attendances.filter(
+            date__month=jdatetime.date.today().month
+        ).count()
+        
+        # شهریه‌ها
+        paid_dues = student.fee_dues.filter(is_paid=True).order_by('-month')
+        unpaid_dues = student.fee_dues.filter(is_paid=False)
+        
+        context = {
+            'student': student,
+            'belt': belt,
+            'belt_color': belt_color,
+            'attendance_count': current_month_attendance,
+            'paid_dues': paid_dues,
+            'unpaid_dues': unpaid_dues,
+        }
+        return render(request, 'accounts/portal_student.html', context)
+
+
+import requests
+from apps.finance.models import FeeDue, PaymentTransaction
+
+class PortalPayView(LoginRequiredMixin, View):
+    """شروع پرداخت آنلاین"""
+    
+    def get(self, request, student_pk, month):
+        student = get_object_or_404(Student, pk=student_pk)
+        
+        # چک دسترسی
+        # ...
+        
+        # مبلغ شهریه - از FeeDue یا Enrollment
+        due = FeeDue.objects.filter(student=student, month=month).first()
+        amount = due.amount if due else 0
+        
+        if amount == 0:
+            # مبلغ پیش‌فرض از ثبت‌نام
+            enrollment = student.enrollments.filter(is_active=True).first()
+            amount = enrollment.monthly_fee if enrollment else 0
+        
+        if amount == 0:
+            messages.error(request, 'مبلغ شهریه تعیین نشده است')
+            return redirect('accounts:portal_student', pk=student_pk)
+        
+        # ساخت تراکنش
+        transaction = PaymentTransaction.objects.create(
+            student=student,
+            amount=amount,
+            month=month,
+            status='pending'
+        )
+        
+        # اتصال به زرین‌پال
+        # در حالت تست: authority = "test"
+        # در حالت واقعی: send request to zarinpal
+        authority = "test_authority_" + str(transaction.id)
+        transaction.authority = authority
+        transaction.save()
+        
+        # ریدایرکت به زرین‌پال
+        zarinpal_url = f"https://www.zarinpal.com/pg/StartPay/{authority}"
+        return redirect(zarinpal_url)
+
+
+class PaymentCallbackView(View):
+    """کال‌بک از زرین‌پال"""
+    
+    def get(self, request):
+        authority = request.GET.get('Authority')
+        status = request.GET.get('Status')
+        
+        if status == 'OK':
+            # پرداخت موفق
+            transaction = PaymentTransaction.objects.get(authority=authority)
+            transaction.status = 'success'
+            transaction.ref_id = request.GET.get('RefID', '')
+            transaction.paid_at = jdatetime.date.today()
+            transaction.save()
+            
+            # ثبت شهریه
+            FeeDue.objects.update_or_create(
+                student=transaction.student,
+                month=transaction.month,
+                defaults={
+                    'amount': transaction.amount,
+                    'is_paid': True,
+                    'paid_at': transaction.paid_at
+                }
+            )
+            
+            messages.success(request, 'پرداخت با موفقیت انجام شد')
+        else:
+            # پرداخت ناموفق
+            transaction = PaymentTransaction.objects.filter(authority=authority).first()
+            if transaction:
+                transaction.status = 'failed'
+                transaction.save()
+            messages.error(request, 'پرداخت ناموفق بود')
+        
+        return redirect('accounts:portal')

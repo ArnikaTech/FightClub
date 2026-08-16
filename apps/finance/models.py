@@ -73,3 +73,19 @@ class FeeDue(models.Model):
 
     def __str__(self):
         return f"{self.student.user.get_full_name()} - {self.month}"
+
+
+class PaymentTransaction(models.Model):
+    STATUS = [
+        ('pending', 'در انتظار'),
+        ('success', 'موفق'),
+        ('failed', 'ناموفق'),
+    ]
+    student = models.ForeignKey(Student, on_delete=models.PROTECT, related_name='transactions')
+    amount = models.PositiveIntegerField('مبلغ')
+    month = models.CharField('ماه', max_length=7)
+    authority = models.CharField('شناسه ارجاع', max_length=100)
+    ref_id = models.CharField('کد رهگیری', max_length=100, blank=True, null=True)
+    status = models.CharField('وضعیت', max_length=10, choices=STATUS, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    paid_at = jmodels.jDateField('تاریخ پرداخت', null=True, blank=True)

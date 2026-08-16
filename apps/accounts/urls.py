@@ -19,4 +19,10 @@ urlpatterns = [
     path('messages/<int:pk>/', views.ThreadView.as_view(), name='message_thread'),
     path('messages/<int:pk>/reply/', views.ReplyView.as_view(), name='reply_message'),
     path('messages/bulk/', views.BulkMessageView.as_view(), name='bulk_message'),
+
+    path('portal/', views.PortalView.as_view(), name='portal'),
+    path('portal/student/<int:pk>/', views.PortalStudentView.as_view(), name='portal_student'),
+
+    path('portal/pay/<int:student_pk>/<str:month>/', views.PortalPayView.as_view(), name='portal_pay'),
+    path('payment/callback/', views.PaymentCallbackView.as_view(), name='payment_callback'),
 ]
