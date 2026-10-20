@@ -109,21 +109,31 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             selected_club = None
 
         # پروفایل هنرجو
-        try:
-            student = user.student_profile
-            context['student'] = student
-            
-            # حضور و غیاب ماه جاری
-            today = jdatetime.date.today()
-            context['my_attendance'] = student.attendances.filter(
-                date__month=today.month, date__year=today.year
-            ).count()
-            
-            # شهریه‌ها
-            context['paid_dues'] = student.fee_dues.filter(is_paid=True).order_by('-month')[:5]
-            context['unpaid_dues'] = student.fee_dues.filter(is_paid=False)
-        except:
-            context['student'] = None
+        if not user.is_super_manager and not user.is_club_manager and not user.is_instructor:
+            try:
+                student = user.student_profile
+                context['student'] = student
+                
+                # حضور من (ماه جاری)
+                today = jdatetime.date.today()
+                context['my_attendance'] = student.attendances.filter(
+                    date__month=today.month,
+                    date__year=today.year,
+                    status='present'
+                ).count()
+                
+                # شهریه پرداخت نشده
+                context['unpaid_dues'] = student.fee_dues.filter(is_paid=False)
+                
+                # وضعیت بیمه
+                days = student.insurance_days_left()
+                context['insurance_status'] = f"{days} روز" if days else "منقضی"
+                
+            except:
+                context['student'] = None
+                context['my_attendance'] = 0
+                context['unpaid_dues'] = []
+                context['insurance_status'] = "-"
         
         context['clubs'] = clubs
         context['selected_club'] = selected_club

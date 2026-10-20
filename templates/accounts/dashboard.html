@@ -17,7 +17,6 @@
             </div>
         </div>
         
-        <!-- کارت خوش‌آمد -->
         <div class="welcome-card animate__animated animate__fadeIn">
             {% if user.is_super_manager %}
             <div class="welcome-text">{{ user.get_short_name }} عزیز، خوش آمدید</div>
@@ -42,7 +41,6 @@
         </div>
         
         {% if user.is_super_manager or user.is_club_manager %}
-        <!-- فیلتر باشگاه -->
         {% if user.is_super_manager and clubs %}
         <form method="get" style="margin-bottom:16px;">
             <select name="club_id" class="select2-dashboard" onchange="this.form.submit()">
@@ -54,65 +52,21 @@
         </form>
         {% endif %}
         
-        {% if not user.is_super_manager and not user.is_club_manager %}
-        <div class="section-block">
-            <div class="section-head"><h3>وضعیت من</h3></div>
-            <div class="info-card">
-                <div class="info-row">
-                    <span class="info-label">کمربند</span>
-                    <span class="info-value">{{ student.get_current_belt_display }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">حضور این ماه</span>
-                    <span class="info-value">{{ my_attendance }} جلسه</span>
-                </div>
-                {% if unpaid_dues %}
-                <div class="info-row">
-                    <span class="info-label">شهریه پرداخت نشده</span>
-                    <span class="info-value" style="color:var(--primary);">{{ unpaid_dues.count }} ماه</span>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
-        
-        <!-- آمار -->
         <div class="stats-grid">
-            <div class="stat-card animate__animated animate__fadeInUp">
-                <div class="stat-icon red"><i class="bi bi-people-fill"></i></div>
-                <div class="stat-value">{{ total_students }}</div>
-                <div class="stat-label">کل هنرجویان</div>
-            </div>
-            <div class="stat-card animate__animated animate__fadeInUp">
-                <div class="stat-icon green"><i class="bi bi-calendar-check-fill"></i></div>
-                <div class="stat-value">{{ present_today }}</div>
-                <div class="stat-label">حاضر امروز</div>
-            </div>
-            <div class="stat-card animate__animated animate__fadeInUp">
-                <div class="stat-icon gold"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                <div class="stat-value">{{ critical_absences }}</div>
-                <div class="stat-label">غیبت متوالی</div>
-            </div>
-            <div class="stat-card animate__animated animate__fadeInUp">
-                <div class="stat-icon blue"><i class="bi bi-shield-check"></i></div>
-                <div class="stat-value">{{ expiring_insurance }}</div>
-                <div class="stat-label">بیمه نزدیک انقضا</div>
-            </div>
+            <div class="stat-card"><div class="stat-icon red"><i class="bi bi-people-fill"></i></div><div class="stat-value">{{ total_students }}</div><div class="stat-label">کل هنرجویان</div></div>
+            <div class="stat-card"><div class="stat-icon green"><i class="bi bi-calendar-check-fill"></i></div><div class="stat-value">{{ present_today }}</div><div class="stat-label">حاضر امروز</div></div>
+            <div class="stat-card"><div class="stat-icon gold"><i class="bi bi-exclamation-triangle-fill"></i></div><div class="stat-value">{{ critical_absences }}</div><div class="stat-label">غیبت متوالی</div></div>
+            <div class="stat-card"><div class="stat-icon blue"><i class="bi bi-shield-check"></i></div><div class="stat-value">{{ expiring_insurance }}</div><div class="stat-label">بیمه نزدیک انقضا</div></div>
         </div>
         
-        <!-- لینک‌های سریع -->
-        <div class="section-block animate__animated animate__fadeInUp">
-            <div class="section-head"><h3>دسترسی سریع</h3></div>
-            <div class="profile-actions">
-                <a href="{% url 'students:student_list' %}" class="profile-action-btn"><i class="bi bi-people-fill"></i><span>هنرجویان</span><i class="bi bi-chevron-left action-arrow"></i></a>
-                <a href="{% url 'students:attendance' %}" class="profile-action-btn"><i class="bi bi-calendar-check"></i><span>حضور و غیاب</span><i class="bi bi-chevron-left action-arrow"></i></a>
-                <a href="{% url 'students:absentees' %}" class="profile-action-btn"><i class="bi bi-exclamation-triangle"></i><span>غیبت‌ها</span><i class="bi bi-chevron-left action-arrow"></i></a>
-                <a href="{% url 'students:student_add' %}" class="profile-action-btn"><i class="bi bi-person-plus"></i><span>هنرجو جدید</span><i class="bi bi-chevron-left action-arrow"></i></a>
-            </div>
+        <div class="profile-actions">
+            <a href="{% url 'students:student_list' %}" class="profile-action-btn"><i class="bi bi-people-fill"></i><span>هنرجویان</span><i class="bi bi-chevron-left action-arrow"></i></a>
+            <a href="{% url 'students:attendance' %}" class="profile-action-btn"><i class="bi bi-calendar-check"></i><span>حضور و غیاب</span><i class="bi bi-chevron-left action-arrow"></i></a>
+            <a href="{% url 'students:absentees' %}" class="profile-action-btn"><i class="bi bi-exclamation-triangle"></i><span>غیبت‌ها</span><i class="bi bi-chevron-left action-arrow"></i></a>
+            <a href="{% url 'students:student_add' %}" class="profile-action-btn"><i class="bi bi-person-plus"></i><span>هنرجو جدید</span><i class="bi bi-chevron-left action-arrow"></i></a>
         </div>
         
         {% elif user.is_instructor %}
-        <!-- آمار مربی -->
         <div class="stats-grid">
             <div class="stat-card"><div class="stat-icon red"><i class="bi bi-people-fill"></i></div><div class="stat-value">{{ total_students }}</div><div class="stat-label">هنرجویان من</div></div>
             <div class="stat-card"><div class="stat-icon green"><i class="bi bi-calendar-check-fill"></i></div><div class="stat-value">{{ present_today }}</div><div class="stat-label">حاضر امروز</div></div>
@@ -128,15 +82,34 @@
         
         {% else %}
         <!-- هنرجو -->
-        <div class="stats-grid">
-            <div class="stat-card"><div class="stat-icon green"><i class="bi bi-calendar-check-fill"></i></div><div class="stat-value">{{ present_today }}</div><div class="stat-label">حضور من (ماه جاری)</div></div>
-            <div class="stat-card"><div class="stat-icon red"><i class="bi bi-x-circle-fill"></i></div><div class="stat-value">{{ absent_today }}</div><div class="stat-label">غیبت من (ماه جاری)</div></div>
-            <div class="stat-card"><div class="stat-icon blue"><i class="bi bi-shield-check"></i></div><div class="stat-value">{{ insurance_status }}</div><div class="stat-label">وضعیت بیمه</div></div>
-        </div>
+        <!-- هنرجو -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="bi bi-calendar-check-fill"></i></div>
+        <div class="stat-value">{{ my_attendance }}</div>
+        <div class="stat-label">حضور من (ماه جاری)</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon red"><i class="bi bi-cash-coin"></i></div>
+        <div class="stat-value">{{ unpaid_dues.count }}</div>
+        <div class="stat-label">شهریه پرداخت نشده</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="bi bi-shield-check"></i></div>
+        <div class="stat-value">{{ insurance_status }}</div>
+        <div class="stat-label">وضعیت بیمه</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon gold"><i class="bi bi-award"></i></div>
+        <div class="stat-value" style="font-size:0.9rem;">{{ student.get_current_belt_display }}</div>
+        <div class="stat-label">کمربند من</div>
+    </div>
+</div>
         
         <div class="profile-actions">
             <a href="{% url 'accounts:inbox' %}" class="profile-action-btn"><i class="bi bi-inbox"></i><span>صندوق ورودی</span><i class="bi bi-chevron-left action-arrow"></i></a>
             <a href="{% url 'accounts:compose_message' %}" class="profile-action-btn"><i class="bi bi-pencil-square"></i><span>پیام جدید</span><i class="bi bi-chevron-left action-arrow"></i></a>
+            <a href="{% url 'students:student_detail' student.pk %}" class="profile-action-btn"><i class="bi bi-person"></i><span>پروفایل من</span><i class="bi bi-chevron-left action-arrow"></i></a>
         </div>
         {% endif %}
     </main>
