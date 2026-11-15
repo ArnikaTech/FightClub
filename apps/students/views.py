@@ -67,9 +67,16 @@ class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     
     def get_queryset(self):
         user = self.request.user
-        qs = managed_students_for(user).filter(is_active=True).order_by(
+        qs = managed_students_for(user).order_by(
             'user__first_name', 'user__last_name'
         )
+
+        # به‌صورت پیش‌فرض فقط هنرجویان فعال نمایش داده می‌شوند.
+        status = self.request.GET.get('status', 'active')
+        if status == 'inactive':
+            qs = qs.filter(is_active=False)
+        elif status != 'all':
+            qs = qs.filter(is_active=True)
         
         # فیلترها
         club_id = self.request.GET.get('club')
