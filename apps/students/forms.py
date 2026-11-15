@@ -8,6 +8,21 @@ import jdatetime
 User = get_user_model()
 
 
+class ShiftSelect(forms.Select):
+    def __init__(self, *args, shift_club_map=None, **kwargs):
+        self.shift_club_map = shift_club_map or {}
+        super().__init__(*args, **kwargs)
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(
+            name, value, label, selected, index, subindex=subindex, attrs=attrs
+        )
+        club_id = self.shift_club_map.get(str(value))
+        if club_id is not None:
+            option['attrs']['data-club-id'] = str(club_id)
+        return option
+
+
 class StudentCreateForm(forms.Form):
     """فرم ثبت هنرجوی جدید"""
     
@@ -72,11 +87,17 @@ class StudentCreateForm(forms.Form):
             clubs = Club.objects.none()
 
         self.fields['club'].queryset = clubs
-        self.fields['shift'].queryset = Shift.objects.filter(
+        shifts = Shift.objects.filter(
             is_active=True,
             class_group__is_active=True,
             class_group__club__in=clubs,
         ).select_related('class_group', 'class_group__club')
+        self.fields['shift'].queryset = shifts
+        shift_club_map = dict(shifts.values_list('pk', 'class_group__club_id'))
+        self.fields['shift'].widget = ShiftSelect(
+            attrs={'class': 'input-glass'},
+            shift_club_map=shift_club_map,
+        )
 
     def clean(self):
         cleaned_data = super().clean()
