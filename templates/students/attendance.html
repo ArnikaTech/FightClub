@@ -65,16 +65,20 @@
                             </div>
                             
                             <div class="att-meta">
-                                {% if s.current_monthly_status == 'debtor' %}
-                                <span class="" style="color:var(--primary);" title="بدهکار">
-                                    <i class="bi bi-exclamation-triangle-fill"></i> بدهکار
-                                </span>
-                                {% elif s.current_monthly_status == 'paid' %}
-                                <!-- <span style="color:#34c759;margin-right:4px;" title="پرداخت شده">
-                                    <i class="bi bi-check-circle-fill"></i> 
-                                </span> -->
+                                {% if s.unpaid_month_count %}
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger debt-months-btn"
+                                        style="padding:2px 7px;font-size:0.75rem;"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#debtMonthsModal"
+                                        data-student-name="{{ s.user.get_full_name }}"
+                                        data-months="{{ s.unpaid_months|join:'|' }}"
+                                        title="مشاهده ماه‌های پرداخت‌نشده">
+                                    <i class="bi bi-exclamation-circle-fill"></i>
+                                    {{ s.unpaid_month_count }} ماه بدهکار
+                                </button>
                                 {% endif %}
-                                
+
                                 {% with days=s.insurance_days_left %}
                                 {% if days is not None %}
                                 {% if days <= 7 %}<span style="color:#ff9800;"><span class="status-dot" style="background:#ff9800;"></span> بیمه {{ days }} روز</span>
@@ -106,11 +110,54 @@
 </div>
 
 {% include 'partials/_contact_modal.html' %}
+
+<!-- مودال ماه‌های پرداخت‌نشده -->
+<div class="modal fade" id="debtMonthsModal" tabindex="-1" aria-labelledby="debtMonthsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="debtMonthsModalLabel">ماه‌های پرداخت‌نشده</h5>
+                <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <div id="debtStudentName" class="fw-bold mb-3"></div>
+                <div id="debtMonthsList" class="d-flex flex-wrap gap-2"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        var debtModal = document.getElementById('debtMonthsModal');
+        if (debtModal) {
+            debtModal.addEventListener('show.bs.modal', function(event) {
+                var trigger = event.relatedTarget;
+                if (!trigger) return;
+
+                document.getElementById('debtStudentName').textContent =
+                    trigger.getAttribute('data-student-name') || '';
+
+                var list = document.getElementById('debtMonthsList');
+                list.replaceChildren();
+
+                var months = (trigger.getAttribute('data-months') || '')
+                    .split('|').filter(Boolean);
+
+                months.forEach(function(month) {
+                    var item = document.createElement('span');
+                    item.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
+                    item.textContent = month;
+                    list.appendChild(item);
+                });
+            });
+        }
+
         var countEl = document.getElementById('selectedCount');
         if(countEl){
             function updateCount(){
@@ -119,6 +166,7 @@
             }
             updateCount();
             document.getElementById('attendanceList').addEventListener('click', function(e){
+                if (e.target.closest('.debt-months-btn')) return;
                 var item = e.target.closest('.attendance-item');
                 if(!item) return;
                 item.classList.toggle('checked');
