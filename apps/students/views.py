@@ -9,7 +9,7 @@ import jdatetime
 from .forms import StudentCreateForm
 from .models import Student, Insurance, StudentContact, Attendance, ClassGroup, Shift, Enrollment
 from apps.clubs.models import Club, Sport
-from apps.finance.models import FeeDue
+from apps.finance.models import FeeDue, Payment
 
 
 def managed_clubs_for(user):
@@ -446,12 +446,53 @@ class AttendanceView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 enrolled_at__lte=today
             )
 
-            students = [e.student for e in enrollments]
-            
+            enrollment_list = list(enrollments.select_related('student__user'))
+            students = [e.student for e in enrollment_list]
+
+            # محاسبه ماه‌های فاقد پرداخت برای هر هنرجو از زمان ثبت‌نام در همین شیفت
+            # پرداخت ثبت‌شده در FeeDue یا Payment هر دو به‌عنوان پرداخت‌شده محسوب می‌شوند.
+            student_ids = [student.id for student in students]
+            month_ranges = {}
+            all_months = set()
+
+            for enrollment in enrollment_list:
+                start = enrollment.enrolled_at
+                start_index = start.year * 12 + start.month - 1
+                end_index = today.year * 12 + today.month - 1
+                months = [
+                    f'{index // 12}/{index % 12 + 1:02d}'
+                    for index in range(start_index, end_index + 1)
+                ] if start_index <= end_index else []
+                month_ranges[enrollment.student_id] = months
+                all_months.update(months)
+
+            paid_pairs = set()
+            if student_ids and all_months:
+                paid_pairs.update(
+                    FeeDue.objects.filter(
+                        student_id__in=student_ids,
+                        month__in=all_months,
+                        is_paid=True,
+                    ).values_list('student_id', 'month')
+                )
+                paid_pairs.update(
+                    Payment.objects.filter(
+                        student_id__in=student_ids,
+                        month__in=all_months,
+                    ).values_list('student_id', 'month')
+                )
+
+            for student in students:
+                student.unpaid_months = [
+                    month for month in month_ranges.get(student.id, [])
+                    if (student.id, month) not in paid_pairs
+                ]
+                student.unpaid_month_count = len(student.unpaid_months)
+
             attended_ids = Attendance.objects.filter(
                 shift=shift, date=today, status='present'
             ).values_list('student_id', flat=True)
-            
+
             context['students'] = students
             context['attended_today'] = set(attended_ids)
             context['present_count'] = len(attended_ids)
