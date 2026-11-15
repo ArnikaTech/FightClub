@@ -346,10 +346,18 @@ class DebtorListView(LoginRequiredMixin, ListView):
             enrollments__is_active=True
         ).distinct()
         
-        paid_ids = FeeDue.objects.filter(
-            month=self.selected_month,
-            is_paid=True
-        ).values_list('student_id', flat=True)
+        paid_ids = set(
+            FeeDue.objects.filter(
+                month=self.selected_month,
+                is_paid=True
+            ).values_list('student_id', flat=True)
+        )
+        # پرداخت‌هایی که مستقیماً در Payment ثبت شده‌اند نیز باید پرداخت‌شده محسوب شوند.
+        paid_ids.update(
+            Payment.objects.filter(
+                month=self.selected_month
+            ).values_list('student_id', flat=True)
+        )
 
         return active_students.exclude(id__in=paid_ids).order_by('user__first_name')
 
