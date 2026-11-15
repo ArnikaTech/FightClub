@@ -244,9 +244,12 @@ class StudentCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
         return context
 
 
-class StudentDeleteView(LoginRequiredMixin, View):
+class StudentDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return can_manage_students(self.request.user)
+
     def post(self, request, pk):
-        student = get_object_or_404(Student, pk=pk)
+        student = get_object_or_404(managed_students_for(request.user), pk=pk)
         name = student.user.get_full_name()
         
         # چک وابستگی‌ها
