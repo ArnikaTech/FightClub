@@ -92,12 +92,19 @@ class StudentCreateForm(forms.Form):
             class_group__is_active=True,
             class_group__club__in=clubs,
         ).select_related('class_group', 'class_group__club')
-        self.fields['shift'].queryset = shifts
-        shift_club_map = dict(shifts.values_list('pk', 'class_group__club_id'))
-        self.fields['shift'].widget = ShiftSelect(
+        shift_field = self.fields['shift']
+        shift_field.queryset = shifts
+        shift_club_map = {
+            str(shift_id): str(club_id)
+            for shift_id, club_id in shifts.values_list(
+                'pk', 'class_group__club_id'
+            )
+        }
+        shift_field.widget = ShiftSelect(
             attrs={'class': 'input-glass'},
             shift_club_map=shift_club_map,
         )
+        shift_field.widget.choices = shift_field.choices
 
     def clean(self):
         cleaned_data = super().clean()
