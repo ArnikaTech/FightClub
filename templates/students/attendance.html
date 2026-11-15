@@ -126,6 +126,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
 function openDebtMonthsModal(trigger) {
     document.getElementById('debtStudentName').textContent =
         trigger.getAttribute('data-student-name') || '';
@@ -151,7 +152,6 @@ function closeDebtMonthsModal() {
 }
 
 
-<script>
     document.addEventListener('DOMContentLoaded', function() {
         var countEl = document.getElementById('selectedCount');
         if(countEl){
