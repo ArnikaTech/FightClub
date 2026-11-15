@@ -46,15 +46,47 @@ class StudentCreateForm(forms.Form):
     # اطلاعات هنرجویی
     club = forms.ModelChoiceField(
         label='باشگاه',
-        queryset=Club.objects.filter(is_active=True),
+        queryset=Club.objects.none(),
         widget=forms.Select(attrs={'class': 'input-glass'})
     )
     shift = forms.ModelChoiceField(
         label='ثبت‌نام در شیفت',
-        queryset=Shift.objects.filter(is_active=True, class_group__is_active=True),
+        queryset=Shift.objects.none(),
         required=False,
         widget=forms.Select(attrs={'class': 'input-glass'})
     )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+        if user and user.is_super_manager:
+            clubs = Club.objects.filter(is_active=True)
+        elif user and user.is_club_manager:
+            clubs = Club.objects.filter(
+                is_active=True,
+                memberships__user=user,
+                memberships__is_active=True,
+            ).distinct()
+        else:
+            clubs = Club.objects.none()
+
+        self.fields['club'].queryset = clubs
+        self.fields['shift'].queryset = Shift.objects.filter(
+            is_active=True,
+            class_group__is_active=True,
+            class_group__club__in=clubs,
+        ).select_related('class_group', 'class_group__club')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        club = cleaned_data.get('club')
+        shift = cleaned_data.get('shift')
+
+        if shift and club and shift.class_group.club_id != club.pk:
+            self.add_error('shift', 'شیفت انتخاب‌شده متعلق به باشگاه انتخاب‌شده نیست')
+
+        return cleaned_data
     birth_date = forms.CharField(
         label='تاریخ تولد',
         required=False,
