@@ -69,8 +69,7 @@
                                 <button type="button"
                                         class="btn btn-sm btn-outline-danger debt-months-btn"
                                         style="padding:2px 7px;font-size:0.75rem;"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#debtMonthsModal"
+                                        onclick="event.stopPropagation(); openDebtMonthsModal(this)"
                                         data-student-name="{{ s.user.get_full_name }}"
                                         data-months="{{ s.unpaid_months|join:'|' }}"
                                         title="مشاهده ماه‌های پرداخت‌نشده">
@@ -111,53 +110,49 @@
 
 {% include 'partials/_contact_modal.html' %}
 
-<!-- مودال ماه‌های پرداخت‌نشده -->
-<div class="modal fade" id="debtMonthsModal" tabindex="-1" aria-labelledby="debtMonthsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="debtMonthsModalLabel">ماه‌های پرداخت‌نشده</h5>
-                <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="بستن"></button>
-            </div>
-            <div class="modal-body">
-                <div id="debtStudentName" class="fw-bold mb-3"></div>
-                <div id="debtMonthsList" class="d-flex flex-wrap gap-2"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
-            </div>
+<!-- مودال ماه‌های پرداخت‌نشده - هماهنگ با قالب مودال‌های پروژه -->
+<div class="modal-overlay" id="debtMonthsModalOverlay" onclick="closeDebtMonthsModal()"></div>
+<div class="modal-sheet" id="debtMonthsModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">ماه‌های پرداخت‌نشده</div>
+    <div class="modal-body">
+        <div id="debtStudentName" class="fw-bold mb-3"></div>
+        <div id="debtMonthsList" class="d-flex flex-wrap gap-2"></div>
+        <div class="modal-btn-row mt-3">
+            <button type="button" class="btn-cancel-sm" onclick="closeDebtMonthsModal()">بستن</button>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+function openDebtMonthsModal(trigger) {
+    document.getElementById('debtStudentName').textContent =
+        trigger.getAttribute('data-student-name') || '';
+
+    var list = document.getElementById('debtMonthsList');
+    list.replaceChildren();
+
+    var months = (trigger.getAttribute('data-months') || '').split('|').filter(Boolean);
+    months.forEach(function(month) {
+        var item = document.createElement('span');
+        item.className = 'info-badge';
+        item.textContent = month;
+        list.appendChild(item);
+    });
+
+    document.getElementById('debtMonthsModalOverlay').classList.add('show');
+    document.getElementById('debtMonthsModal').classList.add('show');
+}
+
+function closeDebtMonthsModal() {
+    document.getElementById('debtMonthsModalOverlay').classList.remove('show');
+    document.getElementById('debtMonthsModal').classList.remove('show');
+}
+
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var debtModal = document.getElementById('debtMonthsModal');
-        if (debtModal) {
-            debtModal.addEventListener('show.bs.modal', function(event) {
-                var trigger = event.relatedTarget;
-                if (!trigger) return;
-
-                document.getElementById('debtStudentName').textContent =
-                    trigger.getAttribute('data-student-name') || '';
-
-                var list = document.getElementById('debtMonthsList');
-                list.replaceChildren();
-
-                var months = (trigger.getAttribute('data-months') || '')
-                    .split('|').filter(Boolean);
-
-                months.forEach(function(month) {
-                    var item = document.createElement('span');
-                    item.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
-                    item.textContent = month;
-                    list.appendChild(item);
-                });
-            });
-        }
-
         var countEl = document.getElementById('selectedCount');
         if(countEl){
             function updateCount(){
