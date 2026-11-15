@@ -47,6 +47,12 @@
                     {% for value, label in belt_choices %}<option value="{{ value }}" {% if request.GET.belt == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
                 </select>
                 
+                <select name="status" class="select2-filter" style="min-width:150px;" onchange="this.form.submit()">
+                    <option value="active" {% if request.GET.status == 'active' or not request.GET.status %}selected{% endif %}>هنرجویان فعال</option>
+                    <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>هنرجویان غیرفعال</option>
+                    <option value="all" {% if request.GET.status == 'all' %}selected{% endif %}>همه هنرجویان</option>
+                </select>
+
                 <select name="insurance" class="select2-filter" style="min-width:160px;" onchange="this.form.submit()">
                     <option value="">🛡️ بیمه</option>
                     <option value="active" {% if request.GET.insurance == 'active' %}selected{% endif %}>فعال</option>
