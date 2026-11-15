@@ -10,6 +10,8 @@ urlpatterns = [
     path('<int:pk>/', views.StudentDetailView.as_view(), name='student_detail'),
     path('<int:pk>/edit/', views.StudentEditView.as_view(), name='student_edit'),
     path('<int:pk>/delete/', views.StudentDeleteView.as_view(), name='student_delete'),
+    path('<int:pk>/deactivate/', views.StudentDeactivateView.as_view(), name='student_deactivate'),
+    path('<int:pk>/activate/', views.StudentActivateView.as_view(), name='student_activate'),
 
     path('<int:pk>/insurance/add/', views.InsuranceCreateView.as_view(), name='insurance_add'),
 
