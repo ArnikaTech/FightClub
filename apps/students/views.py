@@ -113,6 +113,57 @@ class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context['clubs'] = managed_clubs_for(self.request.user).filter(is_active=True)
         context['sports'] = Sport.objects.all()
         context['belt_choices'] = Student.BELTS
+
+        # محاسبه ماه‌های پرداخت‌نشده هنرجویان همین صفحه
+        page_students = list(context['students'])
+        student_ids = [student.id for student in page_students]
+        enrollments = Enrollment.objects.filter(
+            student_id__in=student_ids,
+            is_active=True,
+            student__is_active=True,
+        ).values_list('student_id', 'enrolled_at')
+
+        start_indexes = {}
+        for student_id, enrolled_at in enrollments:
+            index = enrolled_at.year * 12 + enrolled_at.month - 1
+            if student_id not in start_indexes or index < start_indexes[student_id]:
+                start_indexes[student_id] = index
+
+        today = jdatetime.date.today()
+        end_index = today.year * 12 + today.month - 1
+        month_ranges = {
+            student_id: [
+                f'{index // 12}/{index % 12 + 1:02d}'
+                for index in range(start_index, end_index + 1)
+            ]
+            for student_id, start_index in start_indexes.items()
+            if start_index <= end_index
+        }
+        all_months = set(month for months in month_ranges.values() for month in months)
+
+        paid_pairs = set()
+        if student_ids and all_months:
+            paid_pairs.update(
+                FeeDue.objects.filter(
+                    student_id__in=student_ids,
+                    month__in=all_months,
+                    is_paid=True,
+                ).values_list('student_id', 'month')
+            )
+            paid_pairs.update(
+                Payment.objects.filter(
+                    student_id__in=student_ids,
+                    month__in=all_months,
+                ).values_list('student_id', 'month')
+            )
+
+        for student in page_students:
+            student.unpaid_months = [
+                month for month in month_ranges.get(student.id, [])
+                if (student.id, month) not in paid_pairs
+            ]
+            student.unpaid_month_count = len(student.unpaid_months)
+
         return context
 
 
