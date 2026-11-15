@@ -114,11 +114,26 @@
 <div class="modal-overlay" id="debtMonthsModalOverlay" onclick="closeDebtMonthsModal()"></div>
 <div class="modal-sheet" id="debtMonthsModal">
     <div class="modal-handle"></div>
-    <div class="modal-title">ماه‌های پرداخت‌نشده</div>
+    <div class="modal-title">جزئیات بدهی شهریه</div>
     <div class="modal-body">
-        <div id="debtStudentName" class="fw-bold mb-3"></div>
-        <div id="debtMonthsList" class="d-flex flex-wrap gap-2"></div>
-        <div class="modal-btn-row mt-3">
+        <div style="padding:4px 0 16px;margin-bottom:16px;border-bottom:1px solid var(--border-glass);">
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:7px;">
+                <i class="bi bi-person-fill"></i> هنرجو
+            </div>
+            <div id="debtStudentName" class="fw-bold" style="font-size:1rem;color:var(--text-primary);"></div>
+        </div>
+
+        <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;">
+                <div class="info-title" style="margin:0;font-size:0.9rem;">
+                    <i class="bi bi-calendar3"></i> ماه‌های پرداخت‌نشده
+                </div>
+                <span id="debtMonthsCount" class="info-badge"></span>
+            </div>
+            <div id="debtMonthsList" class="d-flex flex-wrap gap-2"></div>
+        </div>
+
+        <div class="modal-btn-row" style="border-top:1px solid var(--border-glass);margin-top:18px;padding-top:14px;">
             <button type="button" class="btn-cancel-sm" onclick="closeDebtMonthsModal()">بستن</button>
         </div>
     </div>
@@ -135,6 +150,7 @@ function openDebtMonthsModal(trigger) {
     list.replaceChildren();
 
     var months = (trigger.getAttribute('data-months') || '').split('|').filter(Boolean);
+    document.getElementById('debtMonthsCount').textContent = months.length + ' ماه';
     months.forEach(function(month) {
         var item = document.createElement('span');
         item.className = 'info-badge';
