@@ -3,7 +3,7 @@ from django.views.generic import TemplateView, View, ListView, DetailView, FormV
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.db import models
+from django.db import models, transaction
 
 import jdatetime
 from .forms import StudentCreateForm
@@ -251,23 +251,14 @@ class StudentDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
     def post(self, request, pk):
         student = get_object_or_404(managed_students_for(request.user), pk=pk)
         name = student.user.get_full_name()
-        
-        # چک وابستگی‌ها
-        if student.enrollments.filter(is_active=True).exists():
-            messages.error(request, f'{name} در کلاس‌ها ثبت‌نام شده. ابتدا ثبت‌نام‌ها را حذف کنید.')
-            return redirect('students:student_detail', pk=pk)
-        
-        if student.attendances.exists():
-            messages.error(request, f'{name} حضور و غیاب ثبت شده دارد. ابتدا حضور و غیاب‌ها را حذف کنید.')
-            return redirect('students:student_detail', pk=pk)
-        
-        if student.payments.exists():
-            messages.error(request, f'{name} پرداختی ثبت شده دارد. ابتدا پرداختی‌ها را حذف کنید.')
-            return redirect('students:student_detail', pk=pk)
-        
-        # حذف
-        student.delete()
-        messages.success(request, f'{name} با موفقیت حذف شد')
+
+        # حذف یکپارچه تمام سوابق وابسته به هنرجو
+        with transaction.atomic():
+            student.transactions.all().delete()
+            student.payments.all().delete()
+            student.delete()
+
+        messages.success(request, f'{name} و تمام سوابق وابسته با موفقیت حذف شد')
         return redirect('students:student_list')
 
 
