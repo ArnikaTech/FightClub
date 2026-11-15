@@ -12,7 +12,7 @@
     <main class="dashboard-main">
         {% include 'partials/_notif_bar.html' %}
         
-        <div class="page-header animate__animated animate__fadeIn">
+        <div class="page-header animate__animated animate__fadeIn" style="padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid var(--border-glass);">
             <div>
                 <h1 class="page-title">هنرجویان <span>{{ students.count }} نفر</span></h1>
                 <div class="page-subtitle">{{ today|jformat:"%Y/%m/%d" }}</div>
