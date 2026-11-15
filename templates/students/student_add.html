@@ -184,5 +184,25 @@ toggleBtn.addEventListener('click', function(e){
         this.style.color = '';
     }
 });
+
+// نمایش شیفت‌های متعلق به باشگاه انتخاب‌شده
+const clubSelect = document.getElementById('id_club');
+const shiftSelect = document.getElementById('id_shift');
+
+function filterStudentShifts() {
+    const selectedClub = clubSelect.value;
+    Array.from(shiftSelect.options).forEach(option => {
+        if (!option.value) return;
+        const matchesClub = !selectedClub || option.dataset.clubId === selectedClub;
+        option.hidden = !matchesClub;
+        option.disabled = !matchesClub;
+        if (!matchesClub && option.selected) {
+            shiftSelect.value = '';
+        }
+    });
+}
+
+clubSelect.addEventListener('change', filterStudentShifts);
+filterStudentShifts();
 </script>
 {% endblock %}
