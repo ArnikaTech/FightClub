@@ -91,7 +91,7 @@
     <div class="modal-handle"></div><div class="modal-title">تایید لغو ثبت‌نام</div>
     <div class="modal-body text-center">
         <i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;color:var(--primary);"></i>
-        <p class="mt-3">آیا از لغو ثبت‌نام "<span id="deleteEnrollmentName"></span>" مطمئن هستید؟</p>
+        <p class="mt-3">ثبت‌نام «<span id="deleteEnrollmentName"></span>» غیرفعال می‌شود و سوابق حضور و غیاب باقی می‌مانند. ادامه می‌دهید؟</p>
         <div class="modal-btn-row mt-3"><button type="button" class="btn-cancel-sm" onclick="closeDeleteEnrollmentModal()">انصراف</button>
             <form id="deleteEnrollmentForm" method="post" style="flex:1;">{% csrf_token %}<button class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> لغو ثبت‌نام</button></form>
         </div>
