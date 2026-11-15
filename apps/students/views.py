@@ -110,14 +110,18 @@ class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 
 class StudentActivateView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self): return can_manage_students(self.request.user)
+    def test_func(self):
+        return can_manage_students(self.request.user)
 
     def post(self, request, pk):
         student = get_object_or_404(managed_students_for(request.user), pk=pk)
-        student.is_active = True
-        student.save()
-        messages.success(request, f'{student.user.get_full_name()} فعال شد')
-        return redirect('students:student_list')
+        if not student.is_active:
+            student.is_active = True
+            student.save(update_fields=['is_active'])
+            messages.success(request, f'عضویت {student.user.get_full_name()} دوباره فعال شد')
+        else:
+            messages.info(request, 'این هنرجو در حال حاضر فعال است')
+        return redirect('students:student_detail', pk=pk)
 
 
 class StudentDetailView(LoginRequiredMixin, DetailView):
@@ -250,16 +254,49 @@ class StudentDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def post(self, request, pk):
         student = get_object_or_404(managed_students_for(request.user), pk=pk)
-        name = student.user.get_full_name()
+        user = student.user
+        name = user.get_full_name()
 
-        # حذف یکپارچه تمام سوابق وابسته به هنرجو
+        # حذف دائمی فقط برای رکورد اشتباه و فاقد سابقه عملیاتی مجاز است.
+        has_financial_history = (
+            student.payments.exists()
+            or student.transactions.exists()
+            or student.fee_dues.exists()
+        )
+        has_attendance_history = student.attendances.exists()
+        has_messages = user.sent_messages.exists() or user.received_messages.exists()
+        has_other_roles = (
+            user.is_super_manager or user.is_club_manager or user.is_instructor
+        )
+
+        if has_financial_history or has_attendance_history or has_messages or has_other_roles:
+            messages.error(
+                request,
+                'این هنرجو سابقه مالی، حضور و غیاب، پیام یا نقش کاربری دیگری دارد؛ '
+                'حذف دائمی مجاز نیست. برای توقف عضویت از گزینه غیرفعال‌سازی استفاده کنید.'
+            )
+            return redirect('students:student_detail', pk=pk)
+
         with transaction.atomic():
-            student.transactions.all().delete()
-            student.payments.all().delete()
             student.delete()
 
-        messages.success(request, f'{name} و تمام سوابق وابسته با موفقیت حذف شد')
+        messages.success(request, f'رکورد اشتباه هنرجو «{name}» حذف شد')
         return redirect('students:student_list')
+
+
+class StudentDeactivateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return can_manage_students(self.request.user)
+
+    def post(self, request, pk):
+        student = get_object_or_404(managed_students_for(request.user), pk=pk)
+        if student.is_active:
+            student.is_active = False
+            student.save(update_fields=['is_active'])
+            messages.success(request, f'عضویت {student.user.get_full_name()} غیرفعال شد')
+        else:
+            messages.info(request, 'این هنرجو قبلاً غیرفعال شده است')
+        return redirect('students:student_detail', pk=pk)
 
 
 class StudentAvatarView(LoginRequiredMixin, View):
@@ -398,7 +435,7 @@ class AttendanceView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
             
             # فقط هنرجویانی که قبل از تاریخ انتخاب شده ثبت‌نام کردن
             enrollments = Enrollment.objects.filter(
-                shift=shift, is_active=True,
+                shift=shift, is_active=True, student__is_active=True,
                 enrolled_at__lte=today
             )
 
@@ -453,7 +490,7 @@ class AttendanceSaveView(LoginRequiredMixin, UserPassesTestMixin, View):
         else:
             date = jdatetime.date.today()
         
-        enrollments = Enrollment.objects.filter(shift=shift, is_active=True, student__in=managed_students_for(request.user))
+        enrollments = Enrollment.objects.filter(shift=shift, is_active=True, student__is_active=True, student__in=managed_students_for(request.user))
         
         for enrollment in enrollments:
             status = 'present' if enrollment.student_id in student_ids else 'absent'
@@ -839,7 +876,7 @@ class EnrollmentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return self.request.user.is_super_manager or self.request.user.is_club_manager
     
     def get_queryset(self):
-        return Enrollment.objects.filter(student__in=managed_students_for(self.request.user), is_active=True).select_related(
+        return Enrollment.objects.filter(student__in=managed_students_for(self.request.user), student__is_active=True, is_active=True).select_related(
             'student__user', 'student__club', 'shift__class_group__sport', 'shift__class_group__club'
         )
 
@@ -932,20 +969,24 @@ class EnrollmentEditView(LoginRequiredMixin, UserPassesTestMixin, View):
 class EnrollmentDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
         return self.request.user.is_super_manager or self.request.user.is_club_manager
-    
+
     def post(self, request, pk):
-        enrollment = get_object_or_404(Enrollment, pk=pk)
+        enrollment = get_object_or_404(
+            Enrollment,
+            pk=pk,
+            student__in=managed_students_for(request.user),
+            shift__in=visible_shifts_for(request.user),
+        )
         name = enrollment.student.user.get_full_name()
-        
-        # اول attendanceهای مرتبط با این شیفت و هنرجو رو پاک کن
-        from .models import Attendance
-        Attendance.objects.filter(
-            student=enrollment.student,
-            shift=enrollment.shift
-        ).delete()
-        
-        # بعد enrollment رو پاک کن
-        enrollment.delete()
-        
-        messages.success(request, f'ثبت‌نام {name} و حضور و غیاب‌های مرتبط حذف شد')
+        shift_name = enrollment.shift.name
+
+        if enrollment.is_active:
+            enrollment.is_active = False
+            enrollment.save(update_fields=['is_active'])
+            messages.success(
+                request,
+                f'ثبت‌نام {name} در شیفت «{shift_name}» لغو شد؛ سوابق حضور و غیاب حفظ شدند.'
+            )
+        else:
+            messages.info(request, 'این ثبت‌نام قبلاً لغو شده است')
         return redirect('students:enrollment_list')
