@@ -360,6 +360,10 @@ class DebtorListView(LoginRequiredMixin, ListView):
         
         # نمایش تعداد واقعی کل بدهکاران (نه فقط همین صفحه)
         context['total_debtors'] = self.object_list.count() if self.object_list else 0
+        # برای مودال جزئیات بدهی، ماه انتخاب‌شده به‌عنوان ماه پرداخت‌نشده نمایش داده می‌شود.
+        for student in context['debtors']:
+            student.unpaid_months = [self.selected_month]
+            student.unpaid_month_count = 1
         # توجه: در ListView، self.object_list همان کوئری فیلتر شده است، اما اگر paginate_by فعال باشد،
         # تعداد واقعی کل آیتم‌ها در context['paginator'].count موجود است.
         
