@@ -225,6 +225,11 @@ class StudentCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     def test_func(self):
         user = self.request.user
         return user.is_super_manager or user.is_club_manager
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
     
     def form_valid(self, form):
         student = form.save()
