@@ -67,8 +67,9 @@ class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     
     def get_queryset(self):
         user = self.request.user
-        if user.is_super_manager:
-            qs = Student.objects.filter(is_active=True).order_by('user__first_name', 'user__last_name')
+        qs = managed_students_for(user).filter(is_active=True).order_by(
+            'user__first_name', 'user__last_name'
+        )
         
         # فیلترها
         club_id = self.request.GET.get('club')
