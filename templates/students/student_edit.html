@@ -22,7 +22,7 @@
             </a>
         </div>
         
-        <form method="post">
+        <form id="studentEditForm" method="post">
             {% csrf_token %}
             
             <div class="form-section animate__animated animate__fadeInUp">
@@ -151,6 +151,18 @@
         </form>
     </main>
     
+    <div class="modal-overlay" id="membershipDeactivateOverlay" onclick="closeMembershipDeactivateModal()"></div>
+    <div class="modal-sheet" id="membershipDeactivateModal">
+        <div class="modal-handle"></div><div class="modal-title">تأیید غیرفعال‌سازی عضویت</div>
+        <div class="modal-body text-center">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size:2.5rem;color:var(--danger);"></i>
+            <p class="mt-3">عضویت انتخاب‌شده غیرفعال شود؟ سوابق هنرجو حذف نخواهد شد.</p>
+            <div class="modal-btn-row mt-3">
+                <button type="button" class="btn-cancel-sm" onclick="closeMembershipDeactivateModal()">انصراف</button>
+                <button type="button" class="btn-submit-sm" onclick="confirmMembershipDeactivation()">تأیید</button>
+            </div>
+        </div>
+    </div>
     {% include 'partials/_bottom_nav.html' %}
     {% include 'partials/_bottom_sheet.html' %}
     {% include 'partials/_toast.html' %}
@@ -159,7 +171,25 @@
 
 {% block extra_js %}
 <script>
+    let membershipDeactivationConfirmed = false;
+    function closeMembershipDeactivateModal() {
+        document.getElementById('membershipDeactivateOverlay').classList.remove('show');
+        document.getElementById('membershipDeactivateModal').classList.remove('show');
+    }
+    function confirmMembershipDeactivation() {
+        membershipDeactivationConfirmed = true;
+        closeMembershipDeactivateModal();
+        document.getElementById('studentEditForm').submit();
+    }
     document.addEventListener('DOMContentLoaded', function() {
+        const editForm = document.getElementById('studentEditForm');
+        editForm.addEventListener('submit', function(event) {
+            if (editForm.querySelectorAll('input[name="deactivate_memberships"]:checked').length && !membershipDeactivationConfirmed) {
+                event.preventDefault();
+                document.getElementById('membershipDeactivateOverlay').classList.add('show');
+                document.getElementById('membershipDeactivateModal').classList.add('show');
+            }
+        });
         {% if messages %}
         {% for m in messages %}
         if (typeof showToast === 'function') {
