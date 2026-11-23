@@ -203,7 +203,7 @@ class StudentEditView(LoginRequiredMixin, UserPassesTestMixin, View):
         student = get_object_or_404(managed_students_for(request.user), pk=pk)
         club_id = request.GET.get('club', student.club_id)
         clubs = managed_clubs_for(request.user).filter(is_active=True)
-        selected_club = clubs.filter(pk=club_id).first() or student.club
+        selected_club = clubs.filter(pk=club_id).first() or clubs.filter(student_memberships__student=student, student_memberships__is_active=True).first()
         
         shifts = visible_shifts_for(request.user).filter(is_active=True, class_group__is_active=True).select_related('class_group')
         sports = Sport.objects.all()
@@ -1056,7 +1056,14 @@ class EnrollmentEditView(LoginRequiredMixin, UserPassesTestMixin, View):
         
         if shift_id:
             if str(enrollment.shift_id) != str(shift_id):
-                get_object_or_404(visible_shifts_for(request.user), pk=shift_id)
+                target_shift = get_object_or_404(visible_shifts_for(request.user), pk=shift_id)
+                if not StudentClub.objects.filter(
+                    student=enrollment.student,
+                    club=target_shift.class_group.club,
+                    is_active=True,
+                ).exists():
+                    messages.error(request, 'این هنرجو در باشگاه شیفت انتخاب‌شده عضویت فعال ندارد')
+                    return redirect('students:enrollment_list')
                 exists = Enrollment.objects.filter(student=enrollment.student, shift_id=shift_id).exclude(pk=pk).exists()
                 if exists:
                     messages.error(request, 'این هنرجو قبلاً در این شیفت ثبت‌نام شده')
