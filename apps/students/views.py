@@ -193,6 +193,14 @@ class StudentDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['today'] = jdatetime.date.today()
+        if self.request.user.is_super_manager or self.request.user.is_club_manager or self.request.user.is_instructor:
+            context['club_memberships'] = self.object.club_memberships.filter(
+                club__in=managed_clubs_for(self.request.user)
+            ).select_related('club', 'club__city', 'club__province')
+        else:
+            context['club_memberships'] = self.object.club_memberships.select_related(
+                'club', 'club__city', 'club__province'
+            ).all()
         return context
 
 
