@@ -3,7 +3,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
-def attach_existing_clubs_to_default_organization(apps, schema_editor):
+def attach_existing_clubs_to_isolated_organizations(apps, schema_editor):
     Organization = apps.get_model('clubs', 'Organization')
     Club = apps.get_model('clubs', 'Club')
 
@@ -53,7 +53,7 @@ class Migration(migrations.Migration):
                 verbose_name='مجموعه',
             ),
         ),
-        migrations.RunPython(attach_existing_clubs_to_default_organization, migrations.RunPython.noop),
+        migrations.RunPython(attach_existing_clubs_to_isolated_organizations, migrations.RunPython.noop),
         migrations.AlterField(
             model_name='club',
             name='organization',
