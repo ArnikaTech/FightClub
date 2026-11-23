@@ -190,14 +190,14 @@
             {% if student.is_active %}
             <form id="deactivateStudentForm" method="post" action="{% url 'students:student_deactivate' student.pk %}">
                 {% csrf_token %}
-                <button type="button" class="profile-action-btn" style="color:var(--danger);" onclick="openDeactivateStudentModal()">
+                <button type="button" class="profile-action-btn" style="width:100%;border:0;text-align:right;font:inherit;cursor:pointer;color:var(--danger);" onclick="openDeactivateStudentModal()">
                     <i class="bi bi-person-dash"></i><span>غیرفعال‌سازی عضویت</span><i class="bi bi-chevron-left action-arrow"></i>
                 </button>
             </form>
             {% else %}
             <form method="post" action="{% url 'students:student_activate' student.pk %}">
                 {% csrf_token %}
-                <button type="submit" class="profile-action-btn" style="color:var(--success);">
+                <button type="submit" class="profile-action-btn" style="width:100%;border:0;text-align:right;font:inherit;cursor:pointer;color:var(--success);">
                     <i class="bi bi-person-check"></i><span>فعال‌سازی مجدد عضویت</span><i class="bi bi-chevron-left action-arrow"></i>
                 </button>
             </form>
@@ -306,7 +306,7 @@
         <p class="mt-3">عضویت این هنرجو غیرفعال شود؟ اطلاعات و سوابق او حفظ خواهند شد.</p>
         <div class="modal-btn-row mt-3">
             <button type="button" class="btn-cancel-sm" onclick="closeDeactivateStudentModal()">انصراف</button>
-            <button type="button" class="btn-submit-sm" onclick="document.getElementById('deactivateStudentForm').submit()">تأیید غیرفعال‌سازی</button>
+            <button type="button" class="btn-submit-sm" style="width:100%;" onclick="document.getElementById('deactivateStudentForm').submit()">تأیید غیرفعال‌سازی</button>
         </div>
     </div>
 </div>
