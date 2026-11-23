@@ -25,7 +25,25 @@ class City(models.Model):
         return f"{self.name} - {self.province.name}"
 
 
+class Organization(models.Model):
+    """Tenant / مالک مستقل در معماری چندمستاجری."""
+
+    name = models.CharField('نام مجموعه', max_length=200)
+    slug = models.SlugField('شناسه یکتا', max_length=100, unique=True)
+    is_active = models.BooleanField('فعال', default=True)
+    created_at = models.DateTimeField('تاریخ ایجاد', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'مجموعه'
+        verbose_name_plural = 'مجموعه‌ها'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class Club(models.Model):
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='branches', verbose_name='مجموعه')
     name = models.CharField('نام باشگاه', max_length=200)
     sports = models.ManyToManyField('Sport', related_name='clubs', verbose_name='رشته‌های ورزشی', blank=True)
     province = models.ForeignKey(Province, on_delete=models.PROTECT, related_name='clubs', verbose_name='استان')
