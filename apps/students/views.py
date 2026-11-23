@@ -203,9 +203,9 @@ class StudentEditView(LoginRequiredMixin, UserPassesTestMixin, View):
     def get(self, request, pk):
         student = get_object_or_404(managed_students_for(request.user), pk=pk)
         clubs = managed_clubs_for(request.user).filter(is_active=True).select_related('city', 'province')
-        memberships = student.club_memberships.select_related(
-            'club', 'club__city', 'club__province'
-        ).order_by('-is_active', 'club__name')
+        memberships = student.club_memberships.filter(
+            club__in=clubs
+        ).select_related('club', 'club__city', 'club__province').order_by('-is_active', 'club__name')
         enrolled_club_ids = set(
             Enrollment.objects.filter(
                 student=student, is_active=True
@@ -249,8 +249,11 @@ class StudentEditView(LoginRequiredMixin, UserPassesTestMixin, View):
             messages.error(request, 'اطلاعات عضویت باشگاه نامعتبر است')
             return redirect('students:student_edit', pk=pk)
 
-        if not add_ids.issubset(allowed_club_ids):
-            messages.error(request, 'دسترسی افزودن هنرجو به یکی از باشگاه‌های انتخاب‌شده را ندارید')
+        active_allowed_club_ids = set(
+            allowed_clubs.filter(is_active=True).values_list('pk', flat=True)
+        )
+        if not add_ids.issubset(active_allowed_club_ids):
+            messages.error(request, 'فقط می‌توانید هنرجو را به باشگاه‌های فعال و مجاز خود اضافه کنید')
             return redirect('students:student_edit', pk=pk)
 
         memberships = {
@@ -259,6 +262,9 @@ class StudentEditView(LoginRequiredMixin, UserPassesTestMixin, View):
         }
         if not deactivate_ids.issubset(set(memberships)):
             messages.error(request, 'یکی از عضویت‌های انتخاب‌شده معتبر نیست')
+            return redirect('students:student_edit', pk=pk)
+        if any(memberships[mid].club_id not in allowed_club_ids for mid in deactivate_ids):
+            messages.error(request, 'اجازه مدیریت یکی از عضویت‌های انتخاب‌شده را ندارید')
             return redirect('students:student_edit', pk=pk)
 
         requested_deactivations = [
@@ -286,6 +292,17 @@ class StudentEditView(LoginRequiredMixin, UserPassesTestMixin, View):
                     f'عضویت باشگاه «{membership.club.name}» به دلیل وجود ثبت‌نام فعال قابل غیرفعال‌سازی نیست؛ '
                     'ابتدا ثبت‌نام فعال آن باشگاه را تعیین تکلیف کنید.'
                 )
+                return redirect('students:student_edit', pk=pk)
+
+        new_shift = None
+        new_shift_id = request.POST.get('new_shift')
+        if new_shift_id:
+            new_shift = get_object_or_404(
+                visible_shifts_for(request.user), pk=new_shift_id,
+                is_active=True, class_group__is_active=True
+            )
+            if new_shift.class_group.club_id not in remaining_active_ids:
+                messages.error(request, 'برای ثبت‌نام در این شیفت ابتدا باید عضویت باشگاه مربوطه فعال باشد')
                 return redirect('students:student_edit', pk=pk)
 
         birth_date_str = request.POST.get('birth_date', '').strip()
@@ -346,20 +363,10 @@ class StudentEditView(LoginRequiredMixin, UserPassesTestMixin, View):
             ):
                 student.club = active_membership.club
 
-            new_shift_id = request.POST.get('new_shift')
-            if new_shift_id:
-                shift = get_object_or_404(
-                    visible_shifts_for(request.user), pk=new_shift_id,
-                    is_active=True, class_group__is_active=True
-                )
-                if not student.club_memberships.filter(
-                    club_id=shift.class_group.club_id, is_active=True
-                ).exists():
-                    messages.error(request, 'برای ثبت‌نام در این شیفت ابتدا باید عضویت باشگاه مربوطه فعال باشد')
-                    return redirect('students:student_edit', pk=pk)
+            if new_shift:
                 Enrollment.objects.get_or_create(
                     student=student,
-                    shift=shift,
+                    shift=new_shift,
                     defaults={'enrolled_at': jdatetime.date.today()},
                 )
 
