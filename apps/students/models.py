@@ -268,3 +268,35 @@ class Enrollment(models.Model):
     
     def __str__(self):
         return f"{self.student.user.get_full_name()} در {self.shift}"
+
+class StudentClub(models.Model):
+    """ارتباط پروفایل هنرجو با هر باشگاه؛ مستقل از ثبت‌نام در شیفت."""
+
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name='club_memberships',
+        verbose_name='هنرجو',
+    )
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.PROTECT,
+        related_name='student_memberships',
+        verbose_name='باشگاه',
+    )
+    is_active = models.BooleanField('فعال', default=True)
+    joined_at = jmodels.jDateField('تاریخ عضویت', default=jdatetime.date.today)
+
+    class Meta:
+        verbose_name = 'عضویت هنرجو در باشگاه'
+        verbose_name_plural = 'عضویت هنرجویان در باشگاه‌ها'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['student', 'club'],
+                name='unique_student_club_membership',
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.student} - {self.club}'
+
