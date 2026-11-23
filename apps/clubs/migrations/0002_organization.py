@@ -7,11 +7,16 @@ def attach_existing_clubs_to_default_organization(apps, schema_editor):
     Organization = apps.get_model('clubs', 'Organization')
     Club = apps.get_model('clubs', 'Club')
 
-    organization, _ = Organization.objects.get_or_create(
-        slug='default',
-        defaults={'name': 'مجموعه پیش‌فرض'},
-    )
-    Club.objects.filter(organization__isnull=True).update(organization=organization)
+    # Do not assume that legacy clubs share one owner. Isolate each existing
+    # club by default; branches can be grouped into one organization explicitly
+    # after ownership is verified.
+    for club in Club.objects.filter(organization__isnull=True).iterator():
+        organization, _ = Organization.objects.get_or_create(
+            slug=f'legacy-club-{club.pk}',
+            defaults={'name': club.name},
+        )
+        club.organization = organization
+        club.save(update_fields=['organization'])
 
 
 class Migration(migrations.Migration):
