@@ -139,8 +139,25 @@ class StudentCreateForm(forms.Form):
     
     def clean_national_code(self):
         national_code = self.cleaned_data['national_code']
-        if User.objects.filter(national_code=national_code).exists():
-            raise forms.ValidationError('این کد ملی قبلاً ثبت شده است')
+        existing_user = User.objects.filter(national_code=national_code).first()
+        if existing_user:
+            # نسخه‌های قبلی حذف هنرجو، حساب کاربری را باقی می‌گذاشتند.
+            # فقط کد ملی حسابِ یتیم و فاقد هرگونه نقش/ارتباط عملیاتی آزاد می‌شود.
+            has_student = hasattr(existing_user, 'student_profile')
+            has_other_roles = (
+                existing_user.is_super_manager
+                or existing_user.is_club_manager
+                or existing_user.is_instructor
+            )
+            has_club_memberships = existing_user.club_memberships.exists()
+            has_messages = (
+                existing_user.sent_messages.exists()
+                or existing_user.received_messages.exists()
+            )
+            if has_student or has_other_roles or has_club_memberships or has_messages:
+                raise forms.ValidationError('این کد ملی قبلاً ثبت شده است')
+            existing_user.national_code = None
+            existing_user.save(update_fields=['national_code'])
         return national_code
     
     def clean_birth_date(self):
