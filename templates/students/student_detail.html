@@ -31,6 +31,7 @@
                 {{ student.user.get_full_name }}
             </div>
             <div class="profile-role">{{ student.get_current_belt_display }}</div>
+            <div class="mt-2">{% if student.is_active %}<span class="info-badge coach">هنرجو فعال</span>{% else %}<span class="info-badge" style="background:rgba(255,77,46,.12);color:var(--danger);">هنرجو غیرفعال</span>{% endif %}</div>
             <div class="profile-phone"><i class="bi bi-phone"></i> {{ student.user.phone }}</div>
         </div>
         
@@ -187,9 +188,9 @@
             <button onclick="openContactModal()" class="profile-action-btn"><i class="bi bi-person-plus"></i><span>ثبت شماره والدین</span><i class="bi bi-chevron-left action-arrow"></i></button>
             <a href="{% url 'students:student_edit' student.pk %}" class="profile-action-btn"><i class="bi bi-pencil"></i><span>ویرایش</span><i class="bi bi-chevron-left action-arrow"></i></a>
             {% if student.is_active %}
-            <form method="post" action="{% url 'students:student_deactivate' student.pk %}">
+            <form id="deactivateStudentForm" method="post" action="{% url 'students:student_deactivate' student.pk %}">
                 {% csrf_token %}
-                <button type="submit" class="profile-action-btn" style="color:var(--danger);" onclick="return confirm('عضویت این هنرجو غیرفعال شود؟ سوابق و اطلاعات او حفظ خواهد شد.');">
+                <button type="button" class="profile-action-btn" style="color:var(--danger);" onclick="openDeactivateStudentModal()">
                     <i class="bi bi-person-dash"></i><span>غیرفعال‌سازی عضویت</span><i class="bi bi-chevron-left action-arrow"></i>
                 </button>
             </form>
@@ -297,6 +298,19 @@
 </div>
 </div>
 
+<div class="modal-overlay" id="deactivateStudentModalOverlay" onclick="closeDeactivateStudentModal()"></div>
+<div class="modal-sheet" id="deactivateStudentModal">
+    <div class="modal-handle"></div><div class="modal-title">تأیید غیرفعال‌سازی</div>
+    <div class="modal-body text-center">
+        <i class="bi bi-person-dash" style="font-size:3rem;color:var(--danger);"></i>
+        <p class="mt-3">عضویت این هنرجو غیرفعال شود؟ اطلاعات و سوابق او حفظ خواهند شد.</p>
+        <div class="modal-btn-row mt-3">
+            <button type="button" class="btn-cancel-sm" onclick="closeDeactivateStudentModal()">انصراف</button>
+            <button type="button" class="btn-submit-sm" onclick="document.getElementById('deactivateStudentForm').submit()">تأیید غیرفعال‌سازی</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="deleteStudentModalOverlay" onclick="closeDeleteStudentModal()"></div>
 <div class="modal-sheet" id="deleteStudentModal"><div class="modal-handle"></div><div class="modal-title">تایید حذف</div>
 <div class="modal-body text-center">
@@ -358,6 +372,8 @@
     function closeEditContactModal(){document.getElementById('editContactModalOverlay').classList.remove('show');document.getElementById('editContactModal').classList.remove('show');}
     function openDeleteContactModal(pk,name){document.getElementById('deleteContactName').textContent=name;document.getElementById('deleteContactForm').action='/students/contact/'+pk+'/delete/';document.getElementById('deleteContactModalOverlay').classList.add('show');document.getElementById('deleteContactModal').classList.add('show');}
     function closeDeleteContactModal(){document.getElementById('deleteContactModalOverlay').classList.remove('show');document.getElementById('deleteContactModal').classList.remove('show');}
+    function openDeactivateStudentModal(){document.getElementById('deactivateStudentModalOverlay').classList.add('show');document.getElementById('deactivateStudentModal').classList.add('show');}
+    function closeDeactivateStudentModal(){document.getElementById('deactivateStudentModalOverlay').classList.remove('show');document.getElementById('deactivateStudentModal').classList.remove('show');}
     function openDeleteStudentModal(){document.getElementById('deleteStudentModalOverlay').classList.add('show');document.getElementById('deleteStudentModal').classList.add('show');}
     function closeDeleteStudentModal(){document.getElementById('deleteStudentModalOverlay').classList.remove('show');document.getElementById('deleteStudentModal').classList.remove('show');}
     
