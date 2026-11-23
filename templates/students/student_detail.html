@@ -91,7 +91,7 @@
                 <a href="{% url 'students:student_edit' student.pk %}" class="btn-call" style="float:left;" title="مدیریت عضویت‌ها"><i class="bi bi-pencil"></i></a>
                 {% endif %}
             </div>
-            {% for membership in student.club_memberships.all %}
+            {% for membership in club_memberships %}
             <div class="info-row">
                 <span class="info-label">{{ membership.club.name }}</span>
                 <span class="info-value">
