@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django_jalali.forms import jDateField
 from apps.clubs.models import Club, Sport
-from .models import Student, Shift, Enrollment
+from .models import Student, StudentClub, Shift, Enrollment
 import jdatetime
 
 User = get_user_model()
@@ -210,6 +210,12 @@ class StudentCreateForm(forms.Form):
             student.joined_at = joined_at
             student.save()
         
+        StudentClub.objects.get_or_create(
+            student=student,
+            club=self.cleaned_data['club'],
+            defaults={'is_active': True, 'joined_at': joined_at or jdatetime.date.today()},
+        )
+
         # ثبت‌نام در شیفت
         shift = self.cleaned_data.get('shift')
         if shift:
