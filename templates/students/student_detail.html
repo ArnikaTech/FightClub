@@ -85,6 +85,27 @@
         </div>
         
         <div class="info-card animate__animated animate__fadeInUp">
+            <div class="info-title">
+                <i class="bi bi-building"></i> عضویت در باشگاه‌ها
+                {% if user.is_super_manager or user.is_club_manager %}
+                <a href="{% url 'students:student_edit' student.pk %}" class="btn-call" style="float:left;" title="مدیریت عضویت‌ها"><i class="bi bi-pencil"></i></a>
+                {% endif %}
+            </div>
+            {% for membership in student.club_memberships.all %}
+            <div class="info-row">
+                <span class="info-label">{{ membership.club.name }}</span>
+                <span class="info-value">
+                    {{ membership.club.city.name|default:"-" }}، {{ membership.club.province.name|default:"-" }}
+                    · {{ membership.joined_at|jformat:"%Y/%m/%d" }}
+                    {% if membership.is_active %}<span class="info-badge coach">فعال</span>{% else %}<span class="info-badge">غیرفعال</span>{% endif %}
+                </span>
+            </div>
+            {% empty %}
+            <div class="text-center py-3 text-muted">عضویت باشگاهی ثبت نشده است</div>
+            {% endfor %}
+        </div>
+
+        <div class="info-card animate__animated animate__fadeInUp">
             <div class="info-title"><i class="bi bi-cash-coin"></i> تاریخچه شهریه</div>
             <div style="max-height:200px;overflow-y:auto;">
                 {% for due in student.fee_dues.all %}
