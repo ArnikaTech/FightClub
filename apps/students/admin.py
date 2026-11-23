@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Student, StudentContact, Insurance, Attendance, ClassGroup, Shift, Enrollment
+from .models import Student, StudentClub, StudentContact, Insurance, Attendance, ClassGroup, Shift, Enrollment
 
 
 class ContactInline(admin.TabularInline):
@@ -17,6 +17,14 @@ class StudentAdmin(admin.ModelAdmin):
     search_fields = ['student_code', 'user__first_name', 'user__last_name']
     autocomplete_fields = ['user', 'club', 'sport']
     inlines = [ContactInline, InsuranceInline]
+
+
+@admin.register(StudentClub)
+class StudentClubAdmin(admin.ModelAdmin):
+    list_display = ['student', 'club', 'is_active', 'joined_at']
+    list_filter = ['club', 'is_active']
+    search_fields = ['student__student_code', 'student__user__first_name', 'student__user__last_name', 'club__name']
+    autocomplete_fields = ['student', 'club']
 
 
 @admin.register(Attendance)
