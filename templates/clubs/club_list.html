@@ -41,6 +41,18 @@
         <form method="post" id="clubForm" action="{% url 'clubs:club_add' %}">
             {% csrf_token %}
             <div class="modal-form-group"><label class="form-label-sm">نام باشگاه *</label><input type="text" name="name" id="clubName" class="input-glass" required></div>
+            <div class="modal-form-group">
+                <label class="form-label-sm">مجموعه *</label>
+                <select name="organization" id="clubOrganization" class="input-glass" onchange="toggleNewOrganization()">
+                    <option value="">-- انتخاب مجموعه موجود --</option>
+                    {% for organization in organizations %}<option value="{{ organization.pk }}">{{ organization.name }}</option>{% endfor %}
+                </select>
+                <small class="text-muted">برای ایجاد شعبه دوم یا بعدی، همان مجموعه شعبه اول را انتخاب کنید.</small>
+            </div>
+            <div class="modal-form-group">
+                <label class="form-label-sm">یا ایجاد مجموعه جدید</label>
+                <input type="text" name="organization_name" id="clubOrganizationName" class="input-glass" placeholder="نام مجموعه جدید" oninput="toggleNewOrganization()">
+            </div>
             <div class="modal-form-group"><label class="form-label-sm">استان *</label><select name="province" id="clubProvince" class="input-glass" required onchange="loadCities()"><option value="">--</option>{% for p in provinces %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}</select></div>
             <div class="modal-form-group"><label class="form-label-sm">شهر *</label><select name="city" id="clubCity" class="input-glass" required><option value="">--</option></select></div>
             <div class="modal-form-group"><label class="form-label-sm">تلفن</label><input type="text" name="phone" id="clubPhone" class="input-glass"></div>
@@ -85,9 +97,28 @@
 
 {% block extra_js %}
 <script>
-    function openClubModal(){document.getElementById('clubModalTitle').textContent='باشگاه جدید';document.getElementById('clubForm').action='{% url "clubs:club_add" %}';document.getElementById('clubName').value='';document.getElementById('clubPhone').value='';document.getElementById('clubAddress').value='';document.getElementById('clubProvince').value='';document.getElementById('clubCity').innerHTML='<option value="">--</option>';document.getElementById('clubModalOverlay').classList.add('show');document.getElementById('clubModal').classList.add('show');}
+    function toggleNewOrganization(){
+        const name=document.getElementById('clubOrganizationName').value.trim();
+        const select=document.getElementById('clubOrganization');
+        select.disabled=!!name;
+        if(name) select.value='';
+    }
+    function openClubModal(){
+        document.getElementById('clubModalTitle').textContent='شعبه جدید';
+        document.getElementById('clubForm').action='{% url "clubs:club_add" %}';
+        document.getElementById('clubName').value='';
+        document.getElementById('clubPhone').value='';
+        document.getElementById('clubAddress').value='';
+        document.getElementById('clubOrganization').disabled=false;
+        document.getElementById('clubOrganization').value='';
+        document.getElementById('clubOrganizationName').value='';
+        document.getElementById('clubProvince').value='';
+        document.getElementById('clubCity').innerHTML='<option value="">--</option>';
+        document.getElementById('clubModalOverlay').classList.add('show');
+        document.getElementById('clubModal').classList.add('show');
+    }
     function closeClubModal(){document.getElementById('clubModalOverlay').classList.remove('show');document.getElementById('clubModal').classList.remove('show');}
-    function editClub(id,name,phone,address,provinceId,cityId){document.getElementById('clubModalTitle').textContent='ویرایش باشگاه';document.getElementById('clubForm').action='/clubs/'+id+'/edit/';document.getElementById('clubName').value=name;document.getElementById('clubPhone').value=phone;document.getElementById('clubAddress').value=address;document.getElementById('clubProvince').value=provinceId;loadCities(provinceId,cityId);document.getElementById('clubModalOverlay').classList.add('show');document.getElementById('clubModal').classList.add('show');}
+    function editClub(id,name,phone,address,provinceId,cityId){document.getElementById('clubModalTitle').textContent='ویرایش باشگاه';document.getElementById('clubOrganization').disabled=true;document.getElementById('clubOrganizationName').disabled=true;document.getElementById('clubForm').action='/clubs/'+id+'/edit/';document.getElementById('clubName').value=name;document.getElementById('clubPhone').value=phone;document.getElementById('clubAddress').value=address;document.getElementById('clubProvince').value=provinceId;loadCities(provinceId,cityId);document.getElementById('clubModalOverlay').classList.add('show');document.getElementById('clubModal').classList.add('show');}
     function confirmClubDeactivate(url,name){document.getElementById('deleteClubName').textContent=name;document.getElementById('deleteClubForm').action=url;document.getElementById('deleteClubModalOverlay').classList.add('show');document.getElementById('deleteClubModal').classList.add('show');}
     function closeClubDeleteModal(){document.getElementById('deleteClubModalOverlay').classList.remove('show');document.getElementById('deleteClubModal').classList.remove('show');}
     function openClubDetail(id){fetch('/clubs/'+id+'/detail-ajax/').then(function(r){return r.json();}).then(function(data){document.getElementById('detailClubName').textContent=data.name;document.getElementById('detailClubCity').textContent=data.city;document.getElementById('detailClubProvince').textContent=data.province;document.getElementById('detailClubPhone').textContent=data.phone||'-';document.getElementById('detailClubAddress').textContent=data.address||'-';document.getElementById('detailClubStudents').textContent=data.students_count+' هنرجو';document.getElementById('detailClubCoaches').innerHTML=data.coaches.map(function(c){return '<p>'+c.name+' ('+c.role+')</p>';}).join('');document.getElementById('clubDetailModalOverlay').classList.add('show');document.getElementById('clubDetailModal').classList.add('show');});}
