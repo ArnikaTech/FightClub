@@ -7,8 +7,9 @@ from django.http import JsonResponse
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.http import HttpResponse
+from django.utils.text import slugify
 
-from .models import Province, City, Club, Sport
+from .models import Province, City, Club, Sport, Organization
 from .models import ClubMembership
 from apps.accounts.models import User
 
@@ -147,20 +148,49 @@ class ClubListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['provinces'] = Province.objects.all()
+        context['organizations'] = Organization.objects.filter(is_active=True).order_by('name')
         return context
 
 
 class ClubCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self): return self.request.user.is_super_manager
+
     def post(self, request):
         name = request.POST.get('name', '').strip()
         province_id = request.POST.get('province')
         city_id = request.POST.get('city')
         phone = request.POST.get('phone', '').strip()
         address = request.POST.get('address', '').strip()
-        if name and province_id and city_id:
-            Club.objects.create(name=name, province_id=province_id, city_id=city_id, phone=phone, address=address)
-            messages.success(request, f'باشگاه {name} ایجاد شد')
+        organization_id = request.POST.get('organization')
+        organization_name = request.POST.get('organization_name', '').strip()
+
+        if not (name and province_id and city_id):
+            messages.error(request, 'نام باشگاه، استان و شهر الزامی است')
+            return redirect('clubs:club_list')
+
+        if organization_name:
+            base_slug = slugify(organization_name, allow_unicode=True) or 'organization'
+            slug = base_slug
+            suffix = 2
+            while Organization.objects.filter(slug=slug).exists():
+                slug = f'{base_slug}-{suffix}'
+                suffix += 1
+            organization = Organization.objects.create(name=organization_name, slug=slug)
+        elif organization_id:
+            organization = get_object_or_404(Organization, pk=organization_id, is_active=True)
+        else:
+            messages.error(request, 'مجموعه را انتخاب کنید یا نام مجموعه جدید را وارد کنید')
+            return redirect('clubs:club_list')
+
+        Club.objects.create(
+            organization=organization,
+            name=name,
+            province_id=province_id,
+            city_id=city_id,
+            phone=phone,
+            address=address,
+        )
+        messages.success(request, f'شعبه «{name}» در مجموعه «{organization.name}» ایجاد شد')
         return redirect('clubs:club_list')
 
 
