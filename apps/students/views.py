@@ -445,6 +445,10 @@ class StudentDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
             return redirect('students:student_detail', pk=pk)
 
         with transaction.atomic():
+            # حساب کاربری و شماره همراه حفظ می‌شود؛ کد ملی آزاد می‌شود تا
+            # در صورت ثبت مجدد هنرجو، رکورد جدید با همان کد ملی ساخته شود.
+            user.national_code = None
+            user.save(update_fields=['national_code'])
             student.delete()
 
         messages.success(request, f'رکورد اشتباه هنرجو «{name}» حذف شد')
