@@ -7,7 +7,7 @@ from django.db import models, transaction
 
 import jdatetime
 from .forms import StudentCreateForm
-from .models import Student, Insurance, StudentContact, Attendance, ClassGroup, Shift, Enrollment
+from .models import Student, StudentClub, Insurance, StudentContact, Attendance, ClassGroup, Shift, Enrollment
 from apps.clubs.models import Club, Sport
 from apps.finance.models import FeeDue, Payment
 
@@ -28,7 +28,7 @@ def visible_students_for(user):
     if user.is_super_manager:
         return Student.objects.all()
     if user.is_club_manager or user.is_instructor:
-        return Student.objects.filter(club__in=managed_clubs_for(user)).distinct() | own_student
+        return Student.objects.filter(club_memberships__club__in=managed_clubs_for(user), club_memberships__is_active=True).distinct() | own_student
     return own_student
 
 
@@ -36,7 +36,7 @@ def managed_students_for(user):
     if user.is_super_manager:
         return Student.objects.all()
     if user.is_club_manager or user.is_instructor:
-        return Student.objects.filter(club__in=managed_clubs_for(user)).distinct()
+        return Student.objects.filter(club_memberships__club__in=managed_clubs_for(user), club_memberships__is_active=True).distinct()
     return Student.objects.none()
 
 
@@ -86,7 +86,7 @@ class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         insurance = self.request.GET.get('insurance')
         
         if club_id:
-            qs = qs.filter(club_id=club_id)
+            qs = qs.filter(club_memberships__club_id=club_id, club_memberships__is_active=True)
         if belt:
             qs = qs.filter(current_belt=belt)
         if sport_id:
@@ -246,6 +246,11 @@ class StudentEditView(LoginRequiredMixin, UserPassesTestMixin, View):
         club_id = request.POST.get('club')
         if club_id:
             student.club = get_object_or_404(managed_clubs_for(request.user), pk=club_id)
+            StudentClub.objects.update_or_create(
+                student=student,
+                club=student.club,
+                defaults={'is_active': True},
+            )
         student.sport_id = request.POST.get('sport') or None
         student.current_belt = request.POST.get('current_belt', student.current_belt)
         
@@ -1009,7 +1014,15 @@ class EnrollmentCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
         if student_id and shift_id:
             student = get_object_or_404(managed_students_for(request.user), pk=student_id)
             shift = get_object_or_404(visible_shifts_for(request.user), pk=shift_id)
-            
+
+            if not StudentClub.objects.filter(
+                student=student,
+                club=shift.class_group.club,
+                is_active=True,
+            ).exists():
+                messages.error(request, 'این هنرجو در باشگاه انتخاب‌شده عضویت فعال ندارد')
+                return redirect('students:enrollment_list')
+
             old_enrollment = Enrollment.objects.filter(student=student, shift=shift).first()
             if old_enrollment:
                 if old_enrollment.is_active:
