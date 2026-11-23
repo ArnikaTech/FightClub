@@ -50,16 +50,46 @@
             </div>
             
             <div class="form-section animate__animated animate__fadeInUp">
-                <div class="form-section-title"><i class="bi bi-person-badge-fill"></i> اطلاعات هنرجو</div>
-                <div class="form-group"><label>باشگاه *</label>
-                    <select name="club" class="input-glass" hx-get="{% url 'clubs:club_info_partial' %}" hx-trigger="change" hx-target="#provinceCityInfo" hx-swap="innerHTML" hx-include="this">
-                        {% for c in clubs %}<option value="{{ c.id }}" {% if c.id == selected_club.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+                <div class="form-section-title"><i class="bi bi-building"></i> عضویت در باشگاه‌ها</div>
+                <p class="text-muted mb-3">می‌توانید هنرجو را به چند شعبه از مجموعه‌های مجاز خود متصل کنید. غیرفعال‌سازی عضویت، سوابق مالی، حضور و غیاب و ثبت‌نام‌ها را حذف نمی‌کند.</p>
+                {% for membership in memberships %}
+                <div class="form-row" style="align-items:center;border-bottom:1px solid var(--border-glass);padding:10px 0;">
+                    <div class="form-group" style="flex:1;margin:0;">
+                        <strong>{{ membership.club.name }}</strong>
+                        <div class="text-muted" style="font-size:.85rem;">
+                            {{ membership.club.city.name|default:"-" }}، {{ membership.club.province.name|default:"-" }}
+                            · عضویت از {{ membership.joined_at|jformat:"%Y/%m/%d" }}
+                            · {% if membership.is_active %}<span style="color:#34c759;">فعال</span>{% else %}<span style="color:var(--text-muted);">غیرفعال</span>{% endif %}
+                        </div>
+                    </div>
+                    {% if membership.is_active %}
+                    <label class="checkbox-label" style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" name="deactivate_memberships" value="{{ membership.pk }}" class="checkbox-custom"
+                            {% if membership.club_id in enrolled_club_ids %}disabled{% endif %}>
+                        <span>{% if membership.club_id in enrolled_club_ids %}دارای ثبت‌نام فعال{% else %}غیرفعال‌سازی{% endif %}</span>
+                    </label>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="text-muted">عضویتی ثبت نشده است.</p>
+                {% endfor %}
+                {% if available_clubs %}
+                <div class="form-group mt-3">
+                    <label>افزودن به باشگاه دیگر</label>
+                    <select name="add_clubs" class="input-glass" multiple size="4">
+                        {% for c in available_clubs %}
+                        <option value="{{ c.pk }}">{{ c.name }} — {{ c.city.name|default:"-" }}</option>
+                        {% endfor %}
                     </select>
+                    <small class="text-muted">برای انتخاب چند باشگاه، کلید Ctrl را نگه دارید.</small>
                 </div>
-                <div id="provinceCityInfo" class="form-row">
-                    <div class="form-group"><label>استان</label><input type="text" class="input-glass" value="{{ selected_club.province.name }}" readonly></div>
-                    <div class="form-group"><label>شهر</label><input type="text" class="input-glass" value="{{ selected_club.city.name }}" readonly></div>
-                </div>
+                {% else %}
+                <p class="text-muted mt-3">باشگاه مجاز دیگری برای افزودن وجود ندارد.</p>
+                {% endif %}
+            </div>
+
+            <div class="form-section animate__animated animate__fadeInUp">
+                <div class="form-section-title"><i class="bi bi-person-badge-fill"></i> اطلاعات هنرجو</div>
                 <div class="form-row">
                     <div class="form-group"><label>رشته ورزشی</label>
                         <select name="sport" class="input-glass">
