@@ -197,91 +197,180 @@ class StudentDetailView(LoginRequiredMixin, DetailView):
 
 
 class StudentEditView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self): return can_manage_students(self.request.user)
+    def test_func(self):
+        return can_manage_students(self.request.user)
 
     def get(self, request, pk):
         student = get_object_or_404(managed_students_for(request.user), pk=pk)
-        club_id = request.GET.get('club', student.club_id)
-        clubs = managed_clubs_for(request.user).filter(is_active=True)
-        selected_club = clubs.filter(pk=club_id).first() or clubs.filter(student_memberships__student=student, student_memberships__is_active=True).first()
-        
-        shifts = visible_shifts_for(request.user).filter(is_active=True, class_group__is_active=True).select_related('class_group')
-        sports = Sport.objects.all()
-        belts = Student.BELTS
-        
+        clubs = managed_clubs_for(request.user).filter(is_active=True).select_related('city', 'province')
+        memberships = student.club_memberships.select_related(
+            'club', 'club__city', 'club__province'
+        ).order_by('-is_active', 'club__name')
+        enrolled_club_ids = set(
+            Enrollment.objects.filter(
+                student=student, is_active=True
+            ).values_list('shift__class_group__club_id', flat=True)
+        )
+        shifts = visible_shifts_for(request.user).filter(
+            is_active=True, class_group__is_active=True
+        ).select_related('class_group', 'class_group__club')
         return render(request, 'students/student_edit.html', {
             'student': student,
             'clubs': clubs,
+            'memberships': memberships,
+            'enrolled_club_ids': enrolled_club_ids,
+            'available_clubs': clubs.exclude(
+                pk__in=memberships.values_list('club_id', flat=True)
+            ),
             'shifts': shifts,
-            'sports': sports,
-            'belts': belts,
-            'selected_club': selected_club,
+            'sports': Sport.objects.all(),
+            'belts': Student.BELTS,
+            'selected_club': student.club,
         })
-    
+
     def post(self, request, pk):
         student = get_object_or_404(managed_students_for(request.user), pk=pk)
         user = student.user
-        
+        allowed_clubs = managed_clubs_for(request.user)
+        allowed_club_ids = set(allowed_clubs.values_list('pk', flat=True))
+
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
-        
         if not first_name or not last_name:
             messages.error(request, 'نام و نام خانوادگی الزامی است')
             return redirect('students:student_edit', pk=pk)
-        
-        user.first_name = first_name
-        user.last_name = last_name
-        user.national_code = request.POST.get('national_code', '').strip() or None
-        student.address = request.POST.get('address', '').strip()
-        
+
+        add_ids = request.POST.getlist('add_clubs')
+        deactivate_ids = request.POST.getlist('deactivate_memberships')
+        try:
+            add_ids = {int(value) for value in add_ids}
+            deactivate_ids = {int(value) for value in deactivate_ids}
+        except (TypeError, ValueError):
+            messages.error(request, 'اطلاعات عضویت باشگاه نامعتبر است')
+            return redirect('students:student_edit', pk=pk)
+
+        if not add_ids.issubset(allowed_club_ids):
+            messages.error(request, 'دسترسی افزودن هنرجو به یکی از باشگاه‌های انتخاب‌شده را ندارید')
+            return redirect('students:student_edit', pk=pk)
+
+        memberships = {
+            membership.pk: membership
+            for membership in student.club_memberships.select_related('club')
+        }
+        if not deactivate_ids.issubset(set(memberships)):
+            messages.error(request, 'یکی از عضویت‌های انتخاب‌شده معتبر نیست')
+            return redirect('students:student_edit', pk=pk)
+
+        requested_deactivations = [
+            memberships[membership_id]
+            for membership_id in deactivate_ids
+            if memberships[membership_id].is_active
+        ]
+        remaining_active_ids = {
+            membership.club_id
+            for membership in memberships.values()
+            if membership.is_active and membership.pk not in deactivate_ids
+        } | add_ids
+        if not remaining_active_ids:
+            messages.error(request, 'هنرجو باید دست‌کم در یک باشگاه عضویت فعال داشته باشد')
+            return redirect('students:student_edit', pk=pk)
+
+        for membership in requested_deactivations:
+            if Enrollment.objects.filter(
+                student=student,
+                shift__class_group__club_id=membership.club_id,
+                is_active=True,
+            ).exists():
+                messages.error(
+                    request,
+                    f'عضویت باشگاه «{membership.club.name}» به دلیل وجود ثبت‌نام فعال قابل غیرفعال‌سازی نیست؛ '
+                    'ابتدا ثبت‌نام فعال آن باشگاه را تعیین تکلیف کنید.'
+                )
+                return redirect('students:student_edit', pk=pk)
+
         birth_date_str = request.POST.get('birth_date', '').strip()
+        birth_date = student.birth_date
         if birth_date_str:
             try:
                 parts = list(map(int, birth_date_str.replace('/', '-').split('-')))
-                student.birth_date = jdatetime.date(*parts)
-            except:
+                birth_date = jdatetime.date(*parts)
+            except (TypeError, ValueError):
                 messages.error(request, 'تاریخ تولد نامعتبر است')
                 return redirect('students:student_edit', pk=pk)
-        
-        club_id = request.POST.get('club')
-        if club_id:
-            student.club = get_object_or_404(managed_clubs_for(request.user), pk=club_id)
-            StudentClub.objects.update_or_create(
-                student=student,
-                club=student.club,
-                defaults={'is_active': True},
-            )
-        student.sport_id = request.POST.get('sport') or None
-        student.current_belt = request.POST.get('current_belt', student.current_belt)
-        
-        # ثبت‌نام در شیفت جدید
-        new_shift_id = request.POST.get('new_shift')
-        if new_shift_id:
-            shift = get_object_or_404(visible_shifts_for(request.user), pk=new_shift_id)
-            Enrollment.objects.get_or_create(
-                student=student,
-                shift=shift,
-                defaults={'enrolled_at': jdatetime.date.today()}
-    )
-        
-        # تاریخ عضویت
-        joined_at_str = request.POST.get('joined_at', '')
+
+        joined_at_str = request.POST.get('joined_at', '').strip()
+        joined_at = student.joined_at
         if joined_at_str:
             try:
                 parts = list(map(int, joined_at_str.replace('/', '-').split('-')))
-                student.joined_at = jdatetime.date(*parts)
-            except:
-                pass
-        
-        student.notes = request.POST.get('notes', '').strip()
-        
-        if request.user.is_super_manager:
-            user.is_instructor = request.POST.get('is_instructor') == 'on'
-            user.is_club_manager = request.POST.get('is_club_manager') == 'on'
-        
-        user.save()
-        student.save()
-        messages.success(request, 'اطلاعات با موفقیت بروزرسانی شد')
+                joined_at = jdatetime.date(*parts)
+            except (TypeError, ValueError):
+                messages.error(request, 'تاریخ عضویت نامعتبر است')
+                return redirect('students:student_edit', pk=pk)
+
+        with transaction.atomic():
+            user.first_name = first_name
+            user.last_name = last_name
+            user.national_code = request.POST.get('national_code', '').strip() or None
+
+            student.address = request.POST.get('address', '').strip()
+            student.birth_date = birth_date
+            student.sport_id = request.POST.get('sport') or None
+            student.current_belt = request.POST.get('current_belt', student.current_belt)
+            student.joined_at = joined_at
+            student.notes = request.POST.get('notes', '').strip()
+
+            for club_id in add_ids:
+                StudentClub.objects.get_or_create(
+                    student=student,
+                    club_id=club_id,
+                    defaults={'is_active': True, 'joined_at': jdatetime.date.today()},
+                )
+                StudentClub.objects.filter(
+                    student=student, club_id=club_id, is_active=False
+                ).update(is_active=True)
+
+            if deactivate_ids:
+                StudentClub.objects.filter(
+                    student=student, pk__in=deactivate_ids, is_active=True
+                ).update(is_active=False)
+
+            active_membership = student.club_memberships.filter(
+                is_active=True
+            ).order_by('joined_at', 'pk').first()
+            if active_membership and (
+                student.club_id != active_membership.club_id
+                or student.club_memberships.filter(
+                    club_id=student.club_id, is_active=True
+                ).exists() is False
+            ):
+                student.club = active_membership.club
+
+            new_shift_id = request.POST.get('new_shift')
+            if new_shift_id:
+                shift = get_object_or_404(
+                    visible_shifts_for(request.user), pk=new_shift_id,
+                    is_active=True, class_group__is_active=True
+                )
+                if not student.club_memberships.filter(
+                    club_id=shift.class_group.club_id, is_active=True
+                ).exists():
+                    messages.error(request, 'برای ثبت‌نام در این شیفت ابتدا باید عضویت باشگاه مربوطه فعال باشد')
+                    return redirect('students:student_edit', pk=pk)
+                Enrollment.objects.get_or_create(
+                    student=student,
+                    shift=shift,
+                    defaults={'enrolled_at': jdatetime.date.today()},
+                )
+
+            if request.user.is_super_manager:
+                user.is_instructor = request.POST.get('is_instructor') == 'on'
+                user.is_club_manager = request.POST.get('is_club_manager') == 'on'
+
+            user.save()
+            student.save()
+
+        messages.success(request, 'اطلاعات و عضویت‌های هنرجو با موفقیت بروزرسانی شد')
         return redirect('students:student_detail', pk=pk)
 
 
