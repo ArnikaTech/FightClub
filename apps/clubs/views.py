@@ -147,9 +147,21 @@ class OrganizationListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return self.request.user.is_super_manager
 
     def get_queryset(self):
-        return Organization.objects.annotate(
+        queryset = Organization.objects.annotate(
             branch_count=Count('branches')
         ).prefetch_related('branches__city', 'branches__province').order_by('name')
+        status = self.request.GET.get('status', 'all')
+        if status == 'active':
+            queryset = queryset.filter(is_active=True)
+        elif status == 'inactive':
+            queryset = queryset.filter(is_active=False)
+        self.selected_status = status if status in ('all', 'active', 'inactive') else 'all'
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['selected_status'] = self.selected_status
+        return context
 
 
 class OrganizationDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
@@ -198,6 +210,39 @@ class OrganizationDeactivateView(LoginRequiredMixin, UserPassesTestMixin, View):
             organization.is_active = False
             organization.save(update_fields=['is_active'])
             messages.success(request, f'مجموعه «{organization.name}» غیرفعال شد')
+        return redirect('clubs:organization_list')
+
+
+class OrganizationActivateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager
+
+    def post(self, request, pk):
+        organization = get_object_or_404(Organization, pk=pk)
+        if not organization.is_active:
+            organization.is_active = True
+            organization.save(update_fields=['is_active'])
+            messages.success(request, f'مجموعه «{organization.name}» دوباره فعال شد')
+        return redirect('clubs:organization_list')
+
+
+class OrganizationDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager
+
+    def post(self, request, pk):
+        organization = get_object_or_404(Organization, pk=pk)
+        name = organization.name
+        branch_count = organization.branches.count()
+        if branch_count:
+            messages.error(
+                request,
+                f'مجموعه «{name}» دارای {branch_count} شعبه است و قابل حذف نیست. '
+                'برای حفظ سوابق، ابتدا وضعیت آن را غیرفعال کنید یا شعبه‌های وابسته را تعیین تکلیف کنید.'
+            )
+        else:
+            organization.delete()
+            messages.success(request, f'مجموعه «{name}» حذف شد')
         return redirect('clubs:organization_list')
 
 
