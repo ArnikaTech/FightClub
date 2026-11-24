@@ -234,8 +234,13 @@ class ClubEditView(LoginRequiredMixin, UserPassesTestMixin, View):
         if request.user.is_super_manager:
             province_id = request.POST.get('province')
             city_id = request.POST.get('city')
+            organization_id = request.POST.get('organization')
             if province_id: club.province_id = province_id
             if city_id: club.city_id = city_id
+            if organization_id:
+                club.organization = get_object_or_404(
+                    Organization, pk=organization_id, is_active=True
+                )
         club.save()
         messages.success(request, 'باشگاه بروزرسانی شد')
         return redirect('clubs:club_list')
