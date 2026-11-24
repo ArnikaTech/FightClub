@@ -152,6 +152,55 @@ class OrganizationListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         ).prefetch_related('branches__city', 'branches__province').order_by('name')
 
 
+class OrganizationDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = Organization
+    template_name = 'clubs/organization_detail.html'
+    context_object_name = 'organization'
+
+    def test_func(self):
+        return self.request.user.is_super_manager
+
+    def get_queryset(self):
+        return Organization.objects.annotate(
+            branch_count=Count('branches')
+        ).prefetch_related('branches__city', 'branches__province')
+
+
+class OrganizationEditView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager
+
+    def post(self, request, pk):
+        organization = get_object_or_404(Organization, pk=pk)
+        name = request.POST.get('name', '').strip()
+        if not name:
+            messages.error(request, 'نام مجموعه الزامی است')
+        else:
+            organization.name = name
+            organization.save(update_fields=['name'])
+            messages.success(request, f'نام مجموعه به «{name}» تغییر کرد')
+        return redirect('clubs:organization_list')
+
+
+class OrganizationDeactivateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager
+
+    def post(self, request, pk):
+        organization = get_object_or_404(Organization, pk=pk)
+        active_branches = organization.branches.filter(is_active=True).count()
+        if active_branches:
+            messages.error(
+                request,
+                f'مجموعه دارای {active_branches} شعبه فعال است. ابتدا شعبه‌های آن را غیرفعال کنید.'
+            )
+        else:
+            organization.is_active = False
+            organization.save(update_fields=['is_active'])
+            messages.success(request, f'مجموعه «{organization.name}» غیرفعال شد')
+        return redirect('clubs:organization_list')
+
+
 class OrganizationCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
         return self.request.user.is_super_manager
