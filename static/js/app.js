@@ -240,11 +240,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================================
     // ۶. آکاردئون منوی موبایل (فقط یکی باز باشه)
     // ============================================================
-    document.querySelectorAll('.nav-group-header').forEach(function(header) {
+    document.querySelectorAll('.dashboard-sidebar .nav-group-header, .mobile-nav .nav-group-header').forEach(function(header) {
         header.addEventListener('click', function() {
             var group = this.parentElement;
+            var menu = group.closest('.sidebar-menu-wrapper, .mobile-nav-list');
             var wasOpen = group.classList.contains('open');
-            document.querySelectorAll('.nav-group').forEach(function(g) { g.classList.remove('open'); });
+            if (menu) {
+                menu.querySelectorAll('.nav-group').forEach(function(item) { item.classList.remove('open'); });
+            }
             if (!wasOpen) group.classList.add('open');
         });
     });
