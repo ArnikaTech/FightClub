@@ -1618,6 +1618,55 @@ Modal
     flex-shrink: 0;
 }
 
+/* Desktop sidebar accordion navigation */
+.dashboard-sidebar .nav-group {
+    margin: 2px 8px 5px;
+}
+
+.dashboard-sidebar .nav-group-header {
+    padding: 10px 12px;
+    border-radius: 10px;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+}
+
+.dashboard-sidebar .nav-group-header > span {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.dashboard-sidebar .nav-group-header > span > i {
+    width: 20px;
+    text-align: center;
+    font-size: 1.05rem;
+    color: var(--primary);
+}
+
+.dashboard-sidebar .nav-group.open .nav-group-header {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.dashboard-sidebar .nav-submenu {
+    padding: 2px 4px 5px 0;
+}
+
+.dashboard-sidebar .nav-submenu .sidebar-nav {
+    width: 100%;
+    padding: 0 6px;
+    gap: 1px;
+}
+
+.dashboard-sidebar .nav-submenu .sidebar-nav li a {
+    padding: 8px 10px;
+    font-size: 0.81rem;
+}
+
+.dashboard-sidebar .nav-submenu .sidebar-nav li a i {
+    font-size: 1.05rem;
+}
+
 .sidebar-user {
     display: flex;
     align-items: center;
