@@ -8,8 +8,8 @@
         {% include 'partials/_notif_bar.html' %}
         
         <div class="page-header animate__animated animate__fadeIn">
-            <div><h1 class="page-title">باشگاه‌ها <span>{{ clubs.count }} فعال</span></h1></div>
-            <button onclick="openClubModal()" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">باشگاه جدید</span></button>
+            <div><h1 class="page-title">شعبه‌ها <span>{{ clubs.count }} فعال</span></h1></div>
+            <button onclick="openClubModal()" class="btn-add"><i class="bi bi-plus-lg"></i><span class="btn-add-text">شعبه جدید</span></button>
         </div>
         
         <div class="coach-list-page">
@@ -36,7 +36,7 @@
 <div class="modal-overlay" id="clubModalOverlay"></div>
 <div class="modal-sheet" id="clubModal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="clubModalTitle">باشگاه جدید</div>
+    <div class="modal-title" id="clubModalTitle">شعبه جدید</div>
     <div class="modal-body">
         <form method="post" id="clubForm" action="{% url 'clubs:club_add' %}">
             {% csrf_token %}
