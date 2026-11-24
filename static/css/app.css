@@ -95,10 +95,10 @@ body {
 
 .btn-primary-gradient {
     color: #fff;
-    background: linear-gradient(135deg, #ff4d2e 0%, #e63900 100%);
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
     border: none;
     cursor: pointer;
-    box-shadow: 0 8px 25px rgba(255, 77, 46, 0.3);
+    box-shadow: 0 8px 25px rgba(13, 110, 253, 0.3);
     transition: all 0.2s ease;
 }
 
@@ -259,7 +259,7 @@ LANDING
     position: absolute;
     inset: 0;
     opacity: 0.4;
-    background-image: radial-gradient(circle at 20% 80%, rgba(255, 77, 46, 0.15), transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 184, 0, 0.1), transparent 50%), radial-gradient(circle at 50% 50%, rgba(255, 77, 46, 0.08), transparent 70%);
+    background-image: radial-gradient(circle at 20% 80%, rgba(13, 110, 253, 0.15), transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 193, 7, 0.1), transparent 50%), radial-gradient(circle at 50% 50%, rgba(13, 110, 253, 0.08), transparent 70%);
 }
 
 .landing-screen .orb {
@@ -272,7 +272,7 @@ LANDING
 .landing-screen .orb-1 {
     width: 300px;
     height: 300px;
-    background: rgba(255, 77, 46, 0.25);
+    background: rgba(13, 110, 253, 0.25);
     top: -100px;
     right: -80px;
 }
@@ -280,7 +280,7 @@ LANDING
 .landing-screen .orb-2 {
     width: 250px;
     height: 250px;
-    background: rgba(255, 184, 0, 0.2);
+    background: rgba(255, 193, 7, 0.2);
     bottom: -80px;
     left: -60px;
     animation-delay: -4s;
@@ -364,7 +364,7 @@ LANDING
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: linear-gradient(135deg, rgba(255, 77, 46, 0.2), rgba(255, 184, 0, 0.1));
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.2), rgba(255, 193, 7, 0.1));
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -378,18 +378,18 @@ LANDING
 
     0%,
     100% {
-        box-shadow: 0 0 30px rgba(255, 77, 46, 0.2);
+        box-shadow: 0 0 30px rgba(13, 110, 253, 0.2);
     }
 
     50% {
-        box-shadow: 0 0 60px rgba(255, 77, 46, 0.4);
+        box-shadow: 0 0 60px rgba(13, 110, 253, 0.4);
     }
 }
 
 .landing-logo .logo-inner i {
     font-size: min(48px, 10vw);
     color: #fff;
-    filter: drop-shadow(0 0 15px rgba(255, 77, 46, 0.6));
+    filter: drop-shadow(0 0 15px rgba(13, 110, 253, 0.6));
     animation: iconPulse 2s ease-in-out infinite;
 }
 
@@ -410,7 +410,7 @@ LANDING
     font-weight: 900;
     letter-spacing: 2px;
     margin-bottom: 6px;
-    background: linear-gradient(135deg, #fff 0%, #ffb800 50%, #ff4d2e 100%);
+    background: linear-gradient(135deg, #fff 0%, #ffc107 50%, #0d6efd 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -429,7 +429,7 @@ LANDING
     font-size: 1.2rem;
     font-weight: 700;
     color: #fff;
-    background: linear-gradient(135deg, #ff4d2e 0%, #ff6b3d 30%, #e63900 100%);
+    background: linear-gradient(135deg, #0d6efd 0%, #3d8bfd 30%, #0a58ca 100%);
     border: none;
     border-radius: 20px;
     position: relative;
@@ -441,7 +441,7 @@ LANDING
     gap: 12px;
     text-decoration: none;
     transition: all 0.3s ease;
-    box-shadow: 0 10px 40px rgba(255, 77, 46, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    box-shadow: 0 10px 40px rgba(13, 110, 253, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 .landing-btn::after {
@@ -626,8 +626,8 @@ LOGIN
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    background: linear-gradient(135deg, rgba(255, 77, 46, 0.2), rgba(255, 77, 46, 0.05));
-    border: 1px solid rgba(255, 77, 46, 0.25);
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.2), rgba(13, 110, 253, 0.05));
+    border: 1px solid rgba(13, 110, 253, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -637,7 +637,7 @@ LOGIN
 .login-header .icon-circle i {
     font-size: 22px;
     color: #fff;
-    filter: drop-shadow(0 0 10px rgba(255, 77, 46, 0.5));
+    filter: drop-shadow(0 0 10px rgba(13, 110, 253, 0.5));
 }
 
 .login-header h2 {
@@ -874,11 +874,11 @@ LOGIN
 }
 
 .notif-item.birthday i {
-    color: #ffb800;
+    color: #ffc107;
 }
 
 .notif-item.warning i {
-    color: #ff4d2e;
+    color: #0d6efd;
 }
 
 .notif-item.success i {
@@ -987,7 +987,7 @@ body.light-mode .notif-bar .theme-toggle .icon-moon {
 }
 
 body.light-mode .notif-bar .theme-toggle:hover {
-    color: #ff9800;
+    color: #0a58ca;
 }
 
 body.light-mode .notif-divider {
@@ -1487,7 +1487,7 @@ Modal
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 4px 15px rgba(255, 77, 46, 0.25);
+    box-shadow: 0 4px 15px rgba(13, 110, 253, 0.25);
 }
 
 .btn-cancel-sm {
@@ -1638,7 +1638,7 @@ Modal
 }
 
 .sidebar-nav li a.active {
-    background: rgba(255, 77, 46, 0.15);
+    background: rgba(13, 110, 253, 0.15);
     color: var(--primary);
     font-weight: 600;
 }
@@ -1769,7 +1769,7 @@ Modal
 }
 
 .logout-btn:hover {
-    background: rgba(255, 77, 46, 0.2);
+    background: rgba(13, 110, 253, 0.2);
     color: var(--danger);
 }
 
@@ -1802,8 +1802,8 @@ Modal
 }
 
 .welcome-card {
-    background: linear-gradient(135deg, rgba(255, 77, 46, 0.15), rgba(255, 184, 0, 0.08));
-    border: 1px solid rgba(255, 77, 46, 0.2);
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.15), rgba(255, 193, 7, 0.08));
+    border: 1px solid rgba(13, 110, 253, 0.2);
     border-radius: 16px;
     padding: 18px;
     margin-bottom: 18px;
@@ -1868,12 +1868,12 @@ Modal
 }
 
 .stat-icon.red {
-    background: rgba(255, 77, 46, 0.2);
+    background: rgba(13, 110, 253, 0.2);
     color: var(--primary);
 }
 
 .stat-icon.gold {
-    background: rgba(255, 184, 0, 0.2);
+    background: rgba(255, 193, 7, 0.2);
     color: var(--accent);
 }
 
@@ -1936,7 +1936,7 @@ Modal
     width: 46px;
     height: 46px;
     border-radius: 10px;
-    background: rgba(255, 77, 46, 0.1);
+    background: rgba(13, 110, 253, 0.1);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2084,7 +2084,7 @@ PROFILE
 ============================================================ */
 .profile-header {
     position: relative;
-    background: linear-gradient(135deg, rgba(255, 77, 46, 0.2), rgba(255, 184, 0, 0.08));
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.2), rgba(255, 193, 7, 0.08));
     border: 1px solid var(--border-glass);
     border-radius: 20px;
     padding: 28px 20px 22px;
@@ -2149,7 +2149,7 @@ PROFILE
 
 .avatar-edit-btn:hover {
     transform: scale(1.15);
-    box-shadow: 0 0 12px rgba(255, 77, 46, 0.5);
+    box-shadow: 0 0 12px rgba(13, 110, 253, 0.5);
 }
 
 .profile-header .profile-name {
@@ -2240,12 +2240,12 @@ PROFILE
 }
 
 .info-badge.manager {
-    background: rgba(255, 184, 0, 0.2);
+    background: rgba(255, 193, 7, 0.2);
     color: var(--accent);
 }
 
 .info-badge.admin {
-    background: rgba(255, 77, 46, 0.2);
+    background: rgba(13, 110, 253, 0.2);
     color: var(--primary);
 }
 
@@ -2295,15 +2295,15 @@ PROFILE
 
 .profile-action-btn.logout {
     color: var(--danger);
-    border-color: rgba(255, 77, 46, 0.2);
-    background: rgba(255, 77, 46, 0.05);
+    border-color: rgba(13, 110, 253, 0.2);
+    background: rgba(13, 110, 253, 0.05);
     grid-column: 1 / -1;
 }
 
 .profile-action-btn.logout:hover {
-    background: rgba(255, 77, 46, 0.12);
-    border-color: rgba(255, 77, 46, 0.4);
-    box-shadow: 0 6px 20px rgba(255, 77, 46, 0.15);
+    background: rgba(13, 110, 253, 0.12);
+    border-color: rgba(13, 110, 253, 0.4);
+    box-shadow: 0 6px 20px rgba(13, 110, 253, 0.15);
 }
 
 @media (min-width: 768px) {
@@ -2380,13 +2380,13 @@ MEMBERS
     border: none;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 77, 46, 0.25);
+    box-shadow: 0 4px 15px rgba(13, 110, 253, 0.25);
     white-space: nowrap;
 }
 
 .btn-add:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 77, 46, 0.4);
+    box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4);
 }
 
 .btn-add:active {
@@ -2480,7 +2480,7 @@ MEMBERS
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: rgba(255, 184, 0, 0.15);
+    background: rgba(255, 193, 7, 0.15);
     color: var(--accent);
     font-size: 0.75rem;
     margin-left: 4px;
@@ -2492,11 +2492,11 @@ MEMBERS
 
     0%,
     100% {
-        box-shadow: 0 0 0 0 rgba(255, 184, 0, 0.4);
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4);
     }
 
     50% {
-        box-shadow: 0 0 0 8px rgba(255, 184, 0, 0);
+        box-shadow: 0 0 0 8px rgba(255, 193, 7, 0);
     }
 }
 
@@ -2560,7 +2560,7 @@ ATTENDANCE
     width: 42px;
     height: 42px;
     border-radius: 12px;
-    background: rgba(255, 77, 46, 0.15);
+    background: rgba(13, 110, 253, 0.15);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2707,7 +2707,7 @@ ATTENDANCE
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: rgba(255, 184, 0, 0.2);
+    background: rgba(255, 193, 7, 0.2);
     color: var(--accent);
     font-size: 0.7rem;
     flex-shrink: 0;
@@ -2721,7 +2721,7 @@ ATTENDANCE
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: rgba(255, 77, 46, 0.2);
+    background: rgba(13, 110, 253, 0.2);
     color: var(--primary);
     font-size: 0.7rem;
     flex-shrink: 0;
@@ -2812,8 +2812,8 @@ ATTENDANCE
 ABSENTEES
 ============================================================ */
 .alert-card {
-    background: rgba(255, 77, 46, 0.08);
-    border: 1px solid rgba(255, 77, 46, 0.2);
+    background: rgba(13, 110, 253, 0.08);
+    border: 1px solid rgba(13, 110, 253, 0.2);
     border-radius: 14px;
     padding: 14px 16px;
     margin-bottom: 18px;
@@ -2826,7 +2826,7 @@ ABSENTEES
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: rgba(255, 77, 46, 0.2);
+    background: rgba(13, 110, 253, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2914,7 +2914,7 @@ ABSENTEES
     gap: 4px;
     font-size: 0.68rem;
     color: var(--primary);
-    background: rgba(255, 77, 46, 0.1);
+    background: rgba(13, 110, 253, 0.1);
     padding: 2px 8px;
     border-radius: 10px;
     white-space: nowrap;
@@ -2938,7 +2938,7 @@ ABSENTEES
     gap: 6px;
     padding: 6px 12px;
     border-radius: 20px;
-    background: rgba(255, 77, 46, 0.1);
+    background: rgba(13, 110, 253, 0.1);
     color: var(--primary);
     font-size: var(--font-size-sm);
     font-weight: 700;
@@ -2981,7 +2981,7 @@ GYM INFO
     padding: 28px 20px 22px;
     text-align: center;
     margin-bottom: 18px;
-    background: linear-gradient(135deg, rgba(255, 77, 46, 0.2), rgba(255, 184, 0, 0.08));
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.2), rgba(255, 193, 7, 0.08));
     border: 1px solid var(--border-glass);
     overflow: hidden;
 }
@@ -3164,7 +3164,7 @@ SMS SEND
 }
 
 .chip-select.active {
-    background: rgba(255, 77, 46, 0.15);
+    background: rgba(13, 110, 253, 0.15);
     border-color: var(--primary);
     color: var(--primary);
     font-weight: 600;
@@ -3285,7 +3285,7 @@ SMS SEND
 
 .textarea-card textarea:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(255, 77, 46, 0.1);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
 }
 
 .textarea-card .char-count {
@@ -3310,7 +3310,7 @@ SMS SEND
     font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 6px 20px rgba(255, 77, 46, 0.3);
+    box-shadow: 0 6px 20px rgba(13, 110, 253, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3361,7 +3361,7 @@ SMS TEMPLATES
 }
 
 .template-icon.birthday {
-    background: rgba(255, 184, 0, 0.2);
+    background: rgba(255, 193, 7, 0.2);
     color: var(--accent);
 }
 
@@ -3420,7 +3420,7 @@ SMS TEMPLATES
 }
 
 .template-preview code {
-    background: rgba(255, 77, 46, 0.15);
+    background: rgba(13, 110, 253, 0.15);
     color: var(--primary);
     padding: 2px 6px;
     border-radius: 4px;
@@ -3437,7 +3437,7 @@ SMS TEMPLATES
 .template-var {
     font-size: var(--font-size-xs);
     color: var(--accent);
-    background: rgba(255, 184, 0, 0.1);
+    background: rgba(255, 193, 7, 0.1);
     padding: 3px 8px;
     border-radius: 6px;
 }
@@ -3537,12 +3537,12 @@ BELTS PROGRESS
 
 .belt-step.earned .belt-circle {
     border-color: var(--accent);
-    box-shadow: 0 0 10px rgba(255, 184, 0, 0.25);
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.25);
 }
 
 .belt-step.current .belt-circle {
     border-color: var(--primary);
-    box-shadow: 0 0 14px rgba(255, 77, 46, 0.45);
+    box-shadow: 0 0 14px rgba(13, 110, 253, 0.45);
     animation: beltPulse 2s ease-in-out infinite;
 }
 
@@ -3550,11 +3550,11 @@ BELTS PROGRESS
 
     0%,
     100% {
-        box-shadow: 0 0 14px rgba(255, 77, 46, 0.45);
+        box-shadow: 0 0 14px rgba(13, 110, 253, 0.45);
     }
 
     50% {
-        box-shadow: 0 0 22px rgba(255, 77, 46, 0.65);
+        box-shadow: 0 0 22px rgba(13, 110, 253, 0.65);
     }
 }
 
@@ -3577,8 +3577,8 @@ BELTS PROGRESS
 }
 
 .current-belt-card {
-    background: linear-gradient(135deg, rgba(255, 77, 46, 0.12), rgba(255, 184, 0, 0.04));
-    border: 1px solid rgba(255, 77, 46, 0.18);
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.12), rgba(255, 193, 7, 0.04));
+    border: 1px solid rgba(13, 110, 253, 0.18);
     border-radius: 18px;
     padding: 20px;
     margin-bottom: 18px;
@@ -3713,7 +3713,7 @@ BELTS PROGRESS
 .dan-item.current i {
     color: var(--accent);
     font-size: 2.8rem;
-    filter: drop-shadow(0 0 10px rgba(255, 184, 0, 0.5));
+    filter: drop-shadow(0 0 10px rgba(255, 193, 7, 0.5));
     animation: danGlow 2s ease-in-out infinite;
 }
 
@@ -3737,11 +3737,11 @@ BELTS PROGRESS
 
     0%,
     100% {
-        filter: drop-shadow(0 0 6px rgba(255, 184, 0, 0.3));
+        filter: drop-shadow(0 0 6px rgba(255, 193, 7, 0.3));
     }
 
     50% {
-        filter: drop-shadow(0 0 16px rgba(255, 184, 0, 0.6));
+        filter: drop-shadow(0 0 16px rgba(255, 193, 7, 0.6));
     }
 }
 
@@ -3853,7 +3853,7 @@ BELTS PROMOTION
 .promo-belt-change .belt-to {
     padding: 3px 8px;
     border-radius: 8px;
-    background: rgba(255, 184, 0, 0.15);
+    background: rgba(255, 193, 7, 0.15);
     color: var(--accent);
 }
 
@@ -3876,7 +3876,7 @@ BELTS PROMOTION
 
 .btn-promote:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(255, 184, 0, 0.3);
+    box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
 }
 
 .btn-promote:active {
@@ -3999,12 +3999,12 @@ MEMBER ADD
     font-weight: 700;
     cursor: pointer;
     transition: all 0.25s;
-    box-shadow: 0 6px 20px rgba(255, 77, 46, 0.3);
+    box-shadow: 0 6px 20px rgba(13, 110, 253, 0.3);
 }
 
 .btn-submit-form:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(255, 77, 46, 0.4);
+    box-shadow: 0 8px 25px rgba(13, 110, 253, 0.4);
 }
 
 .btn-cancel-form {
@@ -4132,7 +4132,7 @@ COACHES
 
 .coach-action-btn.delete:hover {
     color: var(--danger);
-    border-color: rgba(255, 77, 46, 0.3);
+    border-color: rgba(13, 110, 253, 0.3);
 }
 
 .coach-action-btn.call {
@@ -4386,9 +4386,9 @@ select.input-glass + .select2-container {
     border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 999px;
     padding: 11px 16px;
-    background: linear-gradient(135deg, var(--primary), #ff8a65);
+    background: linear-gradient(135deg, var(--primary), #3d8bfd);
     color: #fff;
-    box-shadow: 0 14px 30px rgba(255, 77, 46, 0.28);
+    box-shadow: 0 14px 30px rgba(13, 110, 253, 0.28);
     font-size: var(--font-size-sm);
     font-weight: 700;
     cursor: pointer;
@@ -4407,7 +4407,7 @@ body.app-offline::before {
     z-index: 2500;
     padding: 6px 14px;
     border-radius: 999px;
-    background: rgba(255, 77, 46, 0.95);
+    background: rgba(13, 110, 253, 0.95);
     color: #fff;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
     font-size: var(--font-size-xs);
@@ -4809,4 +4809,140 @@ body.light-mode .select2-search--dropdown .select2-search__field {
 
 body.light-mode .select2-search--dropdown .select2-search__field::placeholder {
     color: #6c757d !important;
+}
+
+
+/* ============================================================
+   LIGHT THEME — FINAL SURFACE AND CONTRAST FIXES
+============================================================ */
+body.light-mode {
+    --text-muted: #495057;
+    --text-secondary: #343a40;
+    --border-glass: #ced4da;
+    --input-bg: #ffffff;
+}
+
+/* Explicit light surfaces override legacy fixed dark backgrounds. */
+body.light-mode .mobile-nav,
+body.light-mode .mobile-nav-header,
+body.light-mode .mobile-nav-footer {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+    border-color: #dee2e6 !important;
+}
+
+body.light-mode .mobile-nav .nav-group-header,
+body.light-mode .mobile-nav .nav-submenu a,
+body.light-mode .mobile-nav .sidebar-nav li a,
+body.light-mode .mobile-nav .nav-user-role,
+body.light-mode .mobile-nav .nav-logo {
+    color: #343a40 !important;
+}
+
+body.light-mode .mobile-nav .nav-group-header:hover,
+body.light-mode .mobile-nav .nav-submenu a:hover,
+body.light-mode .mobile-nav .sidebar-nav li a:hover {
+    color: #212529 !important;
+    background-color: #f1f3f5 !important;
+}
+
+body.light-mode .mobile-nav .nav-submenu a.active,
+body.light-mode .mobile-nav .sidebar-nav li a.active {
+    color: #0d6efd !important;
+    background-color: #e7f1ff !important;
+}
+
+/* Custom bottom-sheet and Bootstrap modals. */
+body.light-mode .modal-sheet,
+body.light-mode .modal-content {
+    color: #212529 !important;
+    background-color: #ffffff !important;
+    border-color: #dee2e6 !important;
+}
+
+body.light-mode .modal-sheet .modal-title,
+body.light-mode .modal-sheet .modal-body,
+body.light-mode .modal-sheet label,
+body.light-mode .modal-content .modal-title,
+body.light-mode .modal-content .modal-body,
+body.light-mode .modal-content label {
+    color: #212529 !important;
+}
+
+body.light-mode .modal-sheet .form-label-sm {
+    color: #495057 !important;
+}
+
+/* Cancel/back actions must remain visually distinct from the surface. */
+body.light-mode .btn-cancel-sm,
+body.light-mode .btn-cancel-form,
+body.light-mode .btn-glass,
+body.light-mode .modal-sheet .btn-cancel-sm {
+    color: #212529 !important;
+    background-color: #e9ecef !important;
+    border: 1px solid #adb5bd !important;
+}
+
+body.light-mode .btn-cancel-sm:hover,
+body.light-mode .btn-cancel-form:hover,
+body.light-mode .btn-glass:hover {
+    color: #16181b !important;
+    background-color: #dee2e6 !important;
+    border-color: #868e96 !important;
+}
+
+/* Native select and Select2: light popup, dark readable text. */
+body.light-mode select,
+body.light-mode select.form-select,
+body.light-mode select.input-glass {
+    color: #212529 !important;
+    background-color: #ffffff !important;
+    border-color: #adb5bd !important;
+    color-scheme: light !important;
+    -webkit-text-fill-color: #212529 !important;
+}
+
+body.light-mode select option,
+body.light-mode select.form-select option,
+body.light-mode select.input-glass option {
+    color: #212529 !important;
+    background: #ffffff !important;
+}
+
+body.light-mode .select2-container--default .select2-selection--single,
+body.light-mode .select2-container--default .select2-selection--multiple {
+    color: #212529 !important;
+    background: #ffffff !important;
+    border-color: #adb5bd !important;
+}
+
+body.light-mode .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #212529 !important;
+}
+
+body.light-mode .select2-container--open .select2-dropdown,
+body.light-mode .select2-dropdown,
+body.light-mode .select2-results,
+body.light-mode .select2-results__options,
+body.light-mode .select2-results__option {
+    color: #212529 !important;
+    background: #ffffff !important;
+}
+
+body.light-mode .select2-results__option--highlighted,
+body.light-mode .select2-results__option--highlighted[aria-selected] {
+    color: #ffffff !important;
+    background: #0d6efd !important;
+}
+
+/* Subtitles and metadata need stronger contrast on light surfaces. */
+body.light-mode .page-header .page-subtitle,
+body.light-mode .page-header .page-title span,
+body.light-mode .belt-step .belt-label,
+body.light-mode .current-belt-card .belt-progress-info,
+body.light-mode .welcome-card .welcome-sub,
+body.light-mode .coach-info-page .coach-meta-page,
+body.light-mode .sidebar-category,
+body.light-mode .sidebar-user .user-info .user-role {
+    color: #495057 !important;
 }
