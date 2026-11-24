@@ -36,6 +36,24 @@
                     <div class="mt-3 text-muted small">هنوز شعبه‌ای ثبت نشده است.</div>
                     {% endif %}
                 </div>
+                <div class="d-flex flex-wrap gap-2 mt-3" style="width:100%;">
+                    <a href="{% url 'clubs:organization_detail' organization.pk %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye"></i> مشاهده
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                            onclick="openEditOrganizationModal({{ organization.pk }}, '{{ organization.name|escapejs }}')">
+                        <i class="bi bi-pencil"></i> ویرایش
+                    </button>
+                    {% if organization.is_active %}
+                    <form method="post" action="{% url 'clubs:organization_deactivate' organization.pk %}"
+                          onsubmit="return confirm('مجموعه غیرفعال شود؟ این عملیات فقط برای مجموعه‌های بدون شعبه فعال انجام می‌شود.');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-archive"></i> غیرفعال‌سازی
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
             </section>
             {% empty %}
             <div class="text-center py-5 text-muted" style="grid-column:1/-1;">هنوز مجموعه‌ای ثبت نشده است.</div>
@@ -43,6 +61,25 @@
         </div>
     </main>
     {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+
+<div class="modal-overlay" id="editOrganizationModalOverlay" onclick="closeEditOrganizationModal()"></div>
+<div class="modal-sheet" id="editOrganizationModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">ویرایش مجموعه</div>
+    <div class="modal-body">
+        <form method="post" id="editOrganizationForm">
+            {% csrf_token %}
+            <div class="modal-form-group">
+                <label class="form-label-sm" for="editOrganizationName">نام مجموعه *</label>
+                <input type="text" name="name" id="editOrganizationName" class="input-glass" maxlength="200" required>
+            </div>
+            <div class="modal-btn-row">
+                <button type="button" class="btn-cancel-sm" onclick="closeEditOrganizationModal()">انصراف</button>
+                <button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> ذخیره تغییرات</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div class="modal-overlay" id="organizationModalOverlay" onclick="closeOrganizationModal()"></div>
@@ -66,6 +103,17 @@
 {% endblock %}
 {% block extra_js %}
 <script>
+function openEditOrganizationModal(id, name) {
+    document.getElementById('editOrganizationForm').action = '/clubs/organizations/' + id + '/edit/';
+    document.getElementById('editOrganizationName').value = name;
+    document.getElementById('editOrganizationModalOverlay').classList.add('show');
+    document.getElementById('editOrganizationModal').classList.add('show');
+    document.getElementById('editOrganizationName').focus();
+}
+function closeEditOrganizationModal() {
+    document.getElementById('editOrganizationModalOverlay').classList.remove('show');
+    document.getElementById('editOrganizationModal').classList.remove('show');
+}
 function openOrganizationModal() {
     document.getElementById('organizationModalOverlay').classList.add('show');
     document.getElementById('organizationModal').classList.add('show');
