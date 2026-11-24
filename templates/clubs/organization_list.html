@@ -26,14 +26,14 @@
                         <span>{{ organization.branch_count }} شعبه</span>
                         <span>{% if organization.is_active %}فعال{% else %}غیرفعال{% endif %}</span>
                     </div>
-                    {% if organization.branches.all %}
+                    {% if organization.branch_count %}
                     <div class="mt-3 d-flex flex-wrap gap-2">
                         {% for branch in organization.branches.all %}
                         <span class="info-badge"><i class="bi bi-geo-alt"></i> {{ branch.name }} – {{ branch.city.name }}</span>
-                        {% empty %}
-                        <span class="text-muted small">هنوز شعبه‌ای ثبت نشده است.</span>
                         {% endfor %}
                     </div>
+                    {% else %}
+                    <div class="mt-3 text-muted small">هنوز شعبه‌ای ثبت نشده است.</div>
                     {% endif %}
                 </div>
             </section>
