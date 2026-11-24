@@ -1016,10 +1016,25 @@ body.light-mode .notif-divider {
 
 @media (min-width: 768px) {
     .notif-bar-wrapper {
-        margin-top: -12px;
-        margin-left: -12px;
-        margin-right: -12px;
+        margin-top: -18px;
+        margin-left: -18px;
+        margin-right: -18px;
         padding: 8px 16px;
+    }
+
+    .notif-bar {
+        width: 100%;
+        min-width: 100% !important;
+        justify-content: space-between;
+        direction: rtl;
+    }
+
+    .notif-actions-group,
+    .notif-controls-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
     }
 
     .notif-item {
