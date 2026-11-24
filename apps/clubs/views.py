@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
+from django.db.models import Count
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.http import HttpResponse
@@ -134,6 +135,44 @@ def get_cities(request, province_id):
     return JsonResponse(list(cities), safe=False)
 
 
+# ========== مدیریت مجموعه‌ها ==========
+
+class OrganizationListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = Organization
+    template_name = 'clubs/organization_list.html'
+    context_object_name = 'organizations'
+
+    def test_func(self):
+        return self.request.user.is_super_manager
+
+    def get_queryset(self):
+        return Organization.objects.annotate(
+            branch_count=Count('branches')
+        ).prefetch_related('branches__city', 'branches__province').order_by('name')
+
+
+class OrganizationCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_super_manager
+
+    def post(self, request):
+        name = request.POST.get('name', '').strip()
+        if not name:
+            messages.error(request, 'نام مجموعه الزامی است')
+            return redirect('clubs:organization_list')
+
+        base_slug = slugify(name, allow_unicode=True) or 'organization'
+        slug = base_slug
+        suffix = 2
+        while Organization.objects.filter(slug=slug).exists():
+            slug = f'{base_slug}-{suffix}'
+            suffix += 1
+
+        organization = Organization.objects.create(name=name, slug=slug)
+        messages.success(request, f'مجموعه «{organization.name}» ایجاد شد')
+        return redirect('clubs:organization_list')
+
+
 # ========== باشگاه‌ها ==========
 
 class ClubListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
@@ -148,7 +187,6 @@ class ClubListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['provinces'] = Province.objects.all()
-        context['organizations'] = Organization.objects.filter(is_active=True).order_by('name')
         return context
 
 
@@ -162,25 +200,14 @@ class ClubCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
         phone = request.POST.get('phone', '').strip()
         address = request.POST.get('address', '').strip()
         organization_id = request.POST.get('organization')
-        organization_name = request.POST.get('organization_name', '').strip()
 
-        if not (name and province_id and city_id):
-            messages.error(request, 'نام باشگاه، استان و شهر الزامی است')
+        if not (name and province_id and city_id and organization_id):
+            messages.error(request, 'نام شعبه، مجموعه، استان و شهر الزامی است')
             return redirect('clubs:club_list')
 
-        if organization_name:
-            base_slug = slugify(organization_name, allow_unicode=True) or 'organization'
-            slug = base_slug
-            suffix = 2
-            while Organization.objects.filter(slug=slug).exists():
-                slug = f'{base_slug}-{suffix}'
-                suffix += 1
-            organization = Organization.objects.create(name=organization_name, slug=slug)
-        elif organization_id:
-            organization = get_object_or_404(Organization, pk=organization_id, is_active=True)
-        else:
-            messages.error(request, 'مجموعه را انتخاب کنید یا نام مجموعه جدید را وارد کنید')
-            return redirect('clubs:club_list')
+        organization = get_object_or_404(
+            Organization, pk=organization_id, is_active=True
+        )
 
         Club.objects.create(
             organization=organization,
