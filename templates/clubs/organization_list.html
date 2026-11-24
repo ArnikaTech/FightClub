@@ -53,24 +53,48 @@
 .organization-empty-branches { color:var(--text-muted);font-size:var(--font-size-xs); }
 .organization-actions { justify-content:flex-end; padding-top:0; flex-shrink:0; gap:6px; }
 .organization-detail-header { margin-bottom:18px; }
-.organization-page-intro {
+.organization-toolbar-card {
+    width:100%;
+    margin-bottom:22px;
+    padding:20px 22px;
+    border:1px solid var(--border-glass);
+    border-radius:16px;
+    background:var(--card-bg);
+    box-shadow:var(--shadow-sm, 0 2px 10px rgba(0,0,0,.04));
+}
+.organization-toolbar-main {
     display:flex;
     align-items:center;
-    gap:10px;
-    margin-top:12px;
-    padding:11px 14px;
-    max-width:520px;
-    border:1px solid var(--border-glass);
-    border-radius:12px;
-    background:var(--card-bg);
+    justify-content:space-between;
+    gap:18px;
+}
+.organization-toolbar-heading { min-width:0; }
+.organization-toolbar-subtitle {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:8px;
     color:var(--text-muted);
     font-size:var(--font-size-sm);
     line-height:1.8;
 }
-.organization-page-intro i {
-    flex-shrink:0;
-    color:var(--text-muted);
-    font-size:17px;
+.organization-toolbar-subtitle i { flex-shrink:0; }
+.organization-toolbar-filter {
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:18px;
+    padding-top:16px;
+    border-top:1px solid var(--border-glass);
+}
+.organization-toolbar-filter .form-select { width:auto; min-width:190px; }
+@media (max-width:575px) {
+    .organization-toolbar-card { padding:16px; }
+    .organization-toolbar-main { align-items:flex-start; flex-direction:column; }
+    .organization-toolbar-main > .btn-add { align-self:stretch; justify-content:center; }
+    .organization-toolbar-filter { align-items:stretch; }
+    .organization-toolbar-filter .form-select { flex:1; min-width:0; width:100%; max-width:none !important; }
 }
 .organization-summary-card {
     background:var(--card-bg);
@@ -108,27 +132,28 @@
     {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
     <main class="dashboard-main">
         {% include 'partials/_notif_bar.html' %}
-        <div class="page-header animate__animated animate__fadeIn">
-            <div>
-                <h1 class="page-title">مجموعه‌ها <span>{{ organizations.count }} مجموعه</span></h1>
-                <div class="organization-page-intro">
-                    <i class="bi bi-info-circle"></i>
-                    <span>مدیریت مجموعه‌های مستقل و شعبه‌های وابسته به آن‌ها</span>
+        <section class="organization-toolbar-card animate__animated animate__fadeIn">
+            <div class="organization-toolbar-main">
+                <div class="organization-toolbar-heading">
+                    <h1 class="page-title">مجموعه‌ها <span>{{ organizations.count }} مجموعه</span></h1>
+                    <div class="organization-toolbar-subtitle">
+                        <i class="bi bi-info-circle"></i>
+                        <span>مدیریت مجموعه‌های مستقل و شعبه‌های وابسته به آن‌ها</span>
+                    </div>
                 </div>
+                <button type="button" onclick="openOrganizationModal()" class="btn-add">
+                    <i class="bi bi-plus-lg"></i><span class="btn-add-text">مجموعه جدید</span>
+                </button>
             </div>
-            <button type="button" onclick="openOrganizationModal()" class="btn-add">
-                <i class="bi bi-plus-lg"></i><span class="btn-add-text">مجموعه جدید</span>
-            </button>
-        </div>
-
-        <form method="get" class="d-flex flex-wrap align-items-center gap-2 mb-3" style="max-width:420px;">
-            <label for="organizationStatusFilter" class="form-label mb-0">نمایش وضعیت:</label>
-            <select id="organizationStatusFilter" name="status" class="form-select" onchange="this.form.submit()" style="max-width:220px;">
-                <option value="all" {% if selected_status == 'all' %}selected{% endif %}>همه مجموعه‌ها</option>
-                <option value="active" {% if selected_status == 'active' %}selected{% endif %}>فقط فعال</option>
-                <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>فقط غیرفعال</option>
-            </select>
-        </form>
+            <form method="get" class="organization-toolbar-filter">
+                <label for="organizationStatusFilter" class="form-label mb-0">نمایش وضعیت:</label>
+                <select id="organizationStatusFilter" name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="all" {% if selected_status == 'all' %}selected{% endif %}>همه مجموعه‌ها</option>
+                    <option value="active" {% if selected_status == 'active' %}selected{% endif %}>فقط فعال</option>
+                    <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>فقط غیرفعال</option>
+                </select>
+            </form>
+        </section>
 
         <div class="coach-list-page organization-list">
             {% for organization in organizations %}
