@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ organization.name }} | جزئیات مجموعه{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">{{ organization.name }}</h1>
+                <p class="text-muted mb-0">جزئیات مجموعه و شعبه‌های وابسته</p>
+            </div>
+            <a href="{% url 'clubs:organization_list' %}" class="btn-cancel-sm">بازگشت به مجموعه‌ها</a>
+        </div>
+        <div class="coach-list-page">
+            <section class="coach-card-page">
+                <div class="coach-avatar-page"><i class="bi bi-diagram-3-fill"></i></div>
+                <div class="coach-info-page">
+                    <div class="coach-name-page">{{ organization.name }}</div>
+                    <div class="coach-meta-page">
+                        <span>{{ organization.branch_count }} شعبه</span>
+                        <span>{% if organization.is_active %}فعال{% else %}غیرفعال{% endif %}</span>
+                        <span>ایجاد: {{ organization.created_at|date:"Y/m/d" }}</span>
+                    </div>
+                </div>
+            </section>
+            <h3 class="mt-4 mb-3">شعبه‌های مجموعه</h3>
+            {% for branch in organization.branches.all %}
+            <section class="coach-card-page">
+                <div class="coach-avatar-page"><i class="bi bi-geo-alt-fill"></i></div>
+                <div class="coach-info-page">
+                    <div class="coach-name-page">{{ branch.name }}</div>
+                    <div class="coach-meta-page">
+                        <span>{{ branch.city.name }}، {{ branch.province.name }}</span>
+                        <span>{% if branch.is_active %}فعال{% else %}غیرفعال{% endif %}</span>
+                    </div>
+                </div>
+                <a href="{% url 'clubs:club_detail' branch.pk %}" class="btn btn-sm btn-outline-primary">مشاهده شعبه</a>
+            </section>
+            {% empty %}
+            <div class="text-center py-5 text-muted">هنوز شعبه‌ای برای این مجموعه ثبت نشده است.</div>
+            {% endfor %}
+        </div>
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+{% endblock %}
