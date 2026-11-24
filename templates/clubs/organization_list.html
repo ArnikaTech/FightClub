@@ -99,6 +99,15 @@
             </button>
         </div>
 
+        <form method="get" class="d-flex flex-wrap align-items-center gap-2 mb-3" style="max-width:420px;">
+            <label for="organizationStatusFilter" class="form-label mb-0">نمایش وضعیت:</label>
+            <select id="organizationStatusFilter" name="status" class="form-select" onchange="this.form.submit()" style="max-width:220px;">
+                <option value="all" {% if selected_status == 'all' %}selected{% endif %}>همه مجموعه‌ها</option>
+                <option value="active" {% if selected_status == 'active' %}selected{% endif %}>فقط فعال</option>
+                <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>فقط غیرفعال</option>
+            </select>
+        </form>
+
         <div class="coach-list-page organization-list">
             {% for organization in organizations %}
             <section class="coach-card-page organization-card animate__animated animate__fadeInUp">
@@ -122,6 +131,15 @@
                         {% if organization.is_active %}
                         <button type="button" class="coach-action-btn delete" title="غیرفعال‌سازی" aria-label="غیرفعال‌سازی"
                                 onclick="openOrganizationDeactivateModal('{% url 'clubs:organization_deactivate' organization.pk %}', '{{ organization.name|escapejs }}', {{ organization.branch_count }})"><i class="bi bi-archive"></i></button>
+                        {% else %}
+                        <form method="post" action="{% url 'clubs:organization_activate' organization.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="coach-action-btn edit" title="فعال‌سازی مجدد" aria-label="فعال‌سازی مجدد"><i class="bi bi-arrow-counterclockwise"></i></button>
+                        </form>
+                        {% endif %}
+                        {% if organization.branch_count == 0 %}
+                        <button type="button" class="coach-action-btn delete" title="حذف مجموعه" aria-label="حذف مجموعه"
+                                onclick="openOrganizationDeleteModal('{% url 'clubs:organization_delete' organization.pk %}', '{{ organization.name|escapejs }}')"><i class="bi bi-trash"></i></button>
                         {% endif %}
                     </div>
                 </div>
@@ -142,6 +160,24 @@
         </div>
     </main>
     {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+
+<div class="modal-overlay" id="organizationDeleteModalOverlay" onclick="closeOrganizationDeleteModal()"></div>
+<div class="modal-sheet" id="organizationDeleteModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">تأیید حذف مجموعه</div>
+    <div class="modal-body text-center">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;color:var(--danger);"></i>
+        <p class="mt-3">آیا از حذف مجموعه «<strong id="deleteOrganizationName"></strong>» مطمئن هستید؟</p>
+        <p class="text-muted small">حذف فقط برای مجموعه‌ای ممکن است که هیچ شعبه‌ای نداشته باشد. این عملیات قابل بازگشت نیست.</p>
+        <div class="modal-btn-row mt-3">
+            <button type="button" class="btn-cancel-sm" onclick="closeOrganizationDeleteModal()">انصراف</button>
+            <form id="deleteOrganizationForm" method="post" style="flex:1;">
+                {% csrf_token %}
+                <button type="submit" class="btn-submit-sm" style="width:100%;"><i class="bi bi-trash"></i> حذف مجموعه</button>
+            </form>
+        </div>
+    </div>
 </div>
 
 <div class="modal-overlay" id="organizationDeactivateModalOverlay" onclick="closeOrganizationDeactivateModal()"></div>
@@ -202,6 +238,16 @@
 {% endblock %}
 {% block extra_js %}
 <script>
+function openOrganizationDeleteModal(url, name) {
+    document.getElementById('deleteOrganizationForm').action = url;
+    document.getElementById('deleteOrganizationName').textContent = name;
+    document.getElementById('organizationDeleteModalOverlay').classList.add('show');
+    document.getElementById('organizationDeleteModal').classList.add('show');
+}
+function closeOrganizationDeleteModal() {
+    document.getElementById('organizationDeleteModalOverlay').classList.remove('show');
+    document.getElementById('organizationDeleteModal').classList.remove('show');
+}
 function openOrganizationDeactivateModal(url, name, branchCount) {
     document.getElementById('deactivateOrganizationForm').action = url;
     document.getElementById('deactivateOrganizationName').textContent = name;
