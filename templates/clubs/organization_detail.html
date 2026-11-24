@@ -4,6 +4,11 @@
 {% block content %}
 <style>
 .organization-detail-header { margin-bottom:18px; }
+.organization-back-btn {
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 11px;font-size:var(--font-size-xs);line-height:1.4;
+    min-height:0;border-radius:9px;white-space:nowrap;
+}
 .organization-summary-card {
     background:var(--card-bg);border:1px solid var(--border-glass);
     border-radius:16px;padding:18px;margin-bottom:24px;
@@ -41,7 +46,7 @@
                 <h1 class="page-title">جزئیات مجموعه</h1>
                 <p class="text-muted mb-0">اطلاعات مجموعه و شعبه‌های زیرمجموعه</p>
             </div>
-            <a href="{% url 'clubs:organization_list' %}" class="btn-cancel-sm"><i class="bi bi-arrow-right"></i> بازگشت</a>
+            <a href="{% url 'clubs:organization_list' %}" class="btn-cancel-sm organization-back-btn"><i class="bi bi-arrow-right"></i> بازگشت</a>
         </div>
 
         <section class="organization-summary-card">
