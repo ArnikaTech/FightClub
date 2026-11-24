@@ -1016,6 +1016,9 @@ body.light-mode .notif-divider {
 
 @media (min-width: 768px) {
     .notif-bar-wrapper {
+        margin-top: -12px;
+        margin-left: -12px;
+        margin-right: -12px;
         padding: 8px 16px;
     }
 
