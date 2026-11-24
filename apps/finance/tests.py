@@ -57,7 +57,9 @@ class FinanceTenantAccessTests(TestCase):
             first_name='هنرجوی',
             last_name='الف',
         )
-        cls.student = Student.objects.create(\n            user=student_user, club=cls.club_a, student_code='TEST-001'\n        )
+        cls.student = Student.objects.create(
+            user=student_user, club=cls.club_a, student_code='TEST-001'
+        )
         cls.other_student_user = User.objects.create_user(
             phone='09120000004',
             password='test-password',
