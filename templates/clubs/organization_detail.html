@@ -2,44 +2,79 @@
 {% load static %}
 {% block title %}{{ organization.name }} | جزئیات مجموعه{% endblock %}
 {% block content %}
+<style>
+.organization-detail-header { margin-bottom:18px; }
+.organization-summary-card {
+    background:var(--card-bg);border:1px solid var(--border-glass);
+    border-radius:16px;padding:18px;margin-bottom:24px;
+}
+.organization-summary-top { display:flex;align-items:center;gap:14px; }
+.organization-summary-icon {
+    width:54px;height:54px;flex-shrink:0;border-radius:15px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--input-bg);border:1px solid var(--border-glass);
+    font-size:24px;color:var(--text-muted);
+}
+.organization-summary-name { font-size:var(--font-size-lg);font-weight:700;overflow-wrap:anywhere; }
+.organization-summary-meta { display:flex;flex-wrap:wrap;gap:12px;margin-top:7px;color:var(--text-muted);font-size:var(--font-size-xs); }
+.organization-section-title { font-size:var(--font-size-base);font-weight:700;margin:0 0 12px; }
+.organization-branch-card { display:flex;align-items:center;gap:12px; }
+.organization-branch-card .coach-info-page { min-width:0; }
+.organization-branch-location { color:var(--text-muted);font-size:var(--font-size-xs);margin-top:4px; }
+.organization-branch-state { margin-right:auto;font-size:var(--font-size-xs);white-space:nowrap; }
+.organization-empty-state {
+    text-align:center;padding:32px 16px;border:1px dashed var(--border-glass);
+    border-radius:14px;color:var(--text-muted);background:var(--card-bg);
+}
+@media(max-width:575px) {
+    .organization-summary-card { padding:14px; }
+    .organization-branch-card { align-items:flex-start; }
+    .organization-branch-state { margin-right:0; }
+}
+</style>
 <div class="dashboard-layout">
     {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
     <main class="dashboard-main">
         {% include 'partials/_notif_bar.html' %}
-        <div class="page-header">
+        <div class="page-header organization-detail-header">
             <div>
-                <h1 class="page-title">{{ organization.name }}</h1>
-                <p class="text-muted mb-0">جزئیات مجموعه و شعبه‌های وابسته</p>
+                <h1 class="page-title">جزئیات مجموعه</h1>
+                <p class="text-muted mb-0">اطلاعات مجموعه و شعبه‌های زیرمجموعه</p>
             </div>
-            <a href="{% url 'clubs:organization_list' %}" class="btn-cancel-sm">بازگشت به مجموعه‌ها</a>
+            <a href="{% url 'clubs:organization_list' %}" class="btn-cancel-sm"><i class="bi bi-arrow-right"></i> بازگشت</a>
         </div>
-        <div class="coach-list-page">
-            <section class="coach-card-page">
-                <div class="coach-avatar-page"><i class="bi bi-diagram-3-fill"></i></div>
-                <div class="coach-info-page">
-                    <div class="coach-name-page">{{ organization.name }}</div>
-                    <div class="coach-meta-page">
-                        <span>{{ organization.branch_count }} شعبه</span>
-                        <span>{% if organization.is_active %}فعال{% else %}غیرفعال{% endif %}</span>
-                        <span>ایجاد: {{ organization.created_at|date:"Y/m/d" }}</span>
+
+        <section class="organization-summary-card">
+            <div class="organization-summary-top">
+                <div class="organization-summary-icon"><i class="bi bi-diagram-3-fill"></i></div>
+                <div style="min-width:0;">
+                    <div class="organization-summary-name">{{ organization.name }}</div>
+                    <div class="organization-summary-meta">
+                        <span><i class="bi bi-building"></i> {{ organization.branch_count }} شعبه</span>
+                        <span><i class="bi bi-calendar3"></i> ایجاد در {{ organization.created_at|date:"Y/m/d" }}</span>
+                        <span>{% if organization.is_active %}<i class="bi bi-check-circle"></i> فعال{% else %}<i class="bi bi-pause-circle"></i> غیرفعال{% endif %}</span>
                     </div>
                 </div>
-            </section>
-            <h3 class="mt-4 mb-3">شعبه‌های مجموعه</h3>
+            </div>
+        </section>
+
+        <h2 class="organization-section-title">شعبه‌های مجموعه</h2>
+        <div class="coach-list-page">
             {% for branch in organization.branches.all %}
-            <section class="coach-card-page">
-                <div class="coach-avatar-page"><i class="bi bi-geo-alt-fill"></i></div>
+            <article class="coach-card-page organization-branch-card">
+                <div class="coach-avatar-page"><i class="bi bi-building"></i></div>
                 <div class="coach-info-page">
                     <div class="coach-name-page">{{ branch.name }}</div>
-                    <div class="coach-meta-page">
-                        <span>{{ branch.city.name }}، {{ branch.province.name }}</span>
-                        <span>{% if branch.is_active %}فعال{% else %}غیرفعال{% endif %}</span>
-                    </div>
+                    <div class="organization-branch-location"><i class="bi bi-geo-alt"></i> {{ branch.city.name }}، {{ branch.province.name }}</div>
+                    {% if branch.phone %}<div class="organization-branch-location"><i class="bi bi-telephone"></i> {{ branch.phone }}</div>{% endif %}
                 </div>
-                <a href="{% url 'clubs:club_detail' branch.pk %}" class="btn btn-sm btn-outline-primary">مشاهده شعبه</a>
-            </section>
+                <span class="organization-branch-state">{% if branch.is_active %}فعال{% else %}غیرفعال{% endif %}</span>
+            </article>
             {% empty %}
-            <div class="text-center py-5 text-muted">هنوز شعبه‌ای برای این مجموعه ثبت نشده است.</div>
+            <div class="organization-empty-state">
+                <i class="bi bi-building" style="font-size:2rem;display:block;margin-bottom:10px;"></i>
+                هنوز شعبه‌ای برای این مجموعه ثبت نشده است.
+            </div>
             {% endfor %}
         </div>
     </main>
