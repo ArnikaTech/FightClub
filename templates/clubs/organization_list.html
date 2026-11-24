@@ -53,6 +53,25 @@
 .organization-empty-branches { color:var(--text-muted);font-size:var(--font-size-xs); }
 .organization-actions { justify-content:flex-end; padding-top:0; flex-shrink:0; gap:6px; }
 .organization-detail-header { margin-bottom:18px; }
+.organization-page-intro {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:12px;
+    padding:11px 14px;
+    max-width:520px;
+    border:1px solid var(--border-glass);
+    border-radius:12px;
+    background:var(--card-bg);
+    color:var(--text-muted);
+    font-size:var(--font-size-sm);
+    line-height:1.8;
+}
+.organization-page-intro i {
+    flex-shrink:0;
+    color:var(--text-muted);
+    font-size:17px;
+}
 .organization-summary-card {
     background:var(--card-bg);
     border:1px solid var(--border-glass);
@@ -92,7 +111,10 @@
         <div class="page-header animate__animated animate__fadeIn">
             <div>
                 <h1 class="page-title">مجموعه‌ها <span>{{ organizations.count }} مجموعه</span></h1>
-                <p class="text-muted mb-0">مدیریت مجموعه‌های مستقل و شعبه‌های وابسته به آن‌ها</p>
+                <div class="organization-page-intro">
+                    <i class="bi bi-info-circle"></i>
+                    <span>مدیریت مجموعه‌های مستقل و شعبه‌های وابسته به آن‌ها</span>
+                </div>
             </div>
             <button type="button" onclick="openOrganizationModal()" class="btn-add">
                 <i class="bi bi-plus-lg"></i><span class="btn-add-text">مجموعه جدید</span>
