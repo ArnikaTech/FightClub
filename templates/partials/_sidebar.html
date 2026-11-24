@@ -5,65 +5,99 @@
         <span class="logo-text">{{ site_settings.gym_name|default:"ستاره‌ها" }}</span>
     </div>
     <div class="sidebar-menu-wrapper">
-        <ul class="sidebar-nav">
-            <li><a href="{% url 'accounts:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="bi bi-grid-fill"></i> پیشخوان</a></li>
-            <li><a href="{% url 'accounts:profile' %}" class="{% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'profile_edit' or request.resolver_match.url_name == 'password_change' %}active{% endif %}"><i class="bi bi-person-circle"></i> پروفایل</a></li>
-        </ul>
-        
+        <div class="nav-group {% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'profile_edit' or request.resolver_match.url_name == 'password_change' %}open{% endif %}">
+            <div class="nav-group-header"><span><i class="bi bi-grid-fill"></i> اصلی</span><i class="bi bi-chevron-down nav-chevron"></i></div>
+            <div class="nav-submenu">
+                <ul class="sidebar-nav">
+                    <li><a href="{% url 'accounts:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="bi bi-grid-fill"></i> پیشخوان</a></li>
+                    <li><a href="{% url 'accounts:profile' %}" class="{% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'profile_edit' or request.resolver_match.url_name == 'password_change' %}active{% endif %}"><i class="bi bi-person-circle"></i> پروفایل</a></li>
+                </ul>
+            </div>
+        </div>
+
         {% if user.is_super_manager or user.is_club_manager %}
-        <div class="sidebar-category">باشگاه</div>
-        <ul class="sidebar-nav">
-            {% if user.is_super_manager %}
-            <li><a href="{% url 'clubs:province_list' %}" class="{% if request.resolver_match.url_name == 'province_list' or request.resolver_match.url_name == 'province_add' or request.resolver_match.url_name == 'province_edit' %}active{% endif %}"><i class="bi bi-map-fill"></i> استان‌ها</a></li>
-            <li><a href="{% url 'clubs:city_list' %}" class="{% if request.resolver_match.url_name == 'city_list' or request.resolver_match.url_name == 'city_add' or request.resolver_match.url_name == 'city_edit' %}active{% endif %}"><i class="bi bi-geo-alt-fill"></i> شهرها</a></li>
-            <li><a href="{% url 'clubs:sport_list' %}" class="{% if request.resolver_match.url_name == 'sport_list' or request.resolver_match.url_name == 'sport_add' or request.resolver_match.url_name == 'sport_edit' %}active{% endif %}"><i class="bi bi-trophy-fill"></i> رشته‌ها</a></li>
-            {% endif %}
-            <li><a href="{% url 'clubs:club_list' %}" class="{% if request.resolver_match.url_name == 'club_list' or request.resolver_match.url_name == 'club_add' or request.resolver_match.url_name == 'club_edit' or request.resolver_match.url_name == 'club_detail' %}active{% endif %}"><i class="bi bi-building"></i> باشگاه‌ها</a></li>
-            <li><a href="{% url 'clubs:coach_list' %}" class="{% if request.resolver_match.url_name == 'coach_list' or request.resolver_match.url_name == 'coach_add' or request.resolver_match.url_name == 'coach_edit' %}active{% endif %}"><i class="bi bi-person-badge-fill"></i> مربیان</a></li>
-        </ul>
-        
-        <div class="sidebar-category">هنرجوها</div>
-        <ul class="sidebar-nav">
-            <li><a href="{% url 'students:student_list' %}" class="{% if request.resolver_match.url_name == 'student_list' %}active{% endif %}"><i class="bi bi-people-fill"></i> لیست هنرجوها</a></li>
-            <li><a href="{% url 'students:student_add' %}" class="{% if request.resolver_match.url_name == 'student_add' %}active{% endif %}"><i class="bi bi-person-plus-fill"></i> ثبت هنرجو جدید</a></li>
-        </ul>
-        
-        <div class="sidebar-category">کلاس‌ها</div>
-        <ul class="sidebar-nav">
-            <li><a href="{% url 'students:class_list' %}" class="{% if request.resolver_match.url_name == 'class_list' or request.resolver_match.url_name == 'shift_list' %}active{% endif %}"><i class="bi bi-people-fill"></i> کلاس‌ها و شیفت‌ها</a></li>
-            <li><a href="{% url 'students:enrollment_list' %}" class="{% if request.resolver_match.url_name == 'enrollment_list' %}active{% endif %}"><i class="bi bi-journal-check"></i> ثبت‌نام‌ها</a></li>
-        </ul>
-        
-        <div class="sidebar-category">حضور و غیاب</div>
-        <ul class="sidebar-nav">
-            <li><a href="{% url 'students:attendance' %}" class="{% if request.resolver_match.url_name == 'attendance' %}active{% endif %}"><i class="bi bi-calendar-check-fill"></i> ثبت حضور</a></li>
-            <li><a href="{% url 'students:absentees' %}" class="{% if request.resolver_match.url_name == 'absentees' %}active{% endif %}"><i class="bi bi-exclamation-triangle-fill"></i> پیگیری غیبت‌ها</a></li>
-            <li><a href="{% url 'students:attendance_history' %}" class="{% if request.resolver_match.url_name == 'attendance_history' %}active{% endif %}"><i class="bi bi-calendar-month"></i> تاریخچه ماهانه</a></li>
-        </ul>
-        
-        <div class="sidebar-category">مالی</div>
-        <ul class="sidebar-nav">
-            <li><a href="{% url 'finance:payment_list' %}" class="{% if request.resolver_match.url_name == 'payment_list' %}active{% endif %}"><i class="bi bi-cash"></i> دریافتی‌ها</a></li>
-            <li><a href="{% url 'finance:expense_list' %}" class="{% if request.resolver_match.url_name == 'expense_list' %}active{% endif %}"><i class="bi bi-cash-stack"></i> پرداختی‌ها</a></li>
-            <li><a href="{% url 'finance:debtor_list' %}" class="{% if request.resolver_match.url_name == 'debtor_list' %}active{% endif %}"><i class="bi bi-exclamation-triangle"></i> بدهکاران</a></li>
-            <li><a href="{% url 'finance:report' %}" class="{% if request.resolver_match.url_name == 'report' %}active{% endif %}"><i class="bi bi-bar-chart"></i> گزارش</a></li>
-        </ul>
+        <div class="nav-group {% if request.resolver_match.namespace == 'clubs' %}open{% endif %}">
+            <div class="nav-group-header"><span><i class="bi bi-building"></i> مجموعه و باشگاه</span><i class="bi bi-chevron-down nav-chevron"></i></div>
+            <div class="nav-submenu">
+                <ul class="sidebar-nav">
+                    {% if user.is_super_manager %}
+                    <li><a href="{% url 'clubs:organization_list' %}" class="{% if request.resolver_match.url_name == 'organization_list' %}active{% endif %}"><i class="bi bi-diagram-3-fill"></i> مجموعه‌ها</a></li>
+                    <li><a href="{% url 'clubs:province_list' %}" class="{% if request.resolver_match.url_name == 'province_list' or request.resolver_match.url_name == 'province_add' or request.resolver_match.url_name == 'province_edit' %}active{% endif %}"><i class="bi bi-map-fill"></i> استان‌ها</a></li>
+                    <li><a href="{% url 'clubs:city_list' %}" class="{% if request.resolver_match.url_name == 'city_list' or request.resolver_match.url_name == 'city_add' or request.resolver_match.url_name == 'city_edit' %}active{% endif %}"><i class="bi bi-geo-alt-fill"></i> شهرها</a></li>
+                    <li><a href="{% url 'clubs:sport_list' %}" class="{% if request.resolver_match.url_name == 'sport_list' or request.resolver_match.url_name == 'sport_add' or request.resolver_match.url_name == 'sport_edit' %}active{% endif %}"><i class="bi bi-trophy-fill"></i> رشته‌ها</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'clubs:club_list' %}" class="{% if request.resolver_match.url_name == 'club_list' or request.resolver_match.url_name == 'club_add' or request.resolver_match.url_name == 'club_edit' or request.resolver_match.url_name == 'club_detail' %}active{% endif %}"><i class="bi bi-building"></i> شعبه‌ها</a></li>
+                    <li><a href="{% url 'clubs:coach_list' %}" class="{% if request.resolver_match.url_name == 'coach_list' or request.resolver_match.url_name == 'coach_add' or request.resolver_match.url_name == 'coach_edit' %}active{% endif %}"><i class="bi bi-person-badge-fill"></i> مربیان</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="nav-group {% if request.resolver_match.namespace == 'students' and request.resolver_match.url_name == 'student_list' or request.resolver_match.url_name == 'student_add' or request.resolver_match.url_name == 'student_detail' or request.resolver_match.url_name == 'student_edit' %}open{% endif %}">
+            <div class="nav-group-header"><span><i class="bi bi-people-fill"></i> هنرجویان</span><i class="bi bi-chevron-down nav-chevron"></i></div>
+            <div class="nav-submenu">
+                <ul class="sidebar-nav">
+                    <li><a href="{% url 'students:student_list' %}" class="{% if request.resolver_match.url_name == 'student_list' %}active{% endif %}"><i class="bi bi-people-fill"></i> لیست هنرجویان</a></li>
+                    <li><a href="{% url 'students:student_add' %}" class="{% if request.resolver_match.url_name == 'student_add' %}active{% endif %}"><i class="bi bi-person-plus-fill"></i> ثبت هنرجوی جدید</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="nav-group {% if request.resolver_match.url_name == 'class_list' or request.resolver_match.url_name == 'shift_list' or request.resolver_match.url_name == 'enrollment_list' %}open{% endif %}">
+            <div class="nav-group-header"><span><i class="bi bi-journal-check"></i> کلاس و ثبت‌نام</span><i class="bi bi-chevron-down nav-chevron"></i></div>
+            <div class="nav-submenu">
+                <ul class="sidebar-nav">
+                    <li><a href="{% url 'students:class_list' %}" class="{% if request.resolver_match.url_name == 'class_list' or request.resolver_match.url_name == 'shift_list' %}active{% endif %}"><i class="bi bi-people-fill"></i> کلاس‌ها و شیفت‌ها</a></li>
+                    <li><a href="{% url 'students:enrollment_list' %}" class="{% if request.resolver_match.url_name == 'enrollment_list' %}active{% endif %}"><i class="bi bi-journal-check"></i> ثبت‌نام‌ها</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="nav-group {% if request.resolver_match.url_name == 'attendance' or request.resolver_match.url_name == 'absentees' or request.resolver_match.url_name == 'attendance_history' %}open{% endif %}">
+            <div class="nav-group-header"><span><i class="bi bi-calendar-check-fill"></i> حضور و غیاب</span><i class="bi bi-chevron-down nav-chevron"></i></div>
+            <div class="nav-submenu">
+                <ul class="sidebar-nav">
+                    <li><a href="{% url 'students:attendance' %}" class="{% if request.resolver_match.url_name == 'attendance' %}active{% endif %}"><i class="bi bi-calendar-check-fill"></i> ثبت حضور</a></li>
+                    <li><a href="{% url 'students:absentees' %}" class="{% if request.resolver_match.url_name == 'absentees' %}active{% endif %}"><i class="bi bi-exclamation-triangle-fill"></i> پیگیری غیبت‌ها</a></li>
+                    <li><a href="{% url 'students:attendance_history' %}" class="{% if request.resolver_match.url_name == 'attendance_history' %}active{% endif %}"><i class="bi bi-calendar-month"></i> تاریخچه ماهانه</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="nav-group {% if request.resolver_match.namespace == 'finance' %}open{% endif %}">
+            <div class="nav-group-header"><span><i class="bi bi-cash-stack"></i> امور مالی</span><i class="bi bi-chevron-down nav-chevron"></i></div>
+            <div class="nav-submenu">
+                <ul class="sidebar-nav">
+                    <li><a href="{% url 'finance:payment_list' %}" class="{% if request.resolver_match.url_name == 'payment_list' %}active{% endif %}"><i class="bi bi-cash"></i> دریافتی‌ها</a></li>
+                    <li><a href="{% url 'finance:expense_list' %}" class="{% if request.resolver_match.url_name == 'expense_list' %}active{% endif %}"><i class="bi bi-cash-stack"></i> پرداختی‌ها</a></li>
+                    <li><a href="{% url 'finance:debtor_list' %}" class="{% if request.resolver_match.url_name == 'debtor_list' %}active{% endif %}"><i class="bi bi-exclamation-triangle"></i> بدهکاران</a></li>
+                    <li><a href="{% url 'finance:report' %}" class="{% if request.resolver_match.url_name == 'report' %}active{% endif %}"><i class="bi bi-bar-chart"></i> گزارش مالی</a></li>
+                </ul>
+            </div>
+        </div>
         {% endif %}
-        
-        <div class="sidebar-category">پیام‌ها</div>
-        <ul class="sidebar-nav">
-            <li><a href="{% url 'accounts:inbox' %}" class="{% if request.resolver_match.url_name == 'inbox' %}active{% endif %}"><i class="bi bi-inbox"></i> صندوق ورودی</a></li>
-            <li><a href="{% url 'accounts:compose_message' %}" class="{% if request.resolver_match.url_name == 'compose_message' %}active{% endif %}"><i class="bi bi-pencil-square"></i> پیام جدید</a></li>
-            {% if user.is_super_manager or user.is_club_manager %}
-            <li><a href="{% url 'accounts:bulk_message' %}" class="{% if request.resolver_match.url_name == 'bulk_message' %}active{% endif %}"><i class="bi bi-megaphone"></i> پیام گروهی</a></li>
-            {% endif %}
-        </ul>
-        
+
+        <div class="nav-group {% if request.resolver_match.url_name == 'inbox' or request.resolver_match.url_name == 'compose_message' or request.resolver_match.url_name == 'bulk_message' %}open{% endif %}">
+            <div class="nav-group-header"><span><i class="bi bi-chat-dots"></i> پیام‌ها</span><i class="bi bi-chevron-down nav-chevron"></i></div>
+            <div class="nav-submenu">
+                <ul class="sidebar-nav">
+                    <li><a href="{% url 'accounts:inbox' %}" class="{% if request.resolver_match.url_name == 'inbox' %}active{% endif %}"><i class="bi bi-inbox"></i> صندوق ورودی</a></li>
+                    <li><a href="{% url 'accounts:compose_message' %}" class="{% if request.resolver_match.url_name == 'compose_message' %}active{% endif %}"><i class="bi bi-pencil-square"></i> پیام جدید</a></li>
+                    {% if user.is_super_manager or user.is_club_manager %}
+                    <li><a href="{% url 'accounts:bulk_message' %}" class="{% if request.resolver_match.url_name == 'bulk_message' %}active{% endif %}"><i class="bi bi-megaphone"></i> پیام گروهی</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
         {% if user.is_super_manager %}
-        <div class="sidebar-category">تنظیمات</div>
-        <ul class="sidebar-nav">
-            <li><a href="{% url 'core:settings' %}" class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}"><i class="bi bi-gear"></i> تنظیمات</a></li>
-        </ul>
+        <div class="nav-group {% if request.resolver_match.namespace == 'core' %}open{% endif %}">
+            <div class="nav-group-header"><span><i class="bi bi-gear"></i> تنظیمات</span><i class="bi bi-chevron-down nav-chevron"></i></div>
+            <div class="nav-submenu">
+                <ul class="sidebar-nav">
+                    <li><a href="{% url 'core:settings' %}" class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}"><i class="bi bi-gear"></i> تنظیمات سیستم</a></li>
+                </ul>
+            </div>
+        </div>
         {% endif %}
     </div>
     <div class="sidebar-user">
