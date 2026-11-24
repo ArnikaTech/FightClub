@@ -8,6 +8,13 @@
     display:flex;
     flex-direction:column;
     align-items:stretch;
+    gap:10px;
+    min-width:0;
+}
+.organization-card-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
     gap:12px;
     min-width:0;
 }
@@ -19,6 +26,7 @@
 }
 .organization-card-main .coach-info-page { min-width:0; }
 .organization-card-main .coach-name-page { overflow-wrap:anywhere; }
+.organization-card-main { flex:1; }
 .organization-card .coach-meta-page { align-items:center; }
 .organization-status-active { color:#34c759; }
 .organization-status-inactive { color:var(--danger); }
@@ -43,7 +51,7 @@
     overflow-wrap:anywhere;
 }
 .organization-empty-branches { color:var(--text-muted);font-size:var(--font-size-xs); }
-.organization-actions { justify-content:flex-end; padding-top:2px; }
+.organization-actions { justify-content:flex-end; padding-top:0; flex-shrink:0; gap:6px; }
 .organization-detail-header { margin-bottom:18px; }
 .organization-summary-card {
     background:var(--card-bg);
@@ -94,16 +102,27 @@
         <div class="coach-list-page organization-list">
             {% for organization in organizations %}
             <section class="coach-card-page organization-card animate__animated animate__fadeInUp">
-                <div class="organization-card-main">
-                    <div class="coach-avatar-page"><i class="bi bi-diagram-3-fill"></i></div>
-                    <div class="coach-info-page">
-                        <div class="coach-name-page">{{ organization.name }}</div>
-                        <div class="coach-meta-page">
-                            <span><i class="bi bi-geo-alt"></i> {{ organization.branch_count }} شعبه</span>
-                            <span class="{% if organization.is_active %}organization-status-active{% else %}organization-status-inactive{% endif %}">
-                                <i class="bi bi-circle-fill"></i> {% if organization.is_active %}فعال{% else %}غیرفعال{% endif %}
-                            </span>
+                <div class="organization-card-header">
+                    <div class="organization-card-main">
+                        <div class="coach-avatar-page"><i class="bi bi-diagram-3-fill"></i></div>
+                        <div class="coach-info-page">
+                            <div class="coach-name-page">{{ organization.name }}</div>
+                            <div class="coach-meta-page">
+                                <span><i class="bi bi-geo-alt"></i> {{ organization.branch_count }} شعبه</span>
+                                <span class="{% if organization.is_active %}organization-status-active{% else %}organization-status-inactive{% endif %}">
+                                    <i class="bi bi-circle-fill"></i> {% if organization.is_active %}فعال{% else %}غیرفعال{% endif %}
+                                </span>
+                            </div>
                         </div>
+                    </div>
+                    <div class="coach-actions organization-actions">
+                        <a href="{% url 'clubs:organization_detail' organization.pk %}" class="coach-action-btn" title="مشاهده" aria-label="مشاهده"><i class="bi bi-eye"></i></a>
+                        <button type="button" class="coach-action-btn edit" title="ویرایش" aria-label="ویرایش"
+                                onclick="openEditOrganizationModal({{ organization.pk }}, '{{ organization.name|escapejs }}')"><i class="bi bi-pencil"></i></button>
+                        {% if organization.is_active %}
+                        <button type="button" class="coach-action-btn delete" title="غیرفعال‌سازی" aria-label="غیرفعال‌سازی"
+                                onclick="openOrganizationDeactivateModal('{% url 'clubs:organization_deactivate' organization.pk %}', '{{ organization.name|escapejs }}', {{ organization.branch_count }})"><i class="bi bi-archive"></i></button>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="organization-branches-preview">
@@ -114,15 +133,6 @@
                     {% endfor %}
                     {% if organization.branch_count > 3 %}
                     <span class="organization-branch-chip">و {{ organization.branch_count|add:"-3" }} شعبه دیگر</span>
-                    {% endif %}
-                </div>
-                <div class="coach-actions organization-actions">
-                    <a href="{% url 'clubs:organization_detail' organization.pk %}" class="coach-action-btn" title="مشاهده" aria-label="مشاهده"><i class="bi bi-eye"></i></a>
-                    <button type="button" class="coach-action-btn edit" title="ویرایش" aria-label="ویرایش"
-                            onclick="openEditOrganizationModal({{ organization.pk }}, '{{ organization.name|escapejs }}')"><i class="bi bi-pencil"></i></button>
-                    {% if organization.is_active %}
-                    <button type="button" class="coach-action-btn delete" title="غیرفعال‌سازی" aria-label="غیرفعال‌سازی"
-                            onclick="openOrganizationDeactivateModal('{% url 'clubs:organization_deactivate' organization.pk %}', '{{ organization.name|escapejs }}', {{ organization.branch_count }})"><i class="bi bi-archive"></i></button>
                     {% endif %}
                 </div>
             </section>
