@@ -188,6 +188,7 @@ class ClubListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['provinces'] = Province.objects.all()
+        context['organizations'] = Organization.objects.filter(is_active=True).order_by('name')
         return context
 
 
