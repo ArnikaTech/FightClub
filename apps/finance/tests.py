@@ -137,6 +137,31 @@ class FinanceTenantAccessTests(TestCase):
         self.fee_due.refresh_from_db()
         self.assertEqual(self.fee_due.amount, 100000)
 
+    def test_manager_cannot_delete_fee_due_for_another_organization(self):
+        self.client.force_login(self.manager_a)
+
+        response = self.client.post(
+            reverse('finance:fee_delete', args=[self.fee_due.pk])
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(FeeDue.objects.filter(pk=self.fee_due.pk).exists())
+
+    def test_manager_cannot_add_fee_for_student_from_another_organization(self):
+        self.client.force_login(self.manager_a)
+        payment_count = Payment.objects.count()
+
+        response = self.client.post(
+            reverse('finance:fee_add', args=[self.other_student.pk]),
+            {'month': '1405/02', 'amount': '100000'},
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(Payment.objects.count(), payment_count)
+        self.assertFalse(
+            FeeDue.objects.filter(student=self.other_student, month='1405/02').exists()
+        )
+
     def test_manager_can_access_payment_in_their_own_organization(self):
         own_payment = Payment.objects.create(
             student=self.student,
