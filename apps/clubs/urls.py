@@ -5,6 +5,8 @@ from . import views
 app_name = 'clubs'
 
 urlpatterns = [
+    path('organizations/', views.OrganizationListView.as_view(), name='organization_list'),
+    path('organizations/add/', views.OrganizationCreateView.as_view(), name='organization_add'),
     path('', views.ClubListView.as_view(), name='club_list'),
     path('add/', views.ClubCreateView.as_view(), name='club_add'),
     path('<int:pk>/', views.ClubDetailView.as_view(), name='club_detail'),
