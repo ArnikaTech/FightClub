@@ -5,9 +5,9 @@ APP.CSS
 @import url("fonts.css");
 
 :root {
-    --primary: #ff4d2e;
-    --primary-dark: #e63900;
-    --accent: #ffb800;
+    --primary: #0d6efd;
+    --primary-dark: #0a58ca;
+    --accent: #ffc107;
 
     /* Theme tokens: Bootstrap-compatible dark palette */
     --bg-dark: #16191d;
@@ -35,9 +35,9 @@ APP.CSS
     --bs-link-hover-color: #9ec5fe;
     color-scheme: dark;
 
-    --danger: #ff8a80;
-    --danger-bg: rgba(255, 77, 46, 0.14);
-    --danger-border: rgba(255, 77, 46, 0.34);
+    --danger: #ff6b75;
+    --danger-bg: rgba(220, 53, 69, 0.14);
+    --danger-border: rgba(220, 53, 69, 0.34);
 
     --font-primary: 'Vazirmatn', 'Tahoma', system-ui, -apple-system, sans-serif;
 
@@ -4555,3 +4555,115 @@ body.light-mode .select2-search--dropdown .select2-search__field {
     color: #212529 !important;
 }
 
+/* ============================================================
+   BOOTSTRAP COLOR SYSTEM — SIDEBAR & MOBILE NAV NORMALIZATION
+   Shared tokens keep both themes consistent with Bootstrap 5.
+============================================================ */
+:root {
+    --bs-primary: #0d6efd;
+    --bs-primary-rgb: 13, 110, 253;
+    --bs-secondary: #6c757d;
+    --bs-secondary-rgb: 108, 117, 125;
+    --bs-success: #198754;
+    --bs-success-rgb: 25, 135, 84;
+    --bs-danger: #dc3545;
+    --bs-danger-rgb: 220, 53, 69;
+    --bs-warning: #ffc107;
+    --bs-warning-rgb: 255, 193, 7;
+    --bs-info: #0dcaf0;
+    --bs-info-rgb: 13, 202, 240;
+}
+
+body.light-mode {
+    --danger: #dc3545;
+    --danger-bg: rgba(220, 53, 69, 0.10);
+    --danger-border: rgba(220, 53, 69, 0.28);
+}
+
+/* Off-canvas mobile menu: use theme surfaces, never a fixed dark color. */
+.mobile-nav {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border-color: var(--border-glass);
+}
+
+.mobile-nav-header,
+.mobile-nav-footer {
+    border-color: var(--border-glass);
+}
+
+.mobile-nav-header .nav-close {
+    background: var(--input-bg);
+    border: 1px solid var(--border-glass);
+    color: var(--text-secondary);
+}
+
+.mobile-nav-header .nav-close:hover,
+.hamburger-btn:hover {
+    background: var(--input-bg);
+    color: var(--primary);
+    border-color: var(--border-glass);
+}
+
+.mobile-nav .nav-group-header,
+.dashboard-sidebar .nav-group-header {
+    color: var(--text-secondary);
+}
+
+.mobile-nav .nav-group-header:hover,
+.dashboard-sidebar .nav-group-header:hover,
+.dashboard-sidebar .nav-group.open .nav-group-header {
+    color: var(--text-primary);
+    background: rgba(128, 128, 128, 0.10);
+}
+
+.mobile-nav .nav-submenu a,
+.mobile-nav .sidebar-nav li a {
+    color: var(--text-secondary);
+}
+
+.mobile-nav .nav-submenu a:hover,
+.mobile-nav .sidebar-nav li a:hover,
+.dashboard-sidebar .sidebar-nav li a:hover {
+    color: var(--text-primary);
+    background: rgba(128, 128, 128, 0.10);
+}
+
+.mobile-nav .nav-submenu a.active,
+.mobile-nav .sidebar-nav li a.active,
+.dashboard-sidebar .sidebar-nav li a.active {
+    color: var(--primary);
+    background: rgba(13, 110, 253, 0.12);
+}
+
+.sidebar-nav li a.active,
+.bottom-nav a.active {
+    color: var(--primary);
+}
+
+.sidebar-category,
+.mobile-nav-footer .nav-user-role,
+.sidebar-user .user-info .user-role {
+    color: var(--text-muted);
+}
+
+/* Bottom navigation uses the same surface and border tokens in both themes. */
+.bottom-nav {
+    background: var(--card-bg);
+    border-top-color: var(--border-glass);
+}
+
+.bottom-nav a {
+    color: var(--text-muted);
+}
+
+.bottom-nav a:hover,
+.bottom-nav a:focus-visible {
+    color: var(--primary);
+}
+
+/* Keep semantic Bootstrap status colors distinct from the primary action color. */
+.text-danger,
+.form-group .errorlist li {
+    color: var(--danger) !important;
+}
