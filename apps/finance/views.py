@@ -257,9 +257,12 @@ class ReportView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         return context
 
 
-class FeeAddView(LoginRequiredMixin, View):
+class FeeAddView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return can_manage_finance(self.request.user)
+
     def post(self, request, student_pk):
-        student = get_object_or_404(Student, pk=student_pk)
+        student = get_object_or_404(managed_students_for(request.user), pk=student_pk)
         month = request.POST.get('month')
         amount = request.POST.get('amount')
         paid_at_str = request.POST.get('paid_at')
@@ -295,9 +298,15 @@ class FeeAddView(LoginRequiredMixin, View):
         return redirect('students:student_detail', pk=student.pk)
 
 
-class FeeEditView(LoginRequiredMixin, View):
+class FeeEditView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return can_manage_finance(self.request.user)
+
     def post(self, request, pk):
-        due = get_object_or_404(FeeDue, pk=pk)
+        due = get_object_or_404(
+            FeeDue.objects.filter(student__in=managed_students_for(request.user)),
+            pk=pk,
+        )
         due.amount = int(request.POST.get('amount', '0').replace(',', ''))
         due.month = request.POST.get('month', due.month)
         paid_at_str = request.POST.get('paid_at')
@@ -312,19 +321,28 @@ class FeeEditView(LoginRequiredMixin, View):
         return redirect('students:student_detail', pk=due.student.pk)
 
 
-class FeeDeleteView(LoginRequiredMixin, View):
+class FeeDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return can_manage_finance(self.request.user)
+
     def post(self, request, pk):
-        due = get_object_or_404(FeeDue, pk=pk)
+        due = get_object_or_404(
+            FeeDue.objects.filter(student__in=managed_students_for(request.user)),
+            pk=pk,
+        )
         student_pk = due.student.pk
         due.delete()
         messages.success(request, 'شهریه حذف شد')
         return redirect('students:student_detail', pk=student_pk)
 
 
-class DebtorListView(LoginRequiredMixin, ListView):
+class DebtorListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     template_name = 'finance/debtor_list.html'
     context_object_name = 'debtors'
     paginate_by = 20
+
+    def test_func(self):
+        return can_manage_finance(self.request.user)
 
     def get_queryset(self):
         # 1. گرفتن ماه انتخاب شده از URL (با فرمت YYYY/MM)
@@ -341,9 +359,10 @@ class DebtorListView(LoginRequiredMixin, ListView):
             self.selected_month = f"{today.year}/{today.month:02d}"
 
         # 2. پیدا کردن هنرجویان فعالی که برای این ماه پول ندادن
-        active_students = Student.objects.filter(
-            is_active=True, 
-            enrollments__is_active=True
+        active_students = managed_students_for(self.request.user).filter(
+            is_active=True,
+            enrollments__is_active=True,
+            enrollments__shift__class_group__club__in=managed_clubs_for(self.request.user),
         ).distinct()
         
         paid_ids = set(
