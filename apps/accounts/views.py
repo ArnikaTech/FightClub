@@ -101,7 +101,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 overview_clubs = clubs
             all_students = Student.objects.filter(
                 models.Q(club__in=overview_clubs) |
-                models.Q(club_memberships__club__in=overview_clubs)
+                models.Q(club_memberships__club__in=overview_clubs, club_memberships__is_active=True)
             ).distinct()
             students = all_students.filter(is_active=True)
         elif user.is_club_manager:
@@ -109,7 +109,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             overview_clubs = clubs
             all_students = Student.objects.filter(
                 models.Q(club__in=overview_clubs) |
-                models.Q(club_memberships__club__in=overview_clubs)
+                models.Q(club_memberships__club__in=overview_clubs, club_memberships__is_active=True)
             ).distinct()
             students = all_students.filter(is_active=True)
             selected_club = None
