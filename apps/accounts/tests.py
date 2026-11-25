@@ -100,9 +100,18 @@ class DashboardOverviewTests(TestCase):
         cls.student_other_tenant = cls._create_student(
             "09121110004", "OV-004", cls.club_c, True
         )
+        cls.student_inactive_membership = cls._create_student(
+            "09121110005", "OV-005", cls.club_c, True
+        )
 
         # هنرجوی اول در هر دو شعبه عضویت دارد، اما باید فقط یک بار شمرده شود.
         StudentClub.objects.create(student=cls.student_a, club=cls.club_b)
+        # عضویت غیرفعال در شعبه دیگر نباید باعث ورود هنرجو به آمار آن شعبه شود.
+        StudentClub.objects.create(
+            student=cls.student_inactive_membership,
+            club=cls.club_a,
+            is_active=False,
+        )
 
         class_a = ClassGroup.objects.create(
             club=cls.club_a,
@@ -186,8 +195,8 @@ class DashboardOverviewTests(TestCase):
             response.context["overview_stats"],
             {
                 "branches": 1,
-                "students_total": 1,
-                "students_active": 1,
+                "students_total": 2,
+                "students_active": 2,
                 "students_inactive": 0,
                 "classes": 1,
                 "shifts": 1,
@@ -221,8 +230,8 @@ class DashboardOverviewTests(TestCase):
             response.context["overview_stats"],
             {
                 "branches": 3,
-                "students_total": 4,
-                "students_active": 3,
+                "students_total": 5,
+                "students_active": 4,
                 "students_inactive": 1,
                 "classes": 3,
                 "shifts": 3,
