@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.db import models
 
 import jdatetime
-from apps.students.models import Student, Attendance
+from apps.students.models import Student, Attendance, ClassGroup, Shift
 from apps.clubs.models import Club
 from .models import User, Message
 
@@ -95,16 +95,28 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             clubs = Club.objects.filter(is_active=True)
             if club_id:
                 selected_club = clubs.filter(pk=club_id).first()
-                students = Student.objects.filter(club=selected_club, is_active=True) if selected_club else Student.objects.none()
+                overview_clubs = clubs.filter(pk=selected_club.pk) if selected_club else clubs.none()
             else:
-                students = Student.objects.filter(is_active=True)
                 selected_club = None
+                overview_clubs = clubs
+            all_students = Student.objects.filter(
+                models.Q(club__in=overview_clubs) |
+                models.Q(club_memberships__club__in=overview_clubs)
+            ).distinct()
+            students = all_students.filter(is_active=True)
         elif user.is_club_manager:
             clubs = managed_clubs_for(user).filter(is_active=True)
-            students = Student.objects.filter(club__in=clubs, is_active=True).distinct()
+            overview_clubs = clubs
+            all_students = Student.objects.filter(
+                models.Q(club__in=overview_clubs) |
+                models.Q(club_memberships__club__in=overview_clubs)
+            ).distinct()
+            students = all_students.filter(is_active=True)
             selected_club = None
         else:
             clubs = Club.objects.none()
+            overview_clubs = Club.objects.none()
+            all_students = Student.objects.none()
             students = Student.objects.none()
             selected_club = None
 
@@ -138,6 +150,23 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context['clubs'] = clubs
         context['selected_club'] = selected_club
         context['total_students'] = students.count() or 0
+
+        if user.is_super_manager or user.is_club_manager:
+            context['overview_stats'] = {
+                'branches': overview_clubs.count(),
+                'students_total': all_students.count(),
+                'students_active': all_students.filter(is_active=True).count(),
+                'students_inactive': all_students.filter(is_active=False).count(),
+                'classes': ClassGroup.objects.filter(
+                    club__in=overview_clubs,
+                    is_active=True,
+                ).count(),
+                'shifts': Shift.objects.filter(
+                    class_group__club__in=overview_clubs,
+                    class_group__is_active=True,
+                    is_active=True,
+                ).count(),
+            }
         context['present_today'] = Attendance.objects.filter(student__in=students, date=today, status='present').count() or 0
         context['absent_today'] = Attendance.objects.filter(student__in=students, date=today, status='absent').count() or 0
         context['birthdays_today'] = students.filter(birth_date__month=today.month, birth_date__day=today.day).count() or 0
