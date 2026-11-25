@@ -4,6 +4,63 @@
 
 {% block title %}پیشخوان | {{ site_settings.gym_name|default:"باشگاه ستاره‌ها" }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .dashboard-overview .info-title {
+        margin-bottom: 14px;
+    }
+
+    .overview-metrics {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .overview-metric {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        padding: 10px;
+        background: var(--input-bg);
+        border: 1px solid var(--border-glass);
+        border-radius: 12px;
+    }
+
+    .overview-metric .stat-icon {
+        flex-shrink: 0;
+        margin-bottom: 0;
+    }
+
+    .overview-metric-copy {
+        min-width: 0;
+    }
+
+    .overview-metric-value {
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.4;
+    }
+
+    .overview-metric-label {
+        color: var(--text-muted);
+        font-size: 0.7rem;
+        white-space: nowrap;
+    }
+
+    @media (min-width: 768px) {
+        .overview-metrics {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .overview-metric {
+            padding: 12px 14px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="dashboard-layout">
     {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
@@ -52,6 +109,36 @@
         </form>
         {% endif %}
         
+        <section class="info-card dashboard-overview">
+            <div class="info-title"><i class="bi bi-bar-chart-line"></i> نمای کلی مجموعه</div>
+            <div class="overview-metrics">
+                <div class="overview-metric">
+                    <span class="stat-icon blue"><i class="bi bi-building"></i></span>
+                    <div class="overview-metric-copy"><div class="overview-metric-value">{{ overview_stats.branches }}</div><div class="overview-metric-label">شعب فعال</div></div>
+                </div>
+                <div class="overview-metric">
+                    <span class="stat-icon red"><i class="bi bi-people-fill"></i></span>
+                    <div class="overview-metric-copy"><div class="overview-metric-value">{{ overview_stats.students_total }}</div><div class="overview-metric-label">کل هنرجویان</div></div>
+                </div>
+                <div class="overview-metric">
+                    <span class="stat-icon green"><i class="bi bi-person-check-fill"></i></span>
+                    <div class="overview-metric-copy"><div class="overview-metric-value">{{ overview_stats.students_active }}</div><div class="overview-metric-label">هنرجوی فعال</div></div>
+                </div>
+                <div class="overview-metric">
+                    <span class="stat-icon gold"><i class="bi bi-person-dash-fill"></i></span>
+                    <div class="overview-metric-copy"><div class="overview-metric-value">{{ overview_stats.students_inactive }}</div><div class="overview-metric-label">هنرجوی غیرفعال</div></div>
+                </div>
+                <div class="overview-metric">
+                    <span class="stat-icon blue"><i class="bi bi-collection"></i></span>
+                    <div class="overview-metric-copy"><div class="overview-metric-value">{{ overview_stats.classes }}</div><div class="overview-metric-label">کلاس فعال</div></div>
+                </div>
+                <div class="overview-metric">
+                    <span class="stat-icon green"><i class="bi bi-calendar-week"></i></span>
+                    <div class="overview-metric-copy"><div class="overview-metric-value">{{ overview_stats.shifts }}</div><div class="overview-metric-label">شیفت فعال</div></div>
+                </div>
+            </div>
+        </section>
+
         <div class="stats-grid">
             <div class="stat-card"><div class="stat-icon red"><i class="bi bi-people-fill"></i></div><div class="stat-value">{{ total_students }}</div><div class="stat-label">کل هنرجویان</div></div>
             <div class="stat-card"><div class="stat-icon green"><i class="bi bi-calendar-check-fill"></i></div><div class="stat-value">{{ present_today }}</div><div class="stat-label">حاضر امروز</div></div>
