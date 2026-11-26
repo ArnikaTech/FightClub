@@ -848,9 +848,6 @@ LOGIN
     min-width: 0;
 }
 
-.notif-controls-group {
-    margin-right: auto;
-}
 
 .notif-bar::-webkit-scrollbar {
     display: none;
@@ -869,6 +866,20 @@ LOGIN
     text-decoration: none;
     transition: all 0.2s ease;
     flex-shrink: 0;
+}
+
+@media (max-width: 380px) {
+    .notif-actions-group,
+    .notif-controls-group {
+        gap: 2px;
+    }
+
+    .notif-item,
+    .notif-bar .theme-toggle,
+    .hamburger-btn {
+        width: 36px;
+        height: 36px;
+    }
 }
 
 .notif-item:hover {
