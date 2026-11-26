@@ -824,17 +824,32 @@ LOGIN
     border-radius: 16px;
     padding: 6px 10px;
     margin-bottom: 16px;
+    overflow: hidden;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
 }
 
 .notif-bar {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-width: 0;
     gap: 8px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-x;
-    justify-content: flex-end;
+    direction: rtl;
+}
+
+.notif-actions-group,
+.notif-controls-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
+.notif-controls-group {
+    margin-right: auto;
 }
 
 .notif-bar::-webkit-scrollbar {
@@ -4400,16 +4415,27 @@ select.input-glass + .select2-container {
     z-index: 2000;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 999px;
-    padding: 11px 16px;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
     background: linear-gradient(135deg, var(--primary), #3d8bfd);
     color: #fff;
-    box-shadow: 0 14px 30px rgba(13, 110, 253, 0.28);
-    font-size: var(--font-size-sm);
-    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(13, 110, 253, 0.28);
+    font-size: 1.15rem;
     cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pwa-install-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(13, 110, 253, 0.34);
+}
+
+.pwa-install-btn:active {
+    transform: scale(0.94);
 }
 
 .pwa-install-btn[hidden] {
