@@ -29,9 +29,9 @@
 </head>
 <body>
     {% block content %}{% endblock %}
-    <button type="button" class="pwa-install-btn" data-pwa-install hidden>
-        <i class="bi bi-download"></i>
-        <span>نصب اپلیکیشن</span>
+    <button type="button" class="pwa-install-btn" data-pwa-install
+        aria-label="نصب اپلیکیشن" title="نصب اپلیکیشن" hidden>
+        <i class="bi bi-download" aria-hidden="true"></i>
     </button>
     
     <script src="{% static 'vendors/bootstrap/bootstrap.bundle.min.js' %}"></script>
