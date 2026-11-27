@@ -1,65 +1,121 @@
-/* Platform owner organization selector in the notification bar. */
+/* Platform owner organization menu in the notification bar. */
 .organization-filter-form {
-    flex: 0 1 auto;
+    flex: 0 0 auto;
     min-width: 0;
     margin-inline-end: 8px;
 }
 
-.organization-filter-control {
+.organization-filter {
     position: relative;
+    width: 190px;
+}
+
+.organization-filter > summary {
+    list-style: none;
+}
+
+.organization-filter > summary::-webkit-details-marker {
+    display: none;
+}
+
+.organization-filter-trigger {
     display: flex;
     align-items: center;
-    width: clamp(160px, 18vw, 190px);
+    position: relative;
+    width: 100%;
     height: 40px;
+    padding: 0 36px 0 30px;
     border: 1px solid var(--border-glass);
     border-radius: 12px;
     background: var(--input-bg);
-    color: var(--text-secondary);
-    transition: border-color .2s ease, background .2s ease;
+    color: var(--text-primary);
+    cursor: pointer;
+    user-select: none;
 }
 
-.organization-filter-control:focus-within {
-    border-color: var(--accent);
+.organization-filter-trigger:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 .organization-filter-icon {
     position: absolute;
-    z-index: 1;
-    right: 12px;
+    right: 10px;
+    color: var(--text-secondary);
     font-size: 1rem;
-    pointer-events: none;
+}
+
+.organization-filter-label {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: .88rem;
 }
 
 .organization-filter-chevron {
     position: absolute;
-    left: 12px;
-    font-size: .7rem;
-    pointer-events: none;
+    left: 10px;
+    color: var(--text-secondary);
+    font-size: .68rem;
+    transition: transform .18s ease;
 }
 
-.organization-filter-select {
+.organization-filter[open] .organization-filter-chevron {
+    transform: rotate(180deg);
+}
+
+.organization-filter-menu {
+    position: absolute;
+    z-index: 100;
+    top: calc(100% + 8px);
+    right: 0;
+    width: max-content;
+    min-width: 100%;
+    max-width: min(280px, calc(100vw - 32px));
+    max-height: min(60vh, 360px);
+    overflow-y: auto;
+    padding: 5px;
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    background: var(--card-bg);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .28);
+}
+
+.organization-filter-option {
+    display: block;
     width: 100%;
-    height: 100%;
-    min-width: 0;
-    padding: 0 38px 0 34px;
+    min-height: 40px;
+    padding: 9px 10px;
     border: 0;
-    outline: 0;
-    appearance: none;
-    -webkit-appearance: none;
+    border-radius: 8px;
     background: transparent;
     color: var(--text-primary);
     font: inherit;
     font-size: .88rem;
+    line-height: 1.4;
     text-align: right;
-    text-overflow: ellipsis;
+    white-space: normal;
     cursor: pointer;
 }
 
-.organization-filter-select option {
-    background: var(--card-bg);
-    color: var(--text-primary);
-    font-size: 14px;
-    padding: 8px 14px;
+.organization-filter-option:hover,
+.organization-filter-option:focus-visible {
+    outline: 0;
+    background: var(--input-bg);
+}
+
+.organization-filter-option.is-selected {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.notif-bar-wrapper:has(.organization-filter[open]) {
+    position: relative;
+    z-index: 20;
+    overflow: visible;
 }
 
 @media (max-width: 600px) {
@@ -67,33 +123,39 @@
         margin-inline-end: 2px;
     }
 
-    .organization-filter-control {
+    .organization-filter {
+        width: 42px;
+    }
+
+    .organization-filter-trigger {
+        justify-content: center;
         width: 42px;
         height: 40px;
-        justify-content: center;
+        padding: 0;
         border-radius: 50%;
         background: transparent;
     }
 
     .organization-filter-icon {
-        right: auto;
+        position: static;
         font-size: 1.1rem;
-        color: var(--text-secondary);
     }
 
+    .organization-filter-label,
     .organization-filter-chevron {
-        left: 1px;
-        bottom: 5px;
-        font-size: .55rem;
-        color: var(--accent);
+        display: none;
     }
 
-    .organization-filter-select {
-        position: absolute;
-        inset: 0;
-        z-index: 2;
-        padding: 0;
-        opacity: 0;
-        cursor: pointer;
+    .organization-filter-menu {
+        width: max-content;
+        min-width: 210px;
+        max-width: min(280px, calc(100vw - 24px));
+        right: auto;
+        left: 0;
+    }
+
+    .organization-filter-option {
+        min-height: 44px;
+        padding: 11px 14px;
     }
 }
