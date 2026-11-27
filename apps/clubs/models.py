@@ -42,6 +42,38 @@ class Organization(models.Model):
         return self.name
 
 
+class OrganizationMembership(models.Model):
+    """عضویت یک کاربر در یک مجموعه؛ وجود عضویت فعال، دسترسی مدیریتی سازمانی را مشخص می‌کند."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='organization_memberships',
+        verbose_name='کاربر',
+    )
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='memberships',
+        verbose_name='مجموعه',
+    )
+    is_active = models.BooleanField('فعال', default=True)
+    joined_at = models.DateTimeField('تاریخ عضویت', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'عضویت مجموعه'
+        verbose_name_plural = 'عضویت‌های مجموعه'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'organization'],
+                name='uniq_org_membership_user_org',
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.user} - {self.organization}"
+
+
 class Club(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='branches', verbose_name='مجموعه')
     name = models.CharField('نام باشگاه', max_length=200)
