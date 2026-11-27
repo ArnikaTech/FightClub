@@ -15,7 +15,7 @@
             </div>
         </div>
 
-        {% if user.is_super_manager or user.is_club_manager %}
+        {% if user.is_super_manager or has_club_management %}
         <div class="nav-group {% if request.resolver_match.namespace == 'clubs' %}open{% endif %}">
             <div class="nav-group-header"><span><i class="bi bi-building"></i> مجموعه و باشگاه</span><i class="bi bi-chevron-down nav-chevron"></i></div>
             <div class="nav-submenu">
@@ -32,22 +32,22 @@
             </div>
         </div>
 
-        <div class="nav-group {% if request.resolver_match.namespace == 'students' and request.resolver_match.url_name == 'student_list' or request.resolver_match.url_name == 'student_add' or request.resolver_match.url_name == 'student_detail' or request.resolver_match.url_name == 'student_edit' %}open{% endif %}">
-            <div class="nav-group-header"><span><i class="bi bi-people-fill"></i> هنرجویان</span><i class="bi bi-chevron-down nav-chevron"></i></div>
-            <div class="nav-submenu">
-                <ul class="sidebar-nav">
-                    <li><a href="{% url 'students:student_list' %}" class="{% if request.resolver_match.url_name == 'student_list' %}active{% endif %}"><i class="bi bi-people-fill"></i> لیست هنرجویان</a></li>
-                    <li><a href="{% url 'students:student_add' %}" class="{% if request.resolver_match.url_name == 'student_add' %}active{% endif %}"><i class="bi bi-person-plus-fill"></i> ثبت هنرجوی جدید</a></li>
-                </ul>
-            </div>
-        </div>
-
         <div class="nav-group {% if request.resolver_match.url_name == 'class_list' or request.resolver_match.url_name == 'shift_list' or request.resolver_match.url_name == 'enrollment_list' %}open{% endif %}">
             <div class="nav-group-header"><span><i class="bi bi-journal-check"></i> کلاس و ثبت‌نام</span><i class="bi bi-chevron-down nav-chevron"></i></div>
             <div class="nav-submenu">
                 <ul class="sidebar-nav">
                     <li><a href="{% url 'students:class_list' %}" class="{% if request.resolver_match.url_name == 'class_list' or request.resolver_match.url_name == 'shift_list' %}active{% endif %}"><i class="bi bi-people-fill"></i> کلاس‌ها و شیفت‌ها</a></li>
                     <li><a href="{% url 'students:enrollment_list' %}" class="{% if request.resolver_match.url_name == 'enrollment_list' %}active{% endif %}"><i class="bi bi-journal-check"></i> ثبت‌نام‌ها</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="nav-group {% if request.resolver_match.namespace == 'students' and request.resolver_match.url_name == 'student_list' or request.resolver_match.url_name == 'student_add' or request.resolver_match.url_name == 'student_detail' or request.resolver_match.url_name == 'student_edit' %}open{% endif %}">
+            <div class="nav-group-header"><span><i class="bi bi-people-fill"></i> هنرجویان</span><i class="bi bi-chevron-down nav-chevron"></i></div>
+            <div class="nav-submenu">
+                <ul class="sidebar-nav">
+                    <li><a href="{% url 'students:student_list' %}" class="{% if request.resolver_match.url_name == 'student_list' %}active{% endif %}"><i class="bi bi-people-fill"></i> لیست هنرجویان</a></li>
+                    <li><a href="{% url 'students:student_add' %}" class="{% if request.resolver_match.url_name == 'student_add' %}active{% endif %}"><i class="bi bi-person-plus-fill"></i> ثبت هنرجوی جدید</a></li>
                 </ul>
             </div>
         </div>
@@ -82,7 +82,7 @@
                 <ul class="sidebar-nav">
                     <li><a href="{% url 'accounts:inbox' %}" class="{% if request.resolver_match.url_name == 'inbox' %}active{% endif %}"><i class="bi bi-inbox"></i> صندوق ورودی</a></li>
                     <li><a href="{% url 'accounts:compose_message' %}" class="{% if request.resolver_match.url_name == 'compose_message' %}active{% endif %}"><i class="bi bi-pencil-square"></i> پیام جدید</a></li>
-                    {% if user.is_super_manager or user.is_club_manager %}
+                    {% if user.is_super_manager or has_club_management %}
                     <li><a href="{% url 'accounts:bulk_message' %}" class="{% if request.resolver_match.url_name == 'bulk_message' %}active{% endif %}"><i class="bi bi-megaphone"></i> پیام گروهی</a></li>
                     {% endif %}
                 </ul>
@@ -106,7 +106,7 @@
         </div>
         <div class="user-info">
             <div class="user-name">{{ user.get_full_name }}</div>
-            <div class="user-role">{% if user.is_super_manager %}مدیر کل{% elif user.is_club_manager %}مدیر باشگاه{% else %}هنرجو{% endif %}</div>
+            <div class="user-role">{% if user.is_super_manager %}مدیر کل{% elif has_club_management %}مدیر شعبه/مجموعه{% else %}هنرجو{% endif %}</div>
         </div>
         <form method="post" action="{% url 'accounts:logout' %}">
             {% csrf_token %}<button type="submit" class="logout-btn" title="خروج"><i class="bi bi-box-arrow-right"></i></button>

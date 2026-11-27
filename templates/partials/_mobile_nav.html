@@ -13,7 +13,7 @@
             </div>
         </div>
         
-        {% if user.is_super_manager or user.is_club_manager %}
+        {% if user.is_super_manager or has_club_management %}
         <div class="nav-group {% if request.resolver_match.namespace == 'clubs' %}open{% endif %}">
             <div class="nav-group-header"><div><i class="bi bi-building"></i> مجموعه و باشگاه</div><i class="bi bi-chevron-down nav-chevron"></i></div>
             <div class="nav-submenu">
@@ -28,38 +28,38 @@
             </div>
         </div>
         
-        <div class="nav-group">
+        <div class="nav-group {% if request.resolver_match.url_name == 'class_list' or request.resolver_match.url_name == 'shift_list' or request.resolver_match.url_name == 'enrollment_list' %}open{% endif %}">
+            <div class="nav-group-header"><div><i class="bi bi-journal-check"></i> کلاس و ثبت‌نام</div><i class="bi bi-chevron-down nav-chevron"></i></div>
+            <div class="nav-submenu">
+                <a href="{% url 'students:class_list' %}" class="{% if request.resolver_match.url_name == 'class_list' or request.resolver_match.url_name == 'shift_list' %}active{% endif %}"><i class="bi bi-people-fill"></i> کلاس‌ها و شیفت‌ها</a>
+                <a href="{% url 'students:enrollment_list' %}" class="{% if request.resolver_match.url_name == 'enrollment_list' %}active{% endif %}"><i class="bi bi-journal-check"></i> ثبت‌نام‌ها</a>
+            </div>
+        </div>
+        
+        <div class="nav-group {% if request.resolver_match.url_name == 'student_list' or request.resolver_match.url_name == 'student_add' or request.resolver_match.url_name == 'student_detail' or request.resolver_match.url_name == 'student_edit' %}open{% endif %}">
             <div class="nav-group-header"><div><i class="bi bi-people-fill"></i> هنرجوها</div><i class="bi bi-chevron-down nav-chevron"></i></div>
             <div class="nav-submenu">
-                <a href="{% url 'students:student_list' %}"><i class="bi bi-people-fill"></i> لیست هنرجوها</a>
-                <a href="{% url 'students:student_add' %}"><i class="bi bi-person-plus-fill"></i> ثبت هنرجو جدید</a>
+                <a href="{% url 'students:student_list' %}" class="{% if request.resolver_match.url_name == 'student_list' %}active{% endif %}"><i class="bi bi-people-fill"></i> لیست هنرجوها</a>
+                <a href="{% url 'students:student_add' %}" class="{% if request.resolver_match.url_name == 'student_add' %}active{% endif %}"><i class="bi bi-person-plus-fill"></i> ثبت هنرجو جدید</a>
             </div>
         </div>
         
-        <div class="nav-group">
-            <div class="nav-group-header"><div><i class="bi bi-people-fill"></i> کلاس‌ها</div><i class="bi bi-chevron-down nav-chevron"></i></div>
+        <div class="nav-group {% if request.resolver_match.url_name == 'attendance' or request.resolver_match.url_name == 'absentees' or request.resolver_match.url_name == 'attendance_history' %}open{% endif %}">
+            <div class="nav-group-header"><div><i class="bi bi-calendar-check-fill"></i> حضور و غیاب</div><i class="bi bi-chevron-down nav-chevron"></i></div>
             <div class="nav-submenu">
-                <a href="{% url 'students:class_list' %}"><i class="bi bi-people-fill"></i> کلاس‌ها و شیفت‌ها</a>
-                <a href="{% url 'students:enrollment_list' %}"><i class="bi bi-journal-check"></i> ثبت‌نام‌ها</a>
+                <a href="{% url 'students:attendance' %}" class="{% if request.resolver_match.url_name == 'attendance' %}active{% endif %}"><i class="bi bi-calendar-check-fill"></i> ثبت حضور</a>
+                <a href="{% url 'students:absentees' %}" class="{% if request.resolver_match.url_name == 'absentees' %}active{% endif %}"><i class="bi bi-exclamation-triangle-fill"></i> پیگیری غیبت‌ها</a>
+                <a href="{% url 'students:attendance_history' %}" class="{% if request.resolver_match.url_name == 'attendance_history' %}active{% endif %}"><i class="bi bi-calendar-month"></i> تاریخچه ماهانه</a>
             </div>
         </div>
         
-        <div class="nav-group">
-            <div class="nav-group-header"><div><i class="bi bi-calendar-check-fill"></i> حضور</div><i class="bi bi-chevron-down nav-chevron"></i></div>
+        <div class="nav-group {% if request.resolver_match.namespace == 'finance' %}open{% endif %}">
+            <div class="nav-group-header"><div><i class="bi bi-cash-stack"></i> امور مالی</div><i class="bi bi-chevron-down nav-chevron"></i></div>
             <div class="nav-submenu">
-                <a href="{% url 'students:attendance' %}"><i class="bi bi-calendar-check-fill"></i> ثبت حضور</a>
-                <a href="{% url 'students:absentees' %}"><i class="bi bi-exclamation-triangle-fill"></i> پیگیری غیبت‌ها</a>
-                <a href="{% url 'students:attendance_history' %}"><i class="bi bi-calendar-month"></i> تاریخچه ماهانه</a>
-            </div>
-        </div>
-        
-        <div class="nav-group">
-            <div class="nav-group-header"><div><i class="bi bi-cash"></i> مالی</div><i class="bi bi-chevron-down nav-chevron"></i></div>
-            <div class="nav-submenu">
-                <a href="{% url 'finance:payment_list' %}"><i class="bi bi-cash"></i> دریافتی‌ها</a>
-                <a href="{% url 'finance:expense_list' %}"><i class="bi bi-cash-stack"></i> پرداختی‌ها</a>
-                <a href="{% url 'finance:debtor_list' %}"><i class="bi bi-exclamation-triangle"></i> بدهکاران</a>
-                <a href="{% url 'finance:report' %}"><i class="bi bi-bar-chart"></i> گزارش</a>
+                <a href="{% url 'finance:payment_list' %}" class="{% if request.resolver_match.url_name == 'payment_list' %}active{% endif %}"><i class="bi bi-cash"></i> دریافتی‌ها</a>
+                <a href="{% url 'finance:expense_list' %}" class="{% if request.resolver_match.url_name == 'expense_list' %}active{% endif %}"><i class="bi bi-cash-stack"></i> پرداختی‌ها</a>
+                <a href="{% url 'finance:debtor_list' %}" class="{% if request.resolver_match.url_name == 'debtor_list' %}active{% endif %}"><i class="bi bi-exclamation-triangle"></i> بدهکاران</a>
+                <a href="{% url 'finance:report' %}" class="{% if request.resolver_match.url_name == 'report' %}active{% endif %}"><i class="bi bi-bar-chart"></i> گزارش</a>
             </div>
         </div>
         {% endif %}
@@ -69,7 +69,7 @@
             <div class="nav-submenu">
                 <a href="{% url 'accounts:inbox' %}"><i class="bi bi-inbox"></i> صندوق ورودی</a>
                 <a href="{% url 'accounts:compose_message' %}"><i class="bi bi-pencil-square"></i> پیام جدید</a>
-                {% if user.is_super_manager or user.is_club_manager %}
+                {% if user.is_super_manager or has_club_management %}
                 <a href="{% url 'accounts:bulk_message' %}"><i class="bi bi-megaphone"></i> پیام گروهی</a>
                 {% endif %}
             </div>
@@ -90,7 +90,7 @@
         </div>
         <div class="nav-user-info">
             <div class="nav-user-name">{{ user.get_full_name }}</div>
-            <div class="nav-user-role">{% if user.is_super_manager %}مدیر کل{% elif user.is_club_manager %}مدیر باشگاه{% else %}هنرجو{% endif %}</div>
+            <div class="nav-user-role">{% if user.is_super_manager %}مدیر کل{% elif has_club_management %}مدیر شعبه/مجموعه{% else %}هنرجو{% endif %}</div>
         </div>
         <form method="post" action="{% url 'accounts:logout' %}">
             {% csrf_token %}<button type="submit" style="background:none;border:none;color:var(--danger);font-size:1.2rem;"><i class="bi bi-box-arrow-right"></i></button>
