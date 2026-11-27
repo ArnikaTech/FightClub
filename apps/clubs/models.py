@@ -43,7 +43,11 @@ class Organization(models.Model):
 
 
 class OrganizationMembership(models.Model):
-    """عضویت یک کاربر در یک مجموعه؛ وجود عضویت فعال، دسترسی مدیریتی سازمانی را مشخص می‌کند."""
+    """عضویت مدیریتی کاربر در یک مجموعه مستقل."""
+
+    ROLE_CHOICES = [
+        ('manager', 'مدیر مجموعه'),
+    ]
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -57,6 +61,7 @@ class OrganizationMembership(models.Model):
         related_name='memberships',
         verbose_name='مجموعه',
     )
+    role = models.CharField('نقش', max_length=20, choices=ROLE_CHOICES, default='manager')
     is_active = models.BooleanField('فعال', default=True)
     joined_at = models.DateTimeField('تاریخ عضویت', auto_now_add=True)
 
