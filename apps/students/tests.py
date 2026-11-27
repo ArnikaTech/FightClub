@@ -44,6 +44,50 @@ class TenantDeleteAccessTests(TestCase):
             phone="09120000032", password="test-password"
         )
 
+    def test_org_and_branch_manager_memberships_do_not_duplicate_classes(self):
+        from apps.clubs.models import ClubMembership
+        ClubMembership.objects.create(
+            user=self.manager, club=self.club_a, role="manager"
+        )
+        self.client.force_login(self.manager)
+
+        response = self.client.get(reverse("students:class_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["classes"].values_list("pk", flat=True)), [self.class_a.pk])
+
+    def test_manager_class_edit_updates_fields_and_preserves_unsubmitted_description(self):
+        self.class_a.description = "توضیح موجود"
+        self.class_a.save(update_fields=["description"])
+        self.client.force_login(self.manager)
+
+        response = self.client.post(
+            reverse("students:class_edit", args=[self.class_a.pk]),
+            {
+                "name": "کلاس ویرایش‌شده",
+                "club": self.club_a.pk,
+                "sport": self.class_a.sport_id,
+                "gender": "female",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.class_a.refresh_from_db()
+        self.assertEqual(self.class_a.name, "کلاس ویرایش‌شده")
+        self.assertEqual(self.class_a.gender, "female")
+        self.assertEqual(self.class_a.description, "توضیح موجود")
+
+    def test_manager_enrollment_form_receives_only_permitted_shifts(self):
+        self.client.force_login(self.manager)
+
+        response = self.client.get(reverse("students:enrollment_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            set(response.context["shifts"].values_list("pk", flat=True)),
+            {self.shift_a.pk},
+        )
+
     def test_platform_owner_class_list_respects_selected_organization(self):
         platform_owner = User.objects.create_user(
             phone="09120000033", password="test-password", is_super_manager=True

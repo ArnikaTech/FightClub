@@ -27,7 +27,8 @@
 .organization-summary-name { font-size:var(--font-size-lg);font-weight:700;overflow-wrap:anywhere; }
 .organization-summary-meta { display:flex;flex-wrap:wrap;gap:12px;margin-top:7px;color:var(--text-muted);font-size:var(--font-size-xs); }
 .organization-section-title { font-size:var(--font-size-base);font-weight:700;margin:0 0 12px; }
-.organization-managers-section { margin-bottom:26px; }
+.organization-panel-card { background:var(--card-bg);border:1px solid var(--border-glass);border-radius:16px;padding:20px;margin-bottom:20px; }
+.organization-managers-section { margin-bottom:20px; }
 .organization-managers-heading { display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px; }
 .organization-manager-add-form { display:flex;align-items:center;gap:8px;min-width:min(100%,380px); }
 .organization-manager-add-form select { flex:1;min-width:0; }
@@ -75,7 +76,7 @@
             </div>
         </section>
 
-        <section class="organization-managers-section">
+        <section class="organization-panel-card organization-managers-section">
             <div class="organization-managers-heading">
                 <div>
                     <h2 class="organization-section-title">مدیران مجموعه</h2>
@@ -115,6 +116,7 @@
             </div>
         </section>
 
+        <section class="organization-panel-card organization-branches-section">
         <h2 class="organization-section-title">شعبه‌های مجموعه</h2>
         <div class="coach-list-page">
             {% for branch in organization.branches.all %}
@@ -134,6 +136,7 @@
             </div>
             {% endfor %}
         </div>
+        </section>
     </main>
     {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
 </div>

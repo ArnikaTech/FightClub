@@ -88,9 +88,9 @@
         document.getElementById('classModalTitle').textContent='ویرایش کلاس';
         document.getElementById('classForm').action='/students/classes/'+id+'/edit/';
         document.getElementById('className').value=name;
-        document.getElementById('classClub').value=club;
-        document.getElementById('classSport').value=sport;
-        document.getElementById('classGender').value=gender;
+        $('#classClub').val(String(club)).trigger('change');
+        $('#classSport').val(String(sport)).trigger('change');
+        $('#classGender').val(gender).trigger('change');
         document.getElementById('classModalOverlay').classList.add('show');
         document.getElementById('classModal').classList.add('show');
     }

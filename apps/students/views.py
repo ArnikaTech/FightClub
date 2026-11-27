@@ -14,7 +14,7 @@ from apps.finance.models import FeeDue, Payment
 
 
 def managed_clubs_for(user):
-    return _managed_clubs_for(user) | teaching_clubs_for(user)
+    return (_managed_clubs_for(user) | teaching_clubs_for(user)).distinct()
 
 
 def visible_students_for(user):
@@ -965,13 +965,26 @@ class ClassGroupEditView(LoginRequiredMixin, UserPassesTestMixin, View):
     
     def post(self, request, pk):
         class_group = get_object_or_404(ClassGroup, pk=pk, club__in=managed_clubs_for(request.user))
-        class_group.name = request.POST.get('name', class_group.name).strip()
+        name = request.POST.get('name', class_group.name).strip()
+        if not name:
+            messages.error(request, 'نام کلاس الزامی است')
+            return redirect('students:class_list')
+
         club_id = request.POST.get('club')
+        sport_id = request.POST.get('sport')
+        gender = request.POST.get('gender', class_group.gender)
         if club_id:
             class_group.club = get_object_or_404(managed_clubs_for(request.user), pk=club_id)
-        class_group.sport_id = request.POST.get('sport', class_group.sport_id)
-        class_group.gender = request.POST.get('gender', class_group.gender)
-        class_group.description = request.POST.get('description', '')
+        if sport_id:
+            class_group.sport = get_object_or_404(Sport, pk=sport_id)
+        if gender not in dict(ClassGroup.GENDER_CHOICES):
+            messages.error(request, 'جنسیت انتخاب‌شده معتبر نیست')
+            return redirect('students:class_list')
+
+        class_group.name = name
+        class_group.gender = gender
+        if 'description' in request.POST:
+            class_group.description = request.POST.get('description', '').strip()
         class_group.save()
         messages.success(request, 'کلاس بروزرسانی شد')
         return redirect('students:class_list')

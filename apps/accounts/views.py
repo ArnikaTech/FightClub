@@ -14,7 +14,7 @@ from .models import User, Message
 
 
 def managed_clubs_for(user):
-    return _managed_clubs_for(user) | teaching_clubs_for(user)
+    return (_managed_clubs_for(user) | teaching_clubs_for(user)).distinct()
 
 
 def visible_students_for(user):
