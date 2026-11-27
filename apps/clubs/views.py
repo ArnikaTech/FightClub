@@ -12,28 +12,12 @@ from django.utils.text import slugify
 
 from .models import Province, City, Club, Sport, Organization, OrganizationMembership
 from .models import ClubMembership
+from .access import managed_clubs_for, can_manage_clubs
 from apps.accounts.models import User
-
-
-def managed_clubs_for(user):
-    if user.is_super_manager:
-        return Club.objects.all()
-    if user.is_club_manager:
-        return Club.objects.filter(
-            organization__memberships__user=user,
-            organization__memberships__is_active=True,
-            organization__memberships__role='manager',
-            organization__is_active=True,
-        ).distinct()
-    return Club.objects.none()
 
 
 def active_managed_clubs_for(user):
     return managed_clubs_for(user).filter(is_active=True)
-
-
-def can_manage_clubs(user):
-    return user.is_super_manager or user.is_club_manager
 
 
 # ========== استان‌ها ==========
@@ -279,7 +263,7 @@ class ClubListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     template_name = 'clubs/club_list.html'
     context_object_name = 'clubs'
     
-    def test_func(self): return self.request.user.is_super_manager or self.request.user.is_club_manager
+    def test_func(self): return can_manage_clubs(self.request.user)
     
     def get_queryset(self):
         return active_managed_clubs_for(self.request.user).select_related('province', 'city')
@@ -412,7 +396,7 @@ class CoachListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     template_name = 'clubs/coach_list.html'
     context_object_name = 'coaches'
     
-    def test_func(self): return self.request.user.is_super_manager or self.request.user.is_club_manager
+    def test_func(self): return can_manage_clubs(self.request.user)
     
     def get_queryset(self):
         return ClubMembership.objects.filter(

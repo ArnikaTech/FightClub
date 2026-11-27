@@ -97,6 +97,36 @@ class OrganizationMembershipTests(TestCase):
             )
         self.assertNotIn(foreign_branch.pk, expected)
 
+    def test_branch_manager_is_scoped_to_assigned_branch(self):
+        self.user.is_club_manager = True
+        self.user.save(update_fields=["is_club_manager"])
+        province = Province.objects.create(name="آزمایش")
+        city = City.objects.create(name="شهر آزمایش", province=province)
+        branch_a = Club.objects.create(
+            organization=self.organization_a,
+            name="شعبه مجاز",
+            province=province,
+            city=city,
+        )
+        branch_b = Club.objects.create(
+            organization=self.organization_a,
+            name="شعبه غیرمجاز",
+            province=province,
+            city=city,
+        )
+        ClubMembership.objects.create(user=self.user, club=branch_a, role="manager")
+
+        for managed_clubs in (
+            accounts_managed_clubs_for,
+            students_managed_clubs_for,
+            finance_managed_clubs_for,
+        ):
+            self.assertSetEqual(
+                set(managed_clubs(self.user).values_list("pk", flat=True)),
+                {branch_a.pk},
+            )
+        self.assertNotIn(branch_b.pk, set(finance_managed_clubs_for(self.user).values_list("pk", flat=True)))
+
     def test_multiple_managers_can_belong_to_the_same_organization(self):
         second_manager = User.objects.create_user(
             phone="09120000002",

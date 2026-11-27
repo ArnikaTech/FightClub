@@ -9,22 +9,12 @@ import jdatetime
 from .forms import StudentCreateForm
 from .models import Student, StudentClub, Insurance, StudentContact, Attendance, ClassGroup, Shift, Enrollment
 from apps.clubs.models import Club, OrganizationMembership, Sport
+from apps.clubs.access import managed_clubs_for as _managed_clubs_for, teaching_clubs_for, can_manage_clubs
 from apps.finance.models import FeeDue, Payment
 
 
 def managed_clubs_for(user):
-    if user.is_super_manager:
-        return Club.objects.all()
-    if user.is_club_manager:
-        return Club.objects.filter(
-            organization__memberships__user=user,
-            organization__memberships__is_active=True,
-            organization__memberships__role='manager',
-            organization__is_active=True,
-        ).distinct()
-    if user.is_instructor:
-        return Club.objects.filter(memberships__user=user, memberships__is_active=True).distinct()
-    return Club.objects.none()
+    return _managed_clubs_for(user) | teaching_clubs_for(user)
 
 
 def visible_students_for(user):
@@ -34,7 +24,7 @@ def visible_students_for(user):
         own_student = Student.objects.none()
     if user.is_super_manager:
         return Student.objects.all()
-    if user.is_club_manager or user.is_instructor:
+    if can_manage_clubs(user) or user.is_instructor:
         return Student.objects.filter(club_memberships__club__in=managed_clubs_for(user), club_memberships__is_active=True).distinct() | own_student
     return own_student
 
@@ -42,23 +32,23 @@ def visible_students_for(user):
 def managed_students_for(user):
     if user.is_super_manager:
         return Student.objects.all()
-    if user.is_club_manager or user.is_instructor:
+    if can_manage_clubs(user) or user.is_instructor:
         return Student.objects.filter(club_memberships__club__in=managed_clubs_for(user), club_memberships__is_active=True).distinct()
     return Student.objects.none()
 
 
 def can_manage_students(user):
-    return user.is_super_manager or user.is_club_manager
+    return can_manage_clubs(user)
 
 
 def can_manage_attendance(user):
-    return user.is_super_manager or user.is_club_manager
+    return can_manage_clubs(user)
 
 
 def visible_shifts_for(user):
     if user.is_super_manager:
         return Shift.objects.all()
-    if user.is_club_manager or user.is_instructor:
+    if can_manage_clubs(user) or user.is_instructor:
         return Shift.objects.filter(class_group__club__in=managed_clubs_for(user)).distinct()
     return Shift.objects.none()
 
@@ -70,7 +60,7 @@ class StudentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     
     def test_func(self):
         user = self.request.user
-        return user.is_super_manager or user.is_club_manager or user.is_instructor
+        return can_manage_clubs(user) or user.is_instructor
     
     def get_queryset(self):
         user = self.request.user
@@ -200,7 +190,7 @@ class StudentDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['today'] = jdatetime.date.today()
-        if self.request.user.is_super_manager or self.request.user.is_club_manager or self.request.user.is_instructor:
+        if can_manage_clubs(self.request.user) or self.request.user.is_instructor:
             context['club_memberships'] = self.object.club_memberships.filter(
                 club__in=managed_clubs_for(self.request.user)
             ).select_related('club', 'club__city', 'club__province')
@@ -403,7 +393,7 @@ class StudentCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     
     def test_func(self):
         user = self.request.user
-        return user.is_super_manager or user.is_club_manager
+        return can_manage_clubs(user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -440,7 +430,7 @@ class StudentDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
         has_attendance_history = student.attendances.exists()
         has_messages = user.sent_messages.exists() or user.received_messages.exists()
         has_other_roles = (
-            user.is_super_manager or user.is_club_manager or user.is_instructor
+            can_manage_clubs(user) or user.is_instructor
         )
 
         if has_financial_history or has_attendance_history or has_messages or has_other_roles:
@@ -763,7 +753,7 @@ class AbsenteeListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     
     def test_func(self):
         user = self.request.user
-        return user.is_super_manager or user.is_club_manager
+        return can_manage_clubs(user)
     
     def get_queryset(self):
         """هنرجویان فعال"""
@@ -918,7 +908,7 @@ class ClassGroupListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     context_object_name = 'classes'
     
     def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
+        return can_manage_clubs(self.request.user)
     
     def get_queryset(self):
         user = self.request.user
@@ -936,7 +926,7 @@ class ClassGroupListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 class ClassGroupCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
+        return can_manage_clubs(self.request.user)
     
     def post(self, request):
         name = request.POST.get('name', '').strip()
@@ -959,7 +949,7 @@ class ClassGroupCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 class ClassGroupEditView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
+        return can_manage_clubs(self.request.user)
     
     def post(self, request, pk):
         class_group = get_object_or_404(ClassGroup, pk=pk, club__in=managed_clubs_for(request.user))
@@ -1013,7 +1003,7 @@ class ShiftListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     context_object_name = 'shifts'
     
     def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
+        return can_manage_clubs(self.request.user)
     
     def get_queryset(self):
         self.class_group = get_object_or_404(ClassGroup, pk=self.kwargs['class_id'], club__in=managed_clubs_for(self.request.user))
@@ -1028,7 +1018,7 @@ class ShiftListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 class ShiftCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
+        return can_manage_clubs(self.request.user)
     
     def post(self, request, class_id):
         class_group = get_object_or_404(ClassGroup, pk=class_id, club__in=managed_clubs_for(request.user))
@@ -1060,7 +1050,7 @@ class ShiftCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 class ShiftEditView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
+        return can_manage_clubs(self.request.user)
     
     def post(self, request, pk):
         shift = get_object_or_404(visible_shifts_for(request.user), pk=pk)
@@ -1100,7 +1090,7 @@ class EnrollmentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     paginate_by = 20
     
     def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
+        return can_manage_clubs(self.request.user)
     
     def get_queryset(self):
         return Enrollment.objects.filter(student__in=managed_students_for(self.request.user), student__is_active=True, is_active=True).select_related(
@@ -1116,7 +1106,7 @@ class EnrollmentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 class EnrollmentCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
+        return can_manage_clubs(self.request.user)
     
     def post(self, request):
         student_id = request.POST.get('student')
@@ -1210,7 +1200,7 @@ class EnrollmentEditView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 class EnrollmentDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
+        return can_manage_clubs(self.request.user)
 
     def post(self, request, pk):
         enrollment = get_object_or_404(

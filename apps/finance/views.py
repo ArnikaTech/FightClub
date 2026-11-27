@@ -8,26 +8,14 @@ import jdatetime
 from .models import Payment, Expense, FeeDue
 from apps.students.models import Student, Enrollment
 from apps.clubs.models import Club, OrganizationMembership
+from apps.clubs.access import managed_clubs_for
 from apps.finance.models import Payment
-
-
-def managed_clubs_for(user):
-    if user.is_super_manager:
-        return Club.objects.all()
-    if user.is_club_manager:
-        return Club.objects.filter(
-            organization__memberships__user=user,
-            organization__memberships__is_active=True,
-            organization__memberships__role='manager',
-            organization__is_active=True,
-        ).distinct()
-    return Club.objects.none()
 
 
 def managed_students_for(user):
     if user.is_super_manager:
         return Student.objects.all()
-    if user.is_club_manager:
+    if managed_clubs_for(user).exists():
         return Student.objects.filter(club__in=managed_clubs_for(user)).distinct()
     return Student.objects.none()
 
@@ -35,7 +23,7 @@ def managed_students_for(user):
 def visible_payments_for(user):
     if user.is_super_manager:
         return Payment.objects.all()
-    if user.is_club_manager:
+    if managed_clubs_for(user).exists():
         return Payment.objects.filter(student__club__in=managed_clubs_for(user)).distinct()
     try:
         return Payment.objects.filter(student=user.student_profile)
@@ -46,13 +34,13 @@ def visible_payments_for(user):
 def managed_expenses_for(user):
     if user.is_super_manager:
         return Expense.objects.all()
-    if user.is_club_manager:
+    if managed_clubs_for(user).exists():
         return Expense.objects.filter(club__in=managed_clubs_for(user)).distinct()
     return Expense.objects.none()
 
 
 def can_manage_finance(user):
-    return user.is_super_manager or user.is_club_manager
+    return user.is_super_manager or managed_clubs_for(user).exists()
 
 
 class PaymentListView(LoginRequiredMixin, ListView):
@@ -158,7 +146,7 @@ class ExpenseListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     paginate_by = 20
     
     def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
+        return can_manage_finance(self.request.user)
     
     def get_queryset(self):
         user = self.request.user
@@ -168,7 +156,7 @@ class ExpenseListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 
 class ExpenseCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self): return self.request.user.is_super_manager or self.request.user.is_club_manager
+    def test_func(self): return can_manage_finance(self.request.user)
     
     def get(self, request):
         clubs = managed_clubs_for(request.user).filter(is_active=True)
@@ -204,7 +192,7 @@ class ExpenseCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 
 class ExpenseEditView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self): return self.request.user.is_super_manager or self.request.user.is_club_manager
+    def test_func(self): return can_manage_finance(self.request.user)
     
     def get(self, request, pk):
         expense = get_object_or_404(managed_expenses_for(request.user), pk=pk)
@@ -243,7 +231,7 @@ class ReportView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = 'finance/report.html'
     
     def test_func(self):
-        return self.request.user.is_super_manager or self.request.user.is_club_manager
+        return can_manage_finance(self.request.user)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
