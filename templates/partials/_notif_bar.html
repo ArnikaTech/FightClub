@@ -20,15 +20,19 @@
         </div>
         <div class="notif-controls-group">
             {% if user.is_super_manager %}
-            <form method="get" action="" style="display:flex;align-items:center;gap:6px;margin-inline-end:12px;">
+            <form method="get" action="" class="organization-filter-form">
                 {% for key, value in request.GET.items %}{% if key != 'organization_id' %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}{% endfor %}
                 <label for="activeOrganization" class="visually-hidden">فیلتر مجموعه</label>
-                <select id="activeOrganization" name="organization_id" class="input-glass" onchange="this.form.submit()" aria-label="فیلتر مجموعه" style="max-width:190px;padding:6px 10px;">
-                    <option value="">همه مجموعه‌ها</option>
-                    {% for organization in platform_organizations %}
-                    <option value="{{ organization.pk }}" {% if active_organization.pk == organization.pk %}selected{% endif %}>{{ organization.name }}</option>
-                    {% endfor %}
-                </select>
+                <span class="organization-filter-control">
+                    <i class="bi bi-buildings organization-filter-icon" aria-hidden="true"></i>
+                    <select id="activeOrganization" name="organization_id" class="organization-filter-select" onchange="this.form.submit()" aria-label="فیلتر مجموعه">
+                        <option value="">همه مجموعه‌ها</option>
+                        {% for organization in platform_organizations %}
+                        <option value="{{ organization.pk }}" {% if active_organization.pk == organization.pk %}selected{% endif %}>{{ organization.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <i class="bi bi-chevron-down organization-filter-chevron" aria-hidden="true"></i>
+                </span>
             </form>
             {% endif %}
             <button class="theme-toggle" id="themeToggle"><i class="bi bi-moon-fill icon-moon"></i><i class="bi bi-sun-fill icon-sun"></i></button>
