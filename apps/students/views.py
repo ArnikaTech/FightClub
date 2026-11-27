@@ -16,14 +16,12 @@ def managed_clubs_for(user):
     if user.is_super_manager:
         return Club.objects.all()
     if user.is_club_manager:
-        organization_clubs = Club.objects.filter(
+        return Club.objects.filter(
             organization__memberships__user=user,
             organization__memberships__is_active=True,
             organization__memberships__role='manager',
             organization__is_active=True,
-        )
-        branch_clubs = Club.objects.filter(memberships__user=user, memberships__is_active=True)
-        return (organization_clubs | branch_clubs).distinct()
+        ).distinct()
     if user.is_instructor:
         return Club.objects.filter(memberships__user=user, memberships__is_active=True).distinct()
     return Club.objects.none()
