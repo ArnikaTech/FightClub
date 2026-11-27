@@ -14,6 +14,9 @@ from apps.finance.models import Payment
 
 def managed_students_for(user):
     if user.is_super_manager:
+        clubs = managed_clubs_for(user)
+        if getattr(user, 'active_organization_id', None):
+            return Student.objects.filter(club__in=clubs).distinct()
         return Student.objects.all()
     if managed_clubs_for(user).exists():
         return Student.objects.filter(club__in=managed_clubs_for(user)).distinct()
@@ -22,6 +25,8 @@ def managed_students_for(user):
 
 def visible_payments_for(user):
     if user.is_super_manager:
+        if getattr(user, 'active_organization_id', None):
+            return Payment.objects.filter(student__club__in=managed_clubs_for(user)).distinct()
         return Payment.objects.all()
     if managed_clubs_for(user).exists():
         return Payment.objects.filter(student__club__in=managed_clubs_for(user)).distinct()
@@ -33,6 +38,8 @@ def visible_payments_for(user):
 
 def managed_expenses_for(user):
     if user.is_super_manager:
+        if getattr(user, 'active_organization_id', None):
+            return Expense.objects.filter(club__in=managed_clubs_for(user)).distinct()
         return Expense.objects.all()
     if managed_clubs_for(user).exists():
         return Expense.objects.filter(club__in=managed_clubs_for(user)).distinct()
@@ -150,8 +157,6 @@ class ExpenseListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     
     def get_queryset(self):
         user = self.request.user
-        if user.is_super_manager:
-            return Expense.objects.select_related('club')
         return managed_expenses_for(user).select_related('club')
 
 
@@ -237,12 +242,8 @@ class ReportView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         
-        if user.is_super_manager:
-            total_income = Payment.objects.aggregate(s=Sum('amount'))['s'] or 0
-            total_expense = Expense.objects.aggregate(s=Sum('amount'))['s'] or 0
-        else:
-            total_income = visible_payments_for(user).aggregate(s=Sum('amount'))['s'] or 0
-            total_expense = managed_expenses_for(user).aggregate(s=Sum('amount'))['s'] or 0
+        total_income = visible_payments_for(user).aggregate(s=Sum('amount'))['s'] or 0
+        total_expense = managed_expenses_for(user).aggregate(s=Sum('amount'))['s'] or 0
         
         context['total_income'] = total_income
         context['total_expense'] = total_expense

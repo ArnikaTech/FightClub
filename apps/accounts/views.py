@@ -19,6 +19,12 @@ def managed_clubs_for(user):
 
 def visible_students_for(user):
     if user.is_super_manager:
+        if getattr(user, 'active_organization_id', None):
+            clubs = managed_clubs_for(user)
+            return Student.objects.filter(
+                models.Q(club__in=clubs)
+                | models.Q(club_memberships__club__in=clubs, club_memberships__is_active=True)
+            ).distinct()
         return Student.objects.all()
     if can_manage_clubs(user) or user.is_instructor:
         return Student.objects.filter(club__in=managed_clubs_for(user)).distinct()
@@ -86,16 +92,16 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         today = jdatetime.date.today()
         
-        club_id = self.request.GET.get('club_id')
-        
         if user.is_super_manager:
+            from apps.clubs.models import Organization
+            from apps.finance.models import Expense, Payment
+
+            context['organizations'] = Organization.objects.filter(is_active=True).order_by('name')
+            selected_organization_id = getattr(self.request, 'active_organization_id', None)
+            selected_organization = Organization.objects.filter(pk=selected_organization_id).first() if selected_organization_id else None
             clubs = Club.objects.filter(is_active=True)
-            if club_id:
-                selected_club = clubs.filter(pk=club_id).first()
-                overview_clubs = clubs.filter(pk=selected_club.pk) if selected_club else clubs.none()
-            else:
-                selected_club = None
-                overview_clubs = clubs
+            overview_clubs = clubs.filter(organization=selected_organization) if selected_organization else clubs
+            selected_club = None
             all_students = Student.objects.filter(
                 models.Q(club__in=overview_clubs) |
                 models.Q(club_memberships__club__in=overview_clubs, club_memberships__is_active=True)
@@ -164,6 +170,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                     is_active=True,
                 ).count(),
             }
+            if user.is_super_manager:
+                from django.db.models import Sum
+                branch_ids = overview_clubs.values_list('pk', flat=True)
+                context['overview_stats']['income'] = Payment.objects.filter(student__club_id__in=branch_ids).aggregate(total=Sum('amount'))['total'] or 0
+                context['overview_stats']['expenses'] = Expense.objects.filter(club_id__in=branch_ids).aggregate(total=Sum('amount'))['total'] or 0
         context['present_today'] = Attendance.objects.filter(student__in=students, date=today, status='present').count() or 0
         context['absent_today'] = Attendance.objects.filter(student__in=students, date=today, status='absent').count() or 0
         context['birthdays_today'] = students.filter(birth_date__month=today.month, birth_date__day=today.day).count() or 0
@@ -211,7 +222,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         # باشگاه‌های تحت مدیریت
         if user.is_super_manager:
             # مدیر کل همه باشگاه‌های فعال رو می‌بینه
-            context['managed_clubs'] = Club.objects.filter(is_active=True)
+            context['managed_clubs'] = managed_clubs_for(user).filter(is_active=True)
         else:
             # بقیه فقط باشگاه‌هایی که عضویت دارن
             context['managed_clubs'] = Club.objects.filter(
@@ -402,9 +413,14 @@ class BulkMessageView(LoginRequiredMixin, View):
         
         # دریافت مخاطبان بر اساس دسترسی
         if user.is_super_manager:
-            students = Student.objects.filter(is_active=True).select_related('user', 'club')
-            coaches = User.objects.filter(is_instructor=True, is_active=True)
-            managers = User.objects.filter(is_club_manager=True, is_active=True)
+            clubs = managed_clubs_for(user).filter(is_active=True)
+            students = Student.objects.filter(club__in=clubs, is_active=True).select_related('user', 'club')
+            coaches = User.objects.filter(club_memberships__club__in=clubs, is_instructor=True, is_active=True).distinct()
+            managers = User.objects.filter(
+                models.Q(club_memberships__club__in=clubs, club_memberships__role='manager')
+                | models.Q(organization_memberships__organization__branches__in=clubs, organization_memberships__role='manager'),
+                is_active=True,
+            ).distinct()
         elif can_manage_clubs(user):
             clubs = managed_clubs_for(user).filter(is_active=True)
             students = Student.objects.filter(club__in=clubs, is_active=True).select_related('user', 'club')

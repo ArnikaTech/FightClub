@@ -98,17 +98,7 @@
         </div>
         
         {% if user.is_super_manager or user.is_club_manager %}
-        {% if user.is_super_manager and clubs %}
-        <form method="get" style="margin-bottom:16px;">
-            <select name="club_id" class="select2-dashboard" onchange="this.form.submit()">
-                <option value="">🏢 همه باشگاه‌ها</option>
-                {% for club in clubs %}
-                <option value="{{ club.id }}" {% if selected_club and selected_club.id == club.id %}selected{% endif %}>{{ club.name }}</option>
-                {% endfor %}
-            </select>
-        </form>
-        {% endif %}
-        
+
         <section class="info-card dashboard-overview">
             <div class="info-title"><i class="bi bi-bar-chart-line"></i> نمای کلی مجموعه</div>
             <div class="overview-metrics">
@@ -136,6 +126,16 @@
                     <span class="stat-icon green"><i class="bi bi-calendar-week"></i></span>
                     <div class="overview-metric-copy"><div class="overview-metric-value">{{ overview_stats.shifts }}</div><div class="overview-metric-label">شیفت فعال</div></div>
                 </div>
+                {% if user.is_super_manager %}
+                <div class="overview-metric">
+                    <span class="stat-icon green"><i class="bi bi-cash-stack"></i></span>
+                    <div class="overview-metric-copy"><div class="overview-metric-value">{{ overview_stats.income }}</div><div class="overview-metric-label">دریافتی (تومان)</div></div>
+                </div>
+                <div class="overview-metric">
+                    <span class="stat-icon red"><i class="bi bi-wallet2"></i></span>
+                    <div class="overview-metric-copy"><div class="overview-metric-value">{{ overview_stats.expenses }}</div><div class="overview-metric-label">هزینه (تومان)</div></div>
+                </div>
+                {% endif %}
             </div>
         </section>
 

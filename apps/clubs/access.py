@@ -9,7 +9,9 @@ def managed_clubs_for(user):
     if not user.is_authenticated:
         return Club.objects.none()
     if user.is_super_manager:
-        return Club.objects.all()
+        clubs = Club.objects.all()
+        organization_id = getattr(user, 'active_organization_id', None)
+        return clubs.filter(organization_id=organization_id) if organization_id else clubs
 
     return Club.objects.filter(
         Q(
@@ -32,7 +34,9 @@ def teaching_clubs_for(user):
     if not user.is_authenticated:
         return Club.objects.none()
     if user.is_super_manager:
-        return Club.objects.all()
+        clubs = Club.objects.all()
+        organization_id = getattr(user, 'active_organization_id', None)
+        return clubs.filter(organization_id=organization_id) if organization_id else clubs
     return Club.objects.filter(
         memberships__user=user,
         memberships__is_active=True,

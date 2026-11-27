@@ -17,6 +17,13 @@ def site_settings(request):
         
         # هنرجویان
         students = Student.objects.filter(is_active=True)
+        active_organization_id = getattr(request, 'active_organization_id', None)
+        if active_organization_id and request.user.is_super_manager:
+            from django.db.models import Q
+            students = students.filter(
+                Q(club__organization_id=active_organization_id)
+                | Q(club_memberships__club__organization_id=active_organization_id, club_memberships__is_active=True)
+            ).distinct()
         today = jdatetime.date.today()
         
         for s in students:
@@ -33,8 +40,19 @@ def site_settings(request):
             if not s.has_active_insurance():
                 expired_insurance += 1
     
+    active_organization_id = getattr(request, 'active_organization_id', None)
+    organizations = []
+    selected_organization = None
+    if request.user.is_authenticated and request.user.is_super_manager:
+        from apps.clubs.models import Organization
+        organizations = Organization.objects.filter(is_active=True).order_by('name')
+        if active_organization_id:
+            selected_organization = organizations.filter(pk=active_organization_id).first()
+
     return {
         'site_settings': settings,
+        'platform_organizations': organizations,
+        'active_organization': selected_organization,
         'unread_count': unread_count,
         'critical_count': critical_count,
         'birthday_count': birthday_count,

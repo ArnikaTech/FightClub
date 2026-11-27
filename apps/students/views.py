@@ -23,6 +23,12 @@ def visible_students_for(user):
     else:
         own_student = Student.objects.none()
     if user.is_super_manager:
+        if getattr(user, 'active_organization_id', None):
+            clubs = managed_clubs_for(user)
+            return Student.objects.filter(
+                models.Q(club__in=clubs)
+                | models.Q(club_memberships__club__in=clubs, club_memberships__is_active=True)
+            ).distinct()
         return Student.objects.all()
     if can_manage_clubs(user) or user.is_instructor:
         return Student.objects.filter(club_memberships__club__in=managed_clubs_for(user), club_memberships__is_active=True).distinct() | own_student
@@ -31,6 +37,12 @@ def visible_students_for(user):
 
 def managed_students_for(user):
     if user.is_super_manager:
+        if getattr(user, 'active_organization_id', None):
+            clubs = managed_clubs_for(user)
+            return Student.objects.filter(
+                models.Q(club__in=clubs)
+                | models.Q(club_memberships__club__in=clubs, club_memberships__is_active=True)
+            ).distinct()
         return Student.objects.all()
     if can_manage_clubs(user) or user.is_instructor:
         return Student.objects.filter(club_memberships__club__in=managed_clubs_for(user), club_memberships__is_active=True).distinct()
@@ -47,6 +59,8 @@ def can_manage_attendance(user):
 
 def visible_shifts_for(user):
     if user.is_super_manager:
+        if getattr(user, 'active_organization_id', None):
+            return Shift.objects.filter(class_group__club__in=managed_clubs_for(user)).distinct()
         return Shift.objects.all()
     if can_manage_clubs(user) or user.is_instructor:
         return Shift.objects.filter(class_group__club__in=managed_clubs_for(user)).distinct()
@@ -758,8 +772,6 @@ class AbsenteeListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def get_queryset(self):
         """هنرجویان فعال"""
         user = self.request.user
-        if user.is_super_manager:
-            return Student.objects.filter(is_active=True).select_related('user', 'club').prefetch_related('contacts', 'attendances')
         return managed_students_for(user).filter(is_active=True).select_related('user', 'club').prefetch_related('contacts', 'attendances')
     
     def get_context_data(self, **kwargs):

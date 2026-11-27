@@ -1,5 +1,6 @@
 from django.db import IntegrityError, transaction
 from django.test import TestCase
+from django.urls import reverse
 
 from apps.accounts.models import User
 from apps.clubs.models import City, Club, Province
@@ -96,6 +97,60 @@ class OrganizationMembershipTests(TestCase):
                 expected,
             )
         self.assertNotIn(foreign_branch.pk, expected)
+
+    def test_platform_owner_can_select_organization_and_dashboard_uses_it(self):
+        province = Province.objects.create(name="آزمایش")
+        city = City.objects.create(name="شهر آزمایش", province=province)
+        Club.objects.create(
+            organization=self.organization_a,
+            name="شعبه مجموعه الف",
+            province=province,
+            city=city,
+        )
+        Club.objects.create(
+            organization=self.organization_b,
+            name="شعبه مجموعه ب",
+            province=province,
+            city=city,
+        )
+        self.user.is_super_manager = True
+        self.user.save(update_fields=["is_super_manager"])
+        self.client.force_login(self.user)
+
+        selection = self.client.get(
+            reverse("accounts:dashboard"),
+            {"organization_id": self.organization_a.pk},
+        )
+        self.assertEqual(selection.status_code, 302)
+        response = self.client.get(reverse("accounts:dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["overview_stats"]["branches"], 1)
+        self.assertEqual(response.context["active_organization"].pk, self.organization_a.pk)
+
+    def test_platform_owner_organization_filter_limits_branches(self):
+        province = Province.objects.create(name="آزمایش")
+        city = City.objects.create(name="شهر آزمایش", province=province)
+        own_branch = Club.objects.create(
+            organization=self.organization_a,
+            name="شعبه مجموعه الف",
+            province=province,
+            city=city,
+        )
+        foreign_branch = Club.objects.create(
+            organization=self.organization_b,
+            name="شعبه مجموعه ب",
+            province=province,
+            city=city,
+        )
+        self.user.is_super_manager = True
+        self.user.active_organization_id = self.organization_a.pk
+
+        self.assertSetEqual(
+            set(accounts_managed_clubs_for(self.user).values_list("pk", flat=True)),
+            {own_branch.pk},
+        )
+        self.assertNotIn(foreign_branch.pk, set(accounts_managed_clubs_for(self.user).values_list("pk", flat=True)))
 
     def test_branch_manager_is_scoped_to_assigned_branch(self):
         self.user.is_club_manager = True
