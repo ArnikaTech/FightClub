@@ -24,8 +24,6 @@ def managed_clubs_for(user):
             organization__memberships__is_active=True,
             organization__memberships__role='manager',
             organization__is_active=True,
-        ).distinct() | Club.objects.filter(
-            memberships__user=user, memberships__is_active=True
         ).distinct()
     return Club.objects.none()
 
