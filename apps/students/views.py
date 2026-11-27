@@ -975,9 +975,14 @@ class ClassGroupEditView(LoginRequiredMixin, UserPassesTestMixin, View):
         return redirect('students:class_list')
 
 
-class ClassGroupDeleteView(LoginRequiredMixin, View):
+class ClassGroupDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return can_manage_students(self.request.user)
+
     def post(self, request, pk):
-        class_group = get_object_or_404(ClassGroup, pk=pk)
+        class_group = get_object_or_404(
+            ClassGroup, pk=pk, club__in=managed_clubs_for(request.user)
+        )
         name = class_group.name
         
         # چک کن شیفت فعال داره؟
@@ -1068,9 +1073,12 @@ class ShiftEditView(LoginRequiredMixin, UserPassesTestMixin, View):
         return redirect('students:shift_list', class_id=shift.class_group_id)
 
 
-class ShiftDeleteView(LoginRequiredMixin, View):
+class ShiftDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return can_manage_students(self.request.user)
+
     def post(self, request, pk):
-        shift = get_object_or_404(Shift, pk=pk)
+        shift = get_object_or_404(visible_shifts_for(request.user), pk=pk)
         name = shift.name
         class_id = shift.class_group_id
         
