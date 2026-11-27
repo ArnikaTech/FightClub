@@ -2,6 +2,10 @@ from django.db import IntegrityError, transaction
 from django.test import TestCase
 
 from apps.accounts.models import User
+from apps.clubs.models import City, Club, Province
+from apps.accounts.views import managed_clubs_for as accounts_managed_clubs_for
+from apps.students.views import managed_clubs_for as students_managed_clubs_for
+from apps.finance.views import managed_clubs_for as finance_managed_clubs_for
 from .models import Organization, OrganizationMembership
 
 
@@ -50,3 +54,67 @@ class OrganizationMembershipTests(TestCase):
                     user=self.user,
                     organization=self.organization_a,
                 )
+
+    def test_organization_manager_sees_all_and_only_own_organization_branches(self):
+        self.user.is_club_manager = True
+        self.user.save(update_fields=["is_club_manager"])
+        OrganizationMembership.objects.create(
+            user=self.user,
+            organization=self.organization_a,
+            role="manager",
+        )
+
+        province = Province.objects.create(name="آزمایش")
+        city = City.objects.create(name="شهر آزمایش", province=province)
+        own_branch_1 = Club.objects.create(
+            organization=self.organization_a,
+            name="شعبه اول",
+            province=province,
+            city=city,
+        )
+        own_branch_2 = Club.objects.create(
+            organization=self.organization_a,
+            name="شعبه دوم",
+            province=province,
+            city=city,
+        )
+        foreign_branch = Club.objects.create(
+            organization=self.organization_b,
+            name="شعبه مجموعه دیگر",
+            province=province,
+            city=city,
+        )
+
+        expected = {own_branch_1.pk, own_branch_2.pk}
+        for managed_clubs in (
+            accounts_managed_clubs_for,
+            students_managed_clubs_for,
+            finance_managed_clubs_for,
+        ):
+            self.assertSetEqual(
+                set(managed_clubs(self.user).values_list("pk", flat=True)),
+                expected,
+            )
+        self.assertNotIn(foreign_branch.pk, expected)
+
+    def test_multiple_managers_can_belong_to_the_same_organization(self):
+        second_manager = User.objects.create_user(
+            phone="09120000002",
+            password="test-pass",
+            first_name="مدیر دوم",
+            last_name="آزمایش",
+        )
+        OrganizationMembership.objects.create(
+            user=self.user,
+            organization=self.organization_a,
+            role="manager",
+        )
+        OrganizationMembership.objects.create(
+            user=second_manager,
+            organization=self.organization_a,
+            role="manager",
+        )
+        self.assertEqual(
+            self.organization_a.memberships.filter(is_active=True, role="manager").count(),
+            2,
+        )
