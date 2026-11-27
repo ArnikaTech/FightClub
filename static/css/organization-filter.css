@@ -9,7 +9,7 @@
     position: relative;
     display: flex;
     align-items: center;
-    width: clamp(170px, 22vw, 250px);
+    width: clamp(160px, 18vw, 190px);
     height: 40px;
     border: 1px solid var(--border-glass);
     border-radius: 12px;
@@ -59,6 +59,7 @@
     background: var(--card-bg);
     color: var(--text-primary);
     font-size: 14px;
+    padding: 8px 14px;
 }
 
 @media (max-width: 600px) {
