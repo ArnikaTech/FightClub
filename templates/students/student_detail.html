@@ -16,7 +16,7 @@
                 <div class="profile-avatar">
                     {% if student.user.avatar %}<img src="{{ student.user.avatar.url }}">{% else %}<i class="bi bi-person-fill"></i>{% endif %}
                 </div>
-                {% if user.is_super_manager or user.is_club_manager %}
+                {% if user.is_super_manager or has_club_management %}
                 <label class="avatar-edit-btn" style="cursor:pointer;">
                     <i class="bi bi-camera"></i>
                     <input type="file" form="avatarForm" name="avatar" accept="image/*" onchange="this.form.submit()" style="display:none;">
@@ -88,7 +88,7 @@
         <div class="info-card animate__animated animate__fadeInUp">
             <div class="info-title">
                 <i class="bi bi-building"></i> عضویت در باشگاه‌ها
-                {% if user.is_super_manager or user.is_club_manager %}
+                {% if user.is_super_manager or has_club_management %}
                 <a href="{% url 'students:student_edit' student.pk %}" class="btn-call" style="float:left;" title="مدیریت عضویت‌ها"><i class="bi bi-pencil"></i></a>
                 {% endif %}
             </div>

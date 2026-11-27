@@ -12,7 +12,7 @@
     {% csrf_token %}
     
     <!-- عکس -->
-    {% if user.is_super_manager or user.is_club_manager %}
+    {% if user.is_super_manager or has_club_management %}
 <div class="text-center mb-3">
     {% if user.avatar %}<img src="{{ user.avatar.url }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">{% else %}<i class="bi bi-person-fill" style="font-size:3rem;color:var(--text-muted);"></i>{% endif %}
     <br><label class="mt-2" style="cursor:pointer;color:var(--accent);"><i class="bi bi-camera"></i> تغییر تصویر<input type="file" name="avatar" accept="image/*" style="display:none;"></label>
@@ -31,7 +31,7 @@
         <label><input type="checkbox" name="is_instructor" {% if user.is_instructor %}checked{% endif %}> مربی</label>
     </p>
 {% else %}
-    <p><label>نقش:</label><input value="{% if user.is_club_manager %}مدیر باشگاه{% elif user.is_instructor %}مربی{% else %}هنرجو{% endif %}" disabled></p>
+    <p><label>نقش:</label><input value="{% if has_club_management %}مدیر مجموعه/شعبه{% elif user.is_instructor %}مربی{% else %}هنرجو{% endif %}" disabled></p>
 {% endif %}
 
     <button type="submit">💾 ذخیره</button>

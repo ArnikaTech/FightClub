@@ -1,7 +1,7 @@
 """Shared tenant and branch access rules for club-scoped data."""
 from django.db.models import Q
 
-from .models import Club
+from .models import Club, ClubMembership, OrganizationMembership
 
 
 def managed_clubs_for(user):
@@ -46,4 +46,18 @@ def teaching_clubs_for(user):
 
 
 def can_manage_clubs(user):
-    return user.is_authenticated and (user.is_super_manager or managed_clubs_for(user).exists())
+    if not user.is_authenticated:
+        return False
+    if user.is_super_manager:
+        return True
+    return OrganizationMembership.objects.filter(
+        user=user,
+        is_active=True,
+        role='manager',
+        organization__is_active=True,
+    ).exists() or ClubMembership.objects.filter(
+        user=user,
+        is_active=True,
+        role='manager',
+        club__organization__is_active=True,
+    ).exists()

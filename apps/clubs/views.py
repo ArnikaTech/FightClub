@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
+from django.db import transaction
 from django.db.models import Count
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -165,6 +166,73 @@ class OrganizationDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView
         return Organization.objects.annotate(
             branch_count=Count('branches')
         ).prefetch_related('branches__city', 'branches__province')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        organization = self.object
+        context['organization_managers'] = organization.memberships.filter(
+            role='manager', is_active=True
+        ).select_related('user').order_by('user__first_name', 'user__last_name')
+        context['available_manager_users'] = User.objects.filter(
+            is_active=True, is_super_manager=False
+        ).exclude(
+            organization_memberships__organization=organization,
+            organization_memberships__is_active=True,
+        ).order_by('first_name', 'last_name')
+        return context
+
+
+class OrganizationManagerAssignView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """Grant or restore organization-manager access without creating a global role."""
+
+    def test_func(self):
+        return self.request.user.is_super_manager
+
+    def post(self, request, pk):
+        organization = get_object_or_404(Organization, pk=pk, is_active=True)
+        user = get_object_or_404(
+            User.objects.filter(is_active=True, is_super_manager=False),
+            pk=request.POST.get('user_id'),
+        )
+        membership, created = OrganizationMembership.objects.update_or_create(
+            user=user,
+            organization=organization,
+            defaults={'role': 'manager', 'is_active': True},
+        )
+        messages.success(
+            request,
+            f'دسترسی مدیر مجموعه برای «{user.get_full_name()}» ' + ('اعطا شد' if created else 'فعال شد'),
+        )
+        return redirect('clubs:organization_detail', pk=organization.pk)
+
+
+class OrganizationManagerDeactivateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """Revoke only this organization's manager membership; keep the audit record."""
+
+    def test_func(self):
+        return self.request.user.is_super_manager
+
+    def post(self, request, pk, membership_pk):
+        with transaction.atomic():
+            organization = get_object_or_404(
+                Organization.objects.select_for_update(), pk=pk
+            )
+            membership = get_object_or_404(
+                OrganizationMembership.objects.select_related('user'),
+                pk=membership_pk,
+                organization=organization,
+                is_active=True,
+                role='manager',
+            )
+            if organization.is_active and organization.memberships.filter(
+                is_active=True, role='manager'
+            ).count() <= 1:
+                messages.error(request, 'برای مجموعهٔ فعال باید دست‌کم یک مدیر فعال باقی بماند.')
+            else:
+                membership.is_active = False
+                membership.save(update_fields=['is_active'])
+                messages.success(request, f'دسترسی مدیر مجموعه برای «{membership.user.get_full_name()}» لغو شد.')
+        return redirect('clubs:organization_detail', pk=organization.pk)
 
 
 class OrganizationEditView(LoginRequiredMixin, UserPassesTestMixin, View):

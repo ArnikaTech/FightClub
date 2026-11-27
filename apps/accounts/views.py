@@ -224,12 +224,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             # مدیر کل همه باشگاه‌های فعال رو می‌بینه
             context['managed_clubs'] = managed_clubs_for(user).filter(is_active=True)
         else:
-            # بقیه فقط باشگاه‌هایی که عضویت دارن
-            context['managed_clubs'] = Club.objects.filter(
-                memberships__user=user,
-                memberships__is_active=True,
-                is_active=True
-            ).distinct()
+            # مدیر مجموعه، مدیر شعبه و مربی فقط شعبه‌های مجاز خود را می‌بینند.
+            context['managed_clubs'] = managed_clubs_for(user).filter(is_active=True)
         
         return context
 

@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django_jalali.forms import jDateField
 from apps.clubs.models import Club, Sport
+from apps.clubs.access import managed_clubs_for
 from .models import Student, StudentClub, Shift, Enrollment
 import jdatetime
 
@@ -75,14 +76,8 @@ class StudentCreateForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.user = user
 
-        if user and user.is_super_manager:
-            clubs = Club.objects.filter(is_active=True)
-        elif user and user.is_club_manager:
-            clubs = Club.objects.filter(
-                is_active=True,
-                memberships__user=user,
-                memberships__is_active=True,
-            ).distinct()
+        if user and (user.is_super_manager or managed_clubs_for(user).exists()):
+            clubs = managed_clubs_for(user).filter(is_active=True)
         else:
             clubs = Club.objects.none()
 
@@ -148,6 +143,7 @@ class StudentCreateForm(forms.Form):
                 existing_user.is_super_manager
                 or existing_user.is_club_manager
                 or existing_user.is_instructor
+                or existing_user.organization_memberships.filter(is_active=True).exists()
             )
             has_club_memberships = existing_user.club_memberships.exists()
             has_messages = (

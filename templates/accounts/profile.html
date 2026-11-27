@@ -20,7 +20,7 @@
             </div>
             <div class="profile-name">{{ user.get_full_name }}</div>
             <div class="profile-role">
-                {% if user.is_super_manager %}مدیر کل{% elif user.is_club_manager %}مدیر باشگاه{% elif user.is_instructor %}مربی{% else %}هنرجو{% endif %}
+                {% if user.is_super_manager %}مدیر کل{% elif has_club_management %}مدیر مجموعه/شعبه{% elif user.is_instructor %}مربی{% else %}هنرجو{% endif %}
             </div>
             <div class="profile-phone"><i class="bi bi-phone"></i> {{ user.phone }}</div>
         </div>
@@ -34,9 +34,9 @@
             <div class="info-row"><span class="info-label">تاریخ تولد</span><span class="info-value">{{ user.birth_date|jformat:"%Y/%m/%d"|default:"-" }}</span></div>
             <div class="info-row"><span class="info-label">نقش</span><span class="info-value">
                 {% if user.is_super_manager %}<span class="info-badge admin">مدیر کل</span>{% endif %}
-                {% if user.is_club_manager %}<span class="info-badge manager">مدیر باشگاه</span>{% endif %}
+                {% if has_club_management %}<span class="info-badge manager">مدیر مجموعه/شعبه</span>{% endif %}
                 {% if user.is_instructor %}<span class="info-badge coach">مربی</span>{% endif %}
-                {% if not user.is_super_manager and not user.is_club_manager and not user.is_instructor %}هنرجو{% endif %}
+                {% if not user.is_super_manager and not has_club_management and not user.is_instructor %}هنرجو{% endif %}
             </span></div>
         </div>
         

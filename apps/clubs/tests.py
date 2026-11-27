@@ -202,6 +202,94 @@ class OrganizationMembershipTests(TestCase):
             )
         self.assertNotIn(branch_b.pk, set(finance_managed_clubs_for(self.user).values_list("pk", flat=True)))
 
+    def test_platform_owner_can_assign_org_manager_without_global_manager_flag(self):
+        platform_owner = User.objects.create_user(
+            phone="09120000041", password="test-pass", first_name="پشتیبان",
+            last_name="پلتفرم", is_super_manager=True,
+        )
+        manager = User.objects.create_user(
+            phone="09120000042", password="test-pass", first_name="مدیر",
+            last_name="مجموعه",
+        )
+        self.client.force_login(platform_owner)
+
+        response = self.client.post(
+            reverse("clubs:organization_manager_add", args=[self.organization_a.pk]),
+            {"user_id": manager.pk},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        membership = OrganizationMembership.objects.get(
+            user=manager, organization=self.organization_a
+        )
+        self.assertTrue(membership.is_active)
+        self.assertFalse(manager.is_club_manager)
+
+        self.client.force_login(manager)
+        self.assertEqual(self.client.get(reverse("clubs:club_list")).status_code, 200)
+
+    def test_revoking_one_membership_preserves_access_to_other_organizations(self):
+        platform_owner = User.objects.create_user(
+            phone="09120000044", password="test-pass", first_name="پشتیبان",
+            last_name="پلتفرم", is_super_manager=True,
+        )
+        manager = User.objects.create_user(
+            phone="09120000045", password="test-pass", first_name="مدیر",
+            last_name="مشترک",
+        )
+        backup_manager = User.objects.create_user(
+            phone="09120000046", password="test-pass", first_name="مدیر",
+            last_name="پشتیبان",
+        )
+        membership_a = OrganizationMembership.objects.create(
+            user=manager, organization=self.organization_a, role="manager"
+        )
+        OrganizationMembership.objects.create(
+            user=backup_manager, organization=self.organization_a, role="manager"
+        )
+        OrganizationMembership.objects.create(
+            user=manager, organization=self.organization_b, role="manager"
+        )
+        province = Province.objects.create(name="آزمایش")
+        city = City.objects.create(name="شهر آزمایش", province=province)
+        branch_b = Club.objects.create(
+            organization=self.organization_b, name="شعبه ب", province=province, city=city
+        )
+        self.client.force_login(platform_owner)
+
+        self.client.post(
+            reverse(
+                "clubs:organization_manager_deactivate",
+                args=[self.organization_a.pk, membership_a.pk],
+            )
+        )
+        manager.active_organization_id = self.organization_b.pk
+        self.assertSetEqual(
+            set(accounts_managed_clubs_for(manager).values_list("pk", flat=True)),
+            {branch_b.pk},
+        )
+
+    def test_cannot_revoke_last_active_organization_manager(self):
+        platform_owner = User.objects.create_user(
+            phone="09120000043", password="test-pass", first_name="پشتیبان",
+            last_name="پلتفرم", is_super_manager=True,
+        )
+        membership = OrganizationMembership.objects.create(
+            user=self.user, organization=self.organization_a, role="manager"
+        )
+        self.client.force_login(platform_owner)
+
+        response = self.client.post(
+            reverse(
+                "clubs:organization_manager_deactivate",
+                args=[self.organization_a.pk, membership.pk],
+            )
+        )
+
+        self.assertEqual(response.status_code, 302)
+        membership.refresh_from_db()
+        self.assertTrue(membership.is_active)
+
     def test_multiple_managers_can_belong_to_the_same_organization(self):
         second_manager = User.objects.create_user(
             phone="09120000002",
