@@ -7,7 +7,7 @@ from django.db.models import Sum
 import jdatetime
 from .models import Payment, Expense, FeeDue
 from apps.students.models import Student, Enrollment
-from apps.clubs.models import Club
+from apps.clubs.models import Club, OrganizationMembership
 from apps.finance.models import Payment
 
 
@@ -15,7 +15,14 @@ def managed_clubs_for(user):
     if user.is_super_manager:
         return Club.objects.all()
     if user.is_club_manager:
-        return Club.objects.filter(memberships__user=user, memberships__is_active=True).distinct()
+        organization_clubs = Club.objects.filter(
+            organization__memberships__user=user,
+            organization__memberships__is_active=True,
+            organization__memberships__role='manager',
+            organization__is_active=True,
+        )
+        branch_clubs = Club.objects.filter(memberships__user=user, memberships__is_active=True)
+        return (organization_clubs | branch_clubs).distinct()
     return Club.objects.none()
 
 
