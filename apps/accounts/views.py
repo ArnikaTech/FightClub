@@ -8,14 +8,23 @@ from django.db import models
 
 import jdatetime
 from apps.students.models import Student, Attendance, ClassGroup, Shift
-from apps.clubs.models import Club
+from apps.clubs.models import Club, OrganizationMembership
 from .models import User, Message
 
 
 def managed_clubs_for(user):
     if user.is_super_manager:
         return Club.objects.all()
-    if user.is_club_manager or user.is_instructor:
+    if user.is_club_manager:
+        organization_clubs = Club.objects.filter(
+            organization__memberships__user=user,
+            organization__memberships__is_active=True,
+            organization__memberships__role='manager',
+            organization__is_active=True,
+        )
+        branch_clubs = Club.objects.filter(memberships__user=user, memberships__is_active=True)
+        return (organization_clubs | branch_clubs).distinct()
+    if user.is_instructor:
         return Club.objects.filter(memberships__user=user, memberships__is_active=True).distinct()
     return Club.objects.none()
 
