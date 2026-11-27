@@ -44,6 +44,24 @@ class TenantDeleteAccessTests(TestCase):
             phone="09120000032", password="test-password"
         )
 
+    def test_platform_owner_class_list_respects_selected_organization(self):
+        platform_owner = User.objects.create_user(
+            phone="09120000033", password="test-password", is_super_manager=True
+        )
+        self.client.force_login(platform_owner)
+        self.client.get(
+            reverse("accounts:dashboard"),
+            {"organization_id": self.org_a.pk},
+        )
+
+        response = self.client.get(reverse("students:class_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            set(response.context["classes"].values_list("pk", flat=True)),
+            {self.class_a.pk},
+        )
+
     def test_manager_cannot_delete_class_from_another_organization(self):
         self.client.force_login(self.manager)
         response = self.client.post(reverse("students:class_delete", args=[self.class_b.pk]))

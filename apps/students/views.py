@@ -839,7 +839,7 @@ class AttendanceHistoryView(LoginRequiredMixin, TemplateView):
         if user.is_super_manager:
             all_students = visible_students_for(user).filter(is_active=True).select_related('user')
             all_shifts = visible_shifts_for(user).filter(is_active=True).select_related('class_group')
-        elif user.is_club_manager:
+        elif can_manage_clubs(user):
             all_students = visible_students_for(user).filter(is_active=True).select_related('user')
             all_shifts = visible_shifts_for(user).filter(is_active=True).select_related('class_group')
         else:
@@ -924,9 +924,9 @@ class ClassGroupListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     
     def get_queryset(self):
         user = self.request.user
-        if user.is_super_manager:
-            return ClassGroup.objects.filter(is_active=True).select_related('club', 'sport')
-        return ClassGroup.objects.filter(club__in=managed_clubs_for(user), is_active=True).select_related('club', 'sport').distinct()
+        return ClassGroup.objects.filter(
+            club__in=managed_clubs_for(user), is_active=True
+        ).select_related('club', 'sport').distinct()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

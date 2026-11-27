@@ -271,7 +271,11 @@ class ClubListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['provinces'] = Province.objects.all()
-        context['organizations'] = Organization.objects.filter(is_active=True).order_by('name')
+        organizations = Organization.objects.filter(is_active=True).order_by('name')
+        selected_organization_id = getattr(self.request, 'active_organization_id', None)
+        if selected_organization_id:
+            organizations = organizations.filter(pk=selected_organization_id)
+        context['organizations'] = organizations
         return context
 
 
@@ -290,9 +294,11 @@ class ClubCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
             messages.error(request, 'نام شعبه، مجموعه، استان و شهر الزامی است')
             return redirect('clubs:club_list')
 
-        organization = get_object_or_404(
-            Organization, pk=organization_id, is_active=True
-        )
+        allowed_organizations = Organization.objects.filter(is_active=True)
+        selected_organization_id = getattr(request, 'active_organization_id', None)
+        if selected_organization_id:
+            allowed_organizations = allowed_organizations.filter(pk=selected_organization_id)
+        organization = get_object_or_404(allowed_organizations, pk=organization_id)
 
         Club.objects.create(
             organization=organization,
@@ -311,6 +317,14 @@ class ClubEditView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def post(self, request, pk):
         club = get_object_or_404(managed_clubs_for(request.user), pk=pk)
+        if request.user.is_super_manager:
+            target_organization_id = request.POST.get('organization')
+            if target_organization_id and str(target_organization_id) != str(club.organization_id):
+                messages.error(
+                    request,
+                    'انتقال شعبه به مجموعهٔ دیگر از ویرایش عادی مجاز نیست؛ این کار ممکن است سوابق مالی و هنرجویان را جابه‌جا کند.',
+                )
+                return redirect('clubs:club_list')
         club.name = request.POST.get('name', '').strip()
         club.phone = request.POST.get('phone', '').strip()
         club.address = request.POST.get('address', '').strip()
@@ -342,7 +356,7 @@ class ClubDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self): return self.request.user.is_super_manager
     
     def post(self, request, pk):
-        club = get_object_or_404(Club, pk=pk)
+        club = get_object_or_404(managed_clubs_for(request.user), pk=pk)
         name = club.name
         
         # چک کن هنرجو یا کلاس فعال داره؟
@@ -361,7 +375,7 @@ class ClubActivateView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self): return self.request.user.is_super_manager
 
     def post(self, request, pk):
-        club = get_object_or_404(Club, pk=pk)
+        club = get_object_or_404(managed_clubs_for(request.user), pk=pk)
         club.is_active = True
         club.save()
         messages.success(request, f'باشگاه {club.name} فعال شد')

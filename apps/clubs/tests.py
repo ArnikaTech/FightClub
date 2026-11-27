@@ -128,6 +128,28 @@ class OrganizationMembershipTests(TestCase):
         self.assertEqual(response.context["overview_stats"]["branches"], 1)
         self.assertEqual(response.context["active_organization"].pk, self.organization_a.pk)
 
+    def test_platform_owner_cannot_delete_branch_outside_selected_organization(self):
+        province = Province.objects.create(name="آزمایش")
+        city = City.objects.create(name="شهر آزمایش", province=province)
+        foreign_branch = Club.objects.create(
+            organization=self.organization_b,
+            name="شعبه مجموعه ب",
+            province=province,
+            city=city,
+        )
+        self.user.is_super_manager = True
+        self.user.save(update_fields=["is_super_manager"])
+        self.client.force_login(self.user)
+        self.client.get(
+            reverse("accounts:dashboard"),
+            {"organization_id": self.organization_a.pk},
+        )
+
+        response = self.client.post(reverse("clubs:club_delete", args=[foreign_branch.pk]))
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(Club.objects.filter(pk=foreign_branch.pk).exists())
+
     def test_platform_owner_organization_filter_limits_branches(self):
         province = Province.objects.create(name="آزمایش")
         city = City.objects.create(name="شهر آزمایش", province=province)
@@ -153,8 +175,6 @@ class OrganizationMembershipTests(TestCase):
         self.assertNotIn(foreign_branch.pk, set(accounts_managed_clubs_for(self.user).values_list("pk", flat=True)))
 
     def test_branch_manager_is_scoped_to_assigned_branch(self):
-        self.user.is_club_manager = True
-        self.user.save(update_fields=["is_club_manager"])
         province = Province.objects.create(name="آزمایش")
         city = City.objects.create(name="شهر آزمایش", province=province)
         branch_a = Club.objects.create(
