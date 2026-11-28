@@ -219,6 +219,8 @@ class DashboardOverviewTests(TestCase):
                 "students_inactive": 1,
                 "classes": 1,
                 "shifts": 1,
+                "income": 0,
+                "expenses": 0,
             },
         )
 
@@ -235,5 +237,7 @@ class DashboardOverviewTests(TestCase):
                 "students_inactive": 1,
                 "classes": 3,
                 "shifts": 3,
+                "income": 0,
+                "expenses": 0,
             },
         )

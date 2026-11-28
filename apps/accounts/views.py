@@ -123,6 +123,18 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             students = Student.objects.none()
             selected_club = None
 
+        # Apply an optional branch filter only inside the user's already-authorized scope.
+        selected_branch_id = self.request.GET.get('club_id')
+        if selected_branch_id:
+            selected_club = overview_clubs.filter(pk=selected_branch_id).first()
+            if selected_club:
+                overview_clubs = overview_clubs.filter(pk=selected_club.pk)
+                all_students = Student.objects.filter(
+                    models.Q(club__in=overview_clubs)
+                    | models.Q(club_memberships__club__in=overview_clubs, club_memberships__is_active=True)
+                ).distinct()
+                students = all_students.filter(is_active=True)
+
         # پروفایل هنرجو
         if not user.is_super_manager and not can_manage_clubs(user) and not user.is_instructor:
             try:
