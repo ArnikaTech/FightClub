@@ -85,8 +85,8 @@
         <section class="organization-panel-card organization-managers-section">
             <div class="organization-managers-heading">
                 <div>
-                    <h2 class="organization-section-title">مدیران مجموعه</h2>
-                    <p class="text-muted mb-0">مدیران می‌توانند به شعبه‌های این مجموعه دسترسی مدیریتی داشته باشند و مدیران شعبه را تعیین کنند.</p>
+                    <h2 class="organization-section-title">مدیران مجموعه <small>(دسترسی به همهٔ شعبه‌ها)</small></h2>
+                    <p class="text-muted mb-0">برای تعیین مدیر با دسترسی محدود، از بخش «مدیران شعبه» در کارت همان شعبه استفاده کنید.</p>
                 </div>
                 {% if is_platform_owner and available_manager_users %}
                 <form method="post" action="{% url 'clubs:organization_manager_add' organization.pk %}" class="organization-manager-add-form">
@@ -139,7 +139,8 @@
                 <span class="organization-branch-state">{% if branch.is_active %}فعال{% else %}غیرفعال{% endif %}</span>
                 {% if can_manage_branch_staff %}
                 <div class="branch-manager-panel">
-                    <strong>مدیران شعبه</strong>
+                    <strong>مدیران این شعبه</strong>
+                    <div class="organization-branch-location">این مدیر فقط به همین شعبه دسترسی مدیریتی دارد.</div>
                     {% if branch.is_active and branch_manager_candidates %}
                     <form method="post" action="{% url 'clubs:branch_manager_add' organization.pk branch.pk %}">
                         {% csrf_token %}

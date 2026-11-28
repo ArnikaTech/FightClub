@@ -102,12 +102,16 @@
         <section class="info-card dashboard-overview">
             <div class="info-title"><i class="bi bi-bar-chart-line"></i> نمای کلی مجموعه</div>
             {% if user.is_super_manager and clubs %}
-            <form method="get" class="dashboard-branch-filter" style="margin:0 0 14px;max-width:360px;">
-                <label class="form-label-sm" for="dashboard-club-filter">فیلتر شعبه</label>
-                <select id="dashboard-club-filter" name="club_id" class="input-glass" onchange="this.form.submit()">
-                    <option value="">همهٔ شعبه‌های محدودهٔ انتخاب‌شده</option>
-                    {% for branch in clubs %}<option value="{{ branch.pk }}" {% if selected_club.pk == branch.pk %}selected{% endif %}>{{ branch.name }} — {{ branch.organization.name }}</option>{% endfor %}
-                </select>
+            <form method="get" action="{% url 'accounts:dashboard' %}" class="dashboard-branch-filter" style="display:flex;align-items:end;gap:8px;margin:0 0 14px;max-width:460px;">
+                {% if active_organization %}<input type="hidden" name="organization_id" value="{{ active_organization.pk }}">{% endif %}
+                <div style="flex:1;min-width:0;">
+                    <label class="form-label-sm" for="dashboard-club-filter">شعبه</label>
+                    <select id="dashboard-club-filter" name="club_id" class="form-select" style="width:100%;">
+                        <option value="">همه شعبه‌ها</option>
+                        {% for branch in clubs %}<option value="{{ branch.pk }}" {% if selected_club.pk == branch.pk %}selected{% endif %}>{{ branch.name }} — {{ branch.organization.name }}</option>{% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-add" style="white-space:nowrap;">اعمال</button>
             </form>
             {% endif %}
             <div class="overview-metrics">
