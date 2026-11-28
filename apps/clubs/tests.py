@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from apps.accounts.models import User
-from apps.clubs.models import City, Club, Province
+from apps.clubs.models import City, Club, ClubMembership, Province
 from apps.accounts.views import managed_clubs_for as accounts_managed_clubs_for
 from apps.students.views import managed_clubs_for as students_managed_clubs_for
 from apps.finance.views import managed_clubs_for as finance_managed_clubs_for
