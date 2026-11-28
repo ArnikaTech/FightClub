@@ -26,6 +26,9 @@
                     <li><a href="{% url 'clubs:city_list' %}" class="{% if request.resolver_match.url_name == 'city_list' or request.resolver_match.url_name == 'city_add' or request.resolver_match.url_name == 'city_edit' %}active{% endif %}"><i class="bi bi-geo-alt-fill"></i> شهرها</a></li>
                     <li><a href="{% url 'clubs:sport_list' %}" class="{% if request.resolver_match.url_name == 'sport_list' or request.resolver_match.url_name == 'sport_add' or request.resolver_match.url_name == 'sport_edit' %}active{% endif %}"><i class="bi bi-trophy-fill"></i> رشته‌ها</a></li>
                     {% endif %}
+                    {% if user.is_super_manager or has_organization_management %}
+                    <li><a href="{% url 'clubs:access_management' %}" class="{% if request.resolver_match.url_name == 'access_management' %}active{% endif %}"><i class="bi bi-shield-lock"></i> مدیران و دسترسی‌ها</a></li>
+                    {% endif %}
                     <li><a href="{% url 'clubs:club_list' %}" class="{% if request.resolver_match.url_name == 'club_list' or request.resolver_match.url_name == 'club_add' or request.resolver_match.url_name == 'club_edit' or request.resolver_match.url_name == 'club_detail' %}active{% endif %}"><i class="bi bi-building"></i> شعبه‌ها</a></li>
                     <li><a href="{% url 'clubs:coach_list' %}" class="{% if request.resolver_match.url_name == 'coach_list' or request.resolver_match.url_name == 'coach_add' or request.resolver_match.url_name == 'coach_edit' %}active{% endif %}"><i class="bi bi-person-badge-fill"></i> مربیان</a></li>
                 </ul>

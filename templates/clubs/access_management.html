@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}مدیران و دسترسی‌ها{% endblock %}
+{% block content %}
+<style>
+.access-header-actions{display:flex;gap:8px;flex-wrap:wrap}
+.access-card{background:var(--card-bg);border:1px solid var(--border-glass);border-radius:16px;padding:18px;margin-bottom:16px}
+.access-org-grid,.access-branch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));grid-auto-rows:1fr;gap:12px}
+.access-org-card,.access-branch-card{height:100%;padding:16px;border:1px solid var(--border-glass);border-radius:13px;background:var(--input-bg)}
+.access-org-card{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.access-title{font-size:var(--font-size-base);font-weight:700}
+.access-subtitle,.access-meta{color:var(--text-muted);font-size:var(--font-size-xs);margin-top:6px}
+.access-branch-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.access-add-form{display:flex;gap:8px;align-items:center;margin-top:14px}
+.access-add-form select{flex:1;min-width:0}
+.access-manager-list{display:grid;gap:8px;margin-top:14px}
+.access-manager-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding:8px 10px;border:1px solid var(--border-glass);border-radius:9px;background:var(--card-bg)}
+.access-manager-row span{min-width:0;overflow-wrap:anywhere}
+.access-empty{padding:16px;text-align:center;color:var(--text-muted);border:1px dashed var(--border-glass);border-radius:10px}
+.access-manager-modal .modal-body{max-height:min(70vh,560px);overflow-y:auto}
+@media(max-width:575px){.access-card{padding:14px}.access-header-actions{width:100%}.access-header-actions>*{flex:1;justify-content:center}.access-add-form .btn-add{width:42px;min-width:42px;height:42px;padding:0;justify-content:center}.access-add-form .button-label{display:none}.access-org-card{align-items:flex-start;flex-direction:column}.access-org-card .btn-add{width:100%;justify-content:center}}
+</style>
+<div class="dashboard-layout">
+    {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
+    <main class="dashboard-main">
+        {% include 'partials/_notif_bar.html' %}
+        <div class="page-header">
+            <div><h1 class="page-title">مدیران و دسترسی‌ها</h1><p class="text-muted mb-0">ابتدا مجموعه را انتخاب کنید؛ سپس مدیر مجموعه یا مدیر هر شعبه را جداگانه تعیین کنید.</p></div>
+            <div class="access-header-actions"><a href="{% url 'accounts:dashboard' %}" class="btn-cancel-sm"><i class="bi bi-arrow-right"></i> پیشخوان</a></div>
+        </div>
+
+        {% if not selected_access_organization %}
+        <section class="access-card">
+            <h2 class="organization-section-title">انتخاب مجموعه</h2>
+            {% if access_organizations %}
+            <div class="access-org-grid">
+                {% for org in access_organizations %}
+                <article class="access-org-card">
+                    <div><div class="access-title"><i class="bi bi-diagram-3"></i> {{ org.name }}</div><div class="access-meta">{{ org.branches.count }} شعبه</div></div>
+                    <a href="?scope_org={{ org.pk }}" class="btn-add"><i class="bi bi-shield-lock"></i> مدیریت دسترسی‌ها</a>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}<div class="access-empty">مجموعهٔ فعالی برای مدیریت در دسترس نیست.</div>{% endif %}
+        </section>
+        {% else %}
+        <section class="access-card">
+            <div class="access-branch-head">
+                <div><div class="access-title">مجموعه: {{ selected_access_organization.name }}</div><div class="access-subtitle">مدیر مجموعه به همهٔ شعبه‌های این مجموعه دسترسی دارد. مدیر شعبه فقط به شعبهٔ مشخص‌شده دسترسی دارد.</div></div>
+                {% if access_organizations.count > 1 %}<a href="{% url 'clubs:access_management' %}" class="btn-cancel-sm">تغییر مجموعه</a>{% endif %}
+            </div>
+        </section>
+
+        {% if can_assign_organization_manager %}
+        <section class="access-card">
+            <div class="access-branch-head"><div><h2 class="organization-section-title">مدیر مجموعه <small>(دسترسی به همهٔ شعبه‌ها)</small></h2><p class="text-muted mb-0">این نقش فقط برای افراد وابسته به همین مجموعه قابل انتخاب است.</p></div></div>
+            {% if organization_manager_candidates %}
+            <form method="post" action="{% url 'clubs:organization_manager_add' selected_access_organization.pk %}" class="access-add-form">
+                {% csrf_token %}<select name="user_id" class="input-glass" required aria-label="انتخاب مدیر مجموعه"><option value="">انتخاب کاربر از این مجموعه…</option>{% for candidate in organization_manager_candidates %}<option value="{{ candidate.pk }}">{{ candidate.get_full_name }} — {{ candidate.phone }}</option>{% endfor %}</select>
+                <button type="submit" class="btn-add" aria-label="افزودن مدیر مجموعه" title="افزودن"><i class="bi bi-person-plus"></i><span class="button-label"> افزودن مدیر</span></button>
+            </form>
+            {% else %}<p class="access-subtitle">کاربر فعالی از این مجموعه برای افزودن موجود نیست.</p>{% endif %}
+            <div class="access-manager-list">
+                {% for membership in organization_managers %}
+                <div class="access-manager-row"><span>{{ membership.user.get_full_name }} — {{ membership.user.phone }}</span><button type="button" class="coach-action-btn delete" aria-label="لغو مدیر مجموعه" onclick="openAccessRevoke('{% url 'clubs:organization_manager_deactivate' selected_access_organization.pk membership.pk %}','{{ membership.user.get_full_name|escapejs }}','کل مجموعه')"><i class="bi bi-person-dash"></i></button></div>
+                {% empty %}<div class="access-empty">هنوز مدیر مجموعه‌ای تعیین نشده است.</div>{% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <section class="access-card">
+            <h2 class="organization-section-title">مدیران شعبه‌ها</h2>
+            <p class="text-muted">مدیر هر شعبه را در کارت همان شعبه اضافه یا لغو کنید. خالی‌بودن مدیر یک شعبه مجاز است.</p>
+            <div class="access-branch-grid">
+                {% for branch in access_branches %}
+                <article class="access-branch-card">
+                    <div class="access-branch-head"><div><div class="access-title">{{ branch.name }}</div><div class="access-meta">{{ branch.city.name }}، {{ branch.province.name }}</div></div><span class="access-meta">{% if branch.is_active %}فعال{% else %}غیرفعال{% endif %}</span></div>
+                    {% if branch.is_active and branch_manager_candidates %}
+                    <form method="post" action="{% url 'clubs:branch_manager_add' selected_access_organization.pk branch.pk %}" class="access-add-form">
+                        {% csrf_token %}<select name="user_id" class="input-glass" required aria-label="انتخاب مدیر برای {{ branch.name }}"><option value="">انتخاب مدیر از این مجموعه…</option>{% for candidate in branch_manager_candidates %}<option value="{{ candidate.pk }}">{{ candidate.get_full_name }} — {{ candidate.phone }}</option>{% endfor %}</select>
+                        <button type="submit" class="btn-add" aria-label="افزودن مدیر به {{ branch.name }}" title="افزودن"><i class="bi bi-person-plus"></i><span class="button-label"> افزودن</span></button>
+                    </form>
+                    {% elif not branch.is_active %}<p class="access-subtitle">برای شعبهٔ غیرفعال مدیر جدید تعیین نمی‌شود.</p>
+                    {% else %}<p class="access-subtitle">کاربر فعالی از این مجموعه برای انتساب وجود ندارد.</p>{% endif %}
+                    <div class="access-manager-list">
+                        {% for membership in branch.active_managers %}
+                        <div class="access-manager-row"><span>{{ membership.user.get_full_name }} — {{ membership.user.phone }}</span><button type="button" class="coach-action-btn delete" aria-label="لغو مدیر {{ branch.name }}" onclick="openAccessRevoke('{% url 'clubs:branch_manager_deactivate' selected_access_organization.pk branch.pk membership.pk %}','{{ membership.user.get_full_name|escapejs }}','شعبهٔ {{ branch.name|escapejs }}')"><i class="bi bi-person-dash"></i></button></div>
+                        {% empty %}<div class="access-empty">برای این شعبه مدیری تعیین نشده است.</div>{% endfor %}
+                    </div>
+                </article>
+                {% empty %}<div class="access-empty">این مجموعه هنوز شعبه‌ای ندارد.</div>{% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if can_manage_branch_staff %}
+        <div class="modal-overlay" id="accessRevokeOverlay" onclick="closeAccessRevoke()"></div>
+        <div class="modal-sheet" id="accessRevokeModal" role="dialog" aria-modal="true" aria-labelledby="accessRevokeTitle"><div class="modal-handle"></div><div class="modal-title" id="accessRevokeTitle">تأیید لغو دسترسی</div><div class="modal-body text-center"><p id="accessRevokeText"></p><form method="post" id="accessRevokeForm" action="">{% csrf_token %}<div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeAccessRevoke()">انصراف</button><button type="submit" class="btn-submit-sm">لغو دسترسی</button></div></form></div></div>
+        <script>
+        function openAccessRevoke(url,name,scope){document.getElementById('accessRevokeForm').action=url;document.getElementById('accessRevokeText').textContent='دسترسی «'+name+'» به «'+scope+'» لغو شود؟';document.getElementById('accessRevokeOverlay').classList.add('show');document.getElementById('accessRevokeModal').classList.add('show');}
+        function closeAccessRevoke(){document.getElementById('accessRevokeOverlay').classList.remove('show');document.getElementById('accessRevokeModal').classList.remove('show');}
+        document.addEventListener('DOMContentLoaded',function(){
+            {% for message in messages %}if(typeof showToast==='function'){showToast('{% if message.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}','{% if message.tags == "success" %}green{% else %}red{% endif %}','{% if message.tags == "success" %}موفق{% else %}خطا{% endif %}','{{ message|escapejs }}');}{% endfor %}
+        });
+        </script>
+        {% endif %}
+    </main>
+    {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
+</div>
+{% endblock %}

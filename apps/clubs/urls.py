@@ -8,6 +8,7 @@ urlpatterns = [
     path('organizations/', views.OrganizationListView.as_view(), name='organization_list'),
     path('organizations/add/', views.OrganizationCreateView.as_view(), name='organization_add'),
     path('organizations/<int:pk>/', views.OrganizationDetailView.as_view(), name='organization_detail'),
+    path('access/', views.AccessManagementView.as_view(), name='access_management'),
     path('organizations/<int:pk>/managers/add/', views.OrganizationManagerAssignView.as_view(), name='organization_manager_add'),
     path('organizations/<int:pk>/managers/<int:membership_pk>/deactivate/', views.OrganizationManagerDeactivateView.as_view(), name='organization_manager_deactivate'),
     path('organizations/<int:pk>/branches/<int:club_pk>/managers/add/', views.BranchManagerAssignView.as_view(), name='branch_manager_add'),

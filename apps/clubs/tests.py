@@ -99,6 +99,32 @@ class OrganizationMembershipTests(TestCase):
             )
         self.assertNotIn(foreign_branch.pk, expected)
 
+    def test_access_management_page_keeps_organization_manager_in_own_scope(self):
+        OrganizationMembership.objects.create(
+            user=self.user, organization=self.organization_a, role="manager"
+        )
+        province = Province.objects.create(name="آزمایش")
+        city = City.objects.create(name="شهر آزمایش", province=province)
+        branch_a = Club.objects.create(
+            organization=self.organization_a, name="شعبه الف", province=province, city=city
+        )
+        branch_b = Club.objects.create(
+            organization=self.organization_b, name="شعبه ب", province=province, city=city
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse("clubs:access_management"), {"scope_org": self.organization_b.pk}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["selected_access_organization"], self.organization_a)
+        self.assertSetEqual(
+            {branch.pk for branch in response.context["access_branches"]},
+            {branch_a.pk},
+        )
+        self.assertNotIn(branch_b.pk, {branch.pk for branch in response.context["access_branches"]})
+
     def test_platform_owner_can_select_organization_and_dashboard_uses_it(self):
         province = Province.objects.create(name="آزمایش")
         city = City.objects.create(name="شهر آزمایش", province=province)
@@ -224,7 +250,7 @@ class OrganizationMembershipTests(TestCase):
         )
         Student.objects.create(user=foreign_user, club=foreign_branch, student_code="foreign-candidate")
         self.client.force_login(platform_owner)
-        detail = self.client.get(reverse("clubs:organization_detail", args=[self.organization_a.pk]))
+        detail = self.client.get(reverse("clubs:access_management"), {"scope_org": self.organization_a.pk})
         self.assertSetEqual(
             set(detail.context["organization_manager_candidates"].values_list("pk", flat=True)),
             {manager.pk},
@@ -300,7 +326,7 @@ class OrganizationMembershipTests(TestCase):
         Student.objects.create(user=foreign_target, club=branch_foreign, student_code="branch-b-manager-candidate")
         OrganizationMembership.objects.create(user=self.user, organization=self.organization_a, role="manager")
         self.client.force_login(self.user)
-        detail = self.client.get(reverse("clubs:organization_detail", args=[self.organization_a.pk]))
+        detail = self.client.get(reverse("clubs:access_management"), {"scope_org": self.organization_a.pk})
         self.assertSetEqual(
             set(detail.context["branch_manager_candidates"].values_list("pk", flat=True)),
             {target.pk},
@@ -321,6 +347,11 @@ class OrganizationMembershipTests(TestCase):
             {"user_id": target.pk},
         )
         self.assertEqual(response.status_code, 404)
+        cross_tenant_response = self.client.post(
+            reverse("clubs:branch_manager_add", args=[self.organization_a.pk, branch_a.pk]),
+            {"user_id": foreign_target.pk},
+        )
+        self.assertEqual(cross_tenant_response.status_code, 404)
         self.assertFalse(accounts_managed_clubs_for(target).filter(pk__in=[branch_b.pk, branch_foreign.pk]).exists())
 
     def test_can_revoke_last_branch_manager_and_leave_branch_unassigned(self):

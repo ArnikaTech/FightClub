@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, DetailView, View
+from django.views.generic import ListView, DetailView, TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -10,6 +10,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.utils.text import slugify
+from django.urls import reverse
 
 from .models import Province, City, Club, Sport, Organization, OrganizationMembership
 from .models import ClubMembership
@@ -40,6 +41,10 @@ def organization_manager_candidates_for(organization):
 
 def branch_manager_candidates_for(organization):
     return organization_manager_candidates_for(organization)
+
+
+def access_management_redirect(organization):
+    return redirect(f'{reverse("clubs:access_management")}?scope_org={organization.pk}')
 
 
 # ========== استان‌ها ==========
@@ -207,14 +212,53 @@ class OrganizationDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView
         context['organization_managers'] = organization.memberships.filter(
             role='manager', is_active=True
         ).select_related('user').order_by('user__first_name', 'user__last_name')
-        context['organization_manager_candidates'] = organization_manager_candidates_for(organization)
-        context['branch_manager_candidates'] = branch_manager_candidates_for(organization)
-        branches = list(organization.branches.all().select_related('city', 'province'))
-        for branch in branches:
-            branch.active_managers = list(branch.memberships.filter(
+        return context
+
+
+class AccessManagementView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    """One dedicated, tenant-scoped place to manage organization and branch managers."""
+    template_name = 'clubs/access_management.html'
+
+    def test_func(self):
+        user = self.request.user
+        return user.is_super_manager or OrganizationMembership.objects.filter(
+            user=user, role='manager', is_active=True, organization__is_active=True
+        ).exists()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        if user.is_super_manager:
+            organizations = Organization.objects.filter(is_active=True).order_by('name')
+            selected_id = self.request.GET.get('scope_org') or getattr(self.request, 'active_organization_id', None)
+        else:
+            organizations = Organization.objects.filter(
+                memberships__user=user, memberships__role='manager', memberships__is_active=True,
+                is_active=True,
+            ).order_by('name').distinct()
+            selected_id = self.request.GET.get('scope_org')
+
+        selected_organization = organizations.filter(pk=selected_id).first() if selected_id else None
+        if selected_organization is None and not user.is_super_manager and organizations.count() == 1:
+            selected_organization = organizations.first()
+
+        context['access_organizations'] = organizations
+        context['selected_access_organization'] = selected_organization
+        context['is_platform_owner'] = user.is_super_manager
+        context['can_assign_organization_manager'] = user.is_super_manager
+        context['can_manage_branch_staff'] = selected_organization is not None
+        if selected_organization:
+            context['organization_manager_candidates'] = organization_manager_candidates_for(selected_organization)
+            context['organization_managers'] = selected_organization.memberships.filter(
                 role='manager', is_active=True
-            ).select_related('user').order_by('user__first_name', 'user__last_name'))
-        context['organization_branches'] = branches
+            ).select_related('user').order_by('user__first_name', 'user__last_name')
+            context['branch_manager_candidates'] = branch_manager_candidates_for(selected_organization)
+            branches = list(selected_organization.branches.all().select_related('city', 'province'))
+            for branch in branches:
+                branch.active_managers = list(branch.memberships.filter(
+                    role='manager', is_active=True
+                ).select_related('user').order_by('user__first_name', 'user__last_name'))
+            context['access_branches'] = branches
         return context
 
 
@@ -239,7 +283,7 @@ class OrganizationManagerAssignView(LoginRequiredMixin, UserPassesTestMixin, Vie
             request,
             f'دسترسی مدیر مجموعه برای «{user.get_full_name()}» ' + ('اعطا شد' if created else 'فعال شد'),
         )
-        return redirect('clubs:organization_detail', pk=organization.pk)
+        return access_management_redirect(organization)
 
 
 class OrganizationManagerDeactivateView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -263,7 +307,7 @@ class OrganizationManagerDeactivateView(LoginRequiredMixin, UserPassesTestMixin,
             membership.is_active = False
             membership.save(update_fields=['is_active'])
             messages.success(request, f'دسترسی مدیر مجموعه برای «{membership.user.get_full_name()}» لغو شد.')
-        return redirect('clubs:organization_detail', pk=organization.pk)
+        return access_management_redirect(organization)
 
 
 class BranchManagerAssignView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -283,7 +327,7 @@ class BranchManagerAssignView(LoginRequiredMixin, UserPassesTestMixin, View):
             defaults={'role': 'manager', 'is_active': True},
         )
         messages.success(request, f'مدیر شعبهٔ «{club.name}» برای «{user.get_full_name()}» ثبت شد.')
-        return redirect('clubs:organization_detail', pk=organization.pk)
+        return access_management_redirect(organization)
 
 
 class BranchManagerDeactivateView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -301,7 +345,7 @@ class BranchManagerDeactivateView(LoginRequiredMixin, UserPassesTestMixin, View)
         membership.is_active = False
         membership.save(update_fields=['is_active'])
         messages.success(request, f'دسترسی مدیر به شعبهٔ «{club.name}» لغو شد.')
-        return redirect('clubs:organization_detail', pk=organization.pk)
+        return access_management_redirect(organization)
 
 
 class OrganizationEditView(LoginRequiredMixin, UserPassesTestMixin, View):

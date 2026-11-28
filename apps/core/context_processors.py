@@ -44,9 +44,15 @@ def site_settings(request):
     organizations = []
     selected_organization = None
     has_club_management = False
+    has_organization_management = False
     if request.user.is_authenticated:
         from apps.clubs.access import can_manage_clubs as user_can_manage_clubs
         has_club_management = user_can_manage_clubs(request.user)
+        if not request.user.is_super_manager:
+            from apps.clubs.models import OrganizationMembership
+            has_organization_management = OrganizationMembership.objects.filter(
+                user=request.user, is_active=True, role='manager', organization__is_active=True
+            ).exists()
     if request.user.is_authenticated and request.user.is_super_manager:
         from apps.clubs.models import Organization
         organizations = Organization.objects.filter(is_active=True).order_by('name')
@@ -58,6 +64,7 @@ def site_settings(request):
         'platform_organizations': organizations,
         'active_organization': selected_organization,
         'has_club_management': has_club_management,
+        'has_organization_management': has_organization_management,
         'unread_count': unread_count,
         'critical_count': critical_count,
         'birthday_count': birthday_count,

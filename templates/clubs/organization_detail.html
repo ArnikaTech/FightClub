@@ -3,83 +3,35 @@
 {% block title %}{{ organization.name }} | جزئیات مجموعه{% endblock %}
 {% block content %}
 <style>
-.organization-detail-header { margin-bottom:18px; }
-.organization-back-btn {
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    flex:0 0 auto;
-    width:auto;
-    gap:6px;
-    white-space:nowrap;
-}
-.organization-summary-card {
-    background:var(--card-bg);border:1px solid var(--border-glass);
-    border-radius:16px;padding:18px;margin-bottom:24px;
-}
-.organization-summary-top { display:flex;align-items:center;gap:14px; }
-.organization-summary-icon {
-    width:54px;height:54px;flex-shrink:0;border-radius:15px;
-    display:flex;align-items:center;justify-content:center;
-    background:var(--input-bg);border:1px solid var(--border-glass);
-    font-size:24px;color:var(--text-muted);
-}
-.organization-summary-name { font-size:var(--font-size-lg);font-weight:700;overflow-wrap:anywhere; }
-.organization-summary-meta { display:flex;flex-wrap:wrap;gap:12px;margin-top:7px;color:var(--text-muted);font-size:var(--font-size-xs); }
-.organization-section-title { font-size:var(--font-size-base);font-weight:700;margin:0 0 12px; }
-.organization-panel-card { background:var(--card-bg);border:1px solid var(--border-glass);border-radius:16px;padding:20px;margin-bottom:20px; }
-.organization-branches-section > .coach-list-page { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,390px),1fr));grid-auto-rows:1fr;align-items:stretch; }
-.organization-branch-card { display:flex;flex-wrap:wrap;align-items:center;gap:12px;height:100%;align-content:flex-start; }
-.organization-branch-card .coach-info-page { min-width:0; }
-.branch-manager-panel { flex:1 0 100%;min-width:0;min-height:190px;padding:14px;border:1px solid var(--border-glass);border-radius:12px;background:var(--input-bg);display:flex;flex-direction:column; }
-.branch-manager-add-form { display:flex;gap:8px;align-items:center;margin-top:10px; }
-.branch-manager-add-form select { flex:1;min-width:0; }
-.branch-manager-add-form .btn-add { flex:0 0 auto;white-space:nowrap; }
-.branch-manager-selected-list { display:grid;gap:8px;margin-top:12px; }
-.branch-manager-row { display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:48px;padding:8px 10px;border:1px solid var(--border-glass);border-radius:8px;background:var(--card-bg); }
-.branch-manager-row form { margin:0; }
-.branch-manager-row span { min-width:0;overflow-wrap:anywhere; }
-.organization-detail-actions { display:flex;flex-wrap:wrap;gap:8px; }
-.organization-manager-add-form { display:flex;align-items:center;gap:8px; }
-.organization-manager-add-form select { flex:1;min-width:0; }
-.organization-managers-modal .modal-body { max-height:min(70vh,560px);overflow-y:auto; }
-.organization-managers-list { margin-top:16px; }
-
-.organization-branch-location { color:var(--text-muted);font-size:var(--font-size-xs);margin-top:4px; }
-.organization-branch-state { margin-right:auto;font-size:var(--font-size-xs);white-space:nowrap; }
-.organization-empty-state {
-    text-align:center;padding:32px 16px;border:1px dashed var(--border-glass);
-    border-radius:14px;color:var(--text-muted);background:var(--card-bg);
-}
-@media(max-width:575px) {
-    .organization-summary-card { padding:14px; }
-    .organization-branch-card { align-items:flex-start; }
-    .organization-branch-state { margin-right:0; }
-    .branch-manager-add-form .btn-add { width:42px;min-width:42px;height:42px;padding:0;justify-content:center; }
-    .branch-manager-add-form .button-label,
-    .organization-manager-add-form .button-label { display:none; }
-    .organization-manager-add-form .btn-add { width:42px;min-width:42px;height:42px;padding:0;justify-content:center; }
-}
+.organization-summary-card,.organization-panel-card{background:var(--card-bg);border:1px solid var(--border-glass);border-radius:16px;padding:18px;margin-bottom:20px}
+.organization-summary-top{display:flex;align-items:center;gap:14px}
+.organization-summary-icon{width:54px;height:54px;flex:0 0 auto;border-radius:15px;display:grid;place-items:center;background:var(--input-bg);font-size:24px}
+.organization-summary-name{font-size:var(--font-size-lg);font-weight:700;overflow-wrap:anywhere}
+.organization-summary-meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:7px;color:var(--text-muted);font-size:var(--font-size-xs)}
+.organization-detail-actions{display:flex;flex-wrap:wrap;gap:8px}
+.organization-branch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));grid-auto-rows:1fr;gap:12px}
+.organization-branch-card{height:100%;padding:16px;border:1px solid var(--border-glass);border-radius:14px;background:var(--card-bg)}
+.organization-branch-name{font-weight:700;font-size:var(--font-size-base);overflow-wrap:anywhere}
+.organization-branch-meta{margin-top:7px;color:var(--text-muted);font-size:var(--font-size-xs)}
+.organization-empty-state{text-align:center;padding:30px 16px;border:1px dashed var(--border-glass);border-radius:14px;color:var(--text-muted)}
+@media(max-width:575px){.organization-summary-card,.organization-panel-card{padding:14px}.organization-detail-actions{width:100%}.organization-detail-actions>*{flex:1;justify-content:center}}
 </style>
 <div class="dashboard-layout">
     {% include 'partials/_sidebar.html' %}{% include 'partials/_mobile_nav.html' %}
     <main class="dashboard-main">
         {% include 'partials/_notif_bar.html' %}
-        <div class="page-header organization-detail-header">
-            <div>
-                <h1 class="page-title">جزئیات مجموعه</h1>
-                <p class="text-muted mb-0">اطلاعات مجموعه و شعبه‌های زیرمجموعه</p>
-            </div>
+        <div class="page-header">
+            <div><h1 class="page-title">جزئیات مجموعه</h1><p class="text-muted mb-0">اطلاعات مجموعه و شعبه‌های زیرمجموعه</p></div>
             <div class="organization-detail-actions">
-                {% if is_platform_owner %}<button type="button" class="btn-cancel-sm" onclick="openOrganizationManagersModal()"><i class="bi bi-people"></i> مدیران مجموعه</button>{% endif %}
-                <a href="{% url 'clubs:organization_list' %}" class="btn-cancel-sm organization-back-btn"><i class="bi bi-arrow-right"></i> بازگشت</a>
+                {% if can_manage_branch_staff %}<a href="{% url 'clubs:access_management' %}?scope_org={{ organization.pk }}" class="btn-add"><i class="bi bi-shield-lock"></i> مدیریت مدیران و دسترسی‌ها</a>{% endif %}
+                <a href="{% url 'clubs:organization_list' %}" class="btn-cancel-sm"><i class="bi bi-arrow-right"></i> بازگشت</a>
             </div>
         </div>
 
         <section class="organization-summary-card">
             <div class="organization-summary-top">
                 <div class="organization-summary-icon"><i class="bi bi-diagram-3-fill"></i></div>
-                <div style="min-width:0;">
+                <div style="min-width:0">
                     <div class="organization-summary-name">{{ organization.name }}</div>
                     <div class="organization-summary-meta">
                         <span><i class="bi bi-building"></i> {{ organization.branch_count }} شعبه</span>
@@ -90,118 +42,19 @@
             </div>
         </section>
 
-        <section class="organization-panel-card organization-branches-section">
-        <h2 class="organization-section-title">شعبه‌های مجموعه</h2>
-        <div class="coach-list-page">
-            {% for branch in organization_branches %}
-            <article class="coach-card-page organization-branch-card">
-                <div class="coach-avatar-page"><i class="bi bi-building"></i></div>
-                <div class="coach-info-page">
-                    <div class="coach-name-page">{{ branch.name }}</div>
-                    <div class="organization-branch-location"><i class="bi bi-geo-alt"></i> {{ branch.city.name }}، {{ branch.province.name }}</div>
-                    {% if branch.phone %}<div class="organization-branch-location"><i class="bi bi-telephone"></i> {{ branch.phone }}</div>{% endif %}
-                </div>
-                <span class="organization-branch-state">{% if branch.is_active %}فعال{% else %}غیرفعال{% endif %}</span>
-                {% if can_manage_branch_staff %}
-                <div class="branch-manager-panel">
-                    <strong>مدیران این شعبه</strong>
-                    <div class="organization-branch-location">این مدیر فقط به همین شعبه دسترسی مدیریتی دارد.</div>
-                    {% if branch.is_active and branch_manager_candidates %}
-                    <form method="post" action="{% url 'clubs:branch_manager_add' organization.pk branch.pk %}" class="branch-manager-add-form">
-                        {% csrf_token %}
-                        <select name="user_id" class="input-glass" required aria-label="انتخاب مدیر شعبهٔ {{ branch.name }}">
-                            <option value="">انتخاب کاربر از همین مجموعه…</option>
-                            {% for candidate in branch_manager_candidates %}<option value="{{ candidate.pk }}">{{ candidate.get_full_name }} — {{ candidate.phone }}</option>{% endfor %}
-                        </select>
-                        <button type="submit" class="btn-add" aria-label="افزودن مدیر به {{ branch.name }}" title="افزودن مدیر"><i class="bi bi-person-plus"></i><span class="button-label"> افزودن</span></button>
-                    </form>
-                    {% elif not branch.is_active %}<p class="text-muted mb-0">شعبه غیرفعال است.</p>
-                    {% else %}<p class="text-muted mb-0">کاربر فعالی از این مجموعه برای انتساب موجود نیست.</p>{% endif %}
-                    <div class="branch-manager-selected-list">
-                    {% for membership in branch.active_managers %}
-                    <div class="branch-manager-row"><span>{{ membership.user.get_full_name }} — {{ membership.user.phone }}</span>
-                        <button type="button" class="coach-action-btn delete" aria-label="لغو مدیر شعبه" title="لغو دسترسی این شعبه" onclick="openRevokeManagerModal('{% url 'clubs:branch_manager_deactivate' organization.pk branch.pk membership.pk %}', '{{ membership.user.get_full_name|escapejs }}', '{{ branch.name|escapejs }}')"><i class="bi bi-person-dash"></i></button>
-                    </div>
-                    {% empty %}<p class="text-muted mb-0">برای این شعبه مدیری تعیین نشده است.</p>{% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-            </article>
-            {% empty %}
-            <div class="organization-empty-state">
-                <i class="bi bi-building" style="font-size:2rem;display:block;margin-bottom:10px;"></i>
-                هنوز شعبه‌ای برای این مجموعه ثبت نشده است.
+        <section class="organization-panel-card">
+            <h2 class="organization-section-title">شعبه‌های این مجموعه</h2>
+            <div class="organization-branch-grid">
+                {% for branch in organization.branches.all %}
+                <article class="organization-branch-card">
+                    <div class="organization-branch-name"><i class="bi bi-building"></i> {{ branch.name }}</div>
+                    <div class="organization-branch-meta"><i class="bi bi-geo-alt"></i> {{ branch.city.name }}، {{ branch.province.name }}</div>
+                    {% if branch.phone %}<div class="organization-branch-meta"><i class="bi bi-telephone"></i> {{ branch.phone }}</div>{% endif %}
+                    <div class="organization-branch-meta">{% if branch.is_active %}<span class="text-success">فعال</span>{% else %}<span class="text-muted">غیرفعال</span>{% endif %}</div>
+                </article>
+                {% empty %}<div class="organization-empty-state">هنوز شعبه‌ای برای این مجموعه ثبت نشده است.</div>{% endfor %}
             </div>
-            {% endfor %}
-        </div>
         </section>
-        {% if is_platform_owner %}
-        <div class="modal-overlay" id="organizationManagersOverlay" onclick="closeOrganizationManagersModal()"></div>
-        <div class="modal-sheet organization-managers-modal" id="organizationManagersModal" role="dialog" aria-modal="true" aria-labelledby="organizationManagersTitle">
-            <div class="modal-handle"></div>
-            <div class="modal-title" id="organizationManagersTitle">مدیران مجموعه</div>
-            <div class="modal-body">
-                <p class="text-muted">این مدیران به تمام شعبه‌های «{{ organization.name }}» دسترسی دارند.</p>
-                {% if organization_manager_candidates %}
-                <form method="post" action="{% url 'clubs:organization_manager_add' organization.pk %}" class="organization-manager-add-form">
-                    {% csrf_token %}
-                    <select name="user_id" class="input-glass" required aria-label="انتخاب مدیر مجموعه">
-                        <option value="">انتخاب کاربر از همین مجموعه…</option>
-                        {% for candidate in organization_manager_candidates %}<option value="{{ candidate.pk }}">{{ candidate.get_full_name }} — {{ candidate.phone }}</option>{% endfor %}
-                    </select>
-                    <button type="submit" class="btn-add" aria-label="افزودن مدیر مجموعه" title="افزودن مدیر"><i class="bi bi-person-plus"></i><span class="button-label"> افزودن</span></button>
-                </form>
-                {% else %}<p class="text-muted">کاربر فعالی از این مجموعه برای افزودن وجود ندارد.</p>{% endif %}
-                <div class="branch-manager-selected-list organization-managers-list">
-                    {% for membership in organization_managers %}
-                    <div class="branch-manager-row"><span>{{ membership.user.get_full_name }} — {{ membership.user.phone }}</span>
-                        <button type="button" class="coach-action-btn delete" aria-label="لغو مدیر مجموعه" title="لغو دسترسی مجموعه" onclick="openRevokeManagerModal('{% url 'clubs:organization_manager_deactivate' organization.pk membership.pk %}', '{{ membership.user.get_full_name|escapejs }}', '{{ organization.name|escapejs }}')"><i class="bi bi-person-dash"></i></button>
-                    </div>
-                    {% empty %}<p class="text-muted">هنوز مدیر مجموعه‌ای تعیین نشده است.</p>{% endfor %}
-                </div>
-            </div>
-        </div>
-        <script>
-        function openOrganizationManagersModal() {
-            document.getElementById('organizationManagersOverlay').classList.add('show');
-            document.getElementById('organizationManagersModal').classList.add('show');
-        }
-        function closeOrganizationManagersModal() {
-            document.getElementById('organizationManagersOverlay').classList.remove('show');
-            document.getElementById('organizationManagersModal').classList.remove('show');
-        }
-        </script>
-        {% endif %}
-        {% if can_manage_branch_staff %}
-        <div class="modal-overlay" id="revokeManagerOverlay" onclick="closeRevokeManagerModal()"></div>
-        <div class="modal-sheet" id="revokeManagerModal" role="dialog" aria-modal="true" aria-labelledby="revokeManagerTitle">
-            <div class="modal-handle"></div><div class="modal-title" id="revokeManagerTitle">تأیید لغو مدیر</div>
-            <div class="modal-body text-center"><p id="revokeManagerText">دسترسی این مدیر لغو شود؟</p>
-                <form method="post" id="revokeManagerForm" action="">{% csrf_token %}
-                    <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeRevokeManagerModal()">انصراف</button><button type="submit" class="btn-submit-sm">لغو دسترسی</button></div>
-                </form>
-            </div>
-        </div>
-        <script>
-        function openRevokeManagerModal(url, name, scopeName) {
-            document.getElementById('revokeManagerForm').action = url;
-            document.getElementById('revokeManagerText').textContent = 'دسترسی «' + name + '» به «' + scopeName + '» لغو شود؟';
-            document.getElementById('revokeManagerOverlay').classList.add('show');
-            document.getElementById('revokeManagerModal').classList.add('show');
-        }
-        function closeRevokeManagerModal() {
-            document.getElementById('revokeManagerOverlay').classList.remove('show');
-            document.getElementById('revokeManagerModal').classList.remove('show');
-        }
-        document.addEventListener('DOMContentLoaded', function () {
-            {% for message in messages %}
-            if (typeof showToast === 'function') {
-                showToast('{% if message.tags == "success" %}bi-check-circle-fill{% else %}bi-exclamation-circle-fill{% endif %}', '{% if message.tags == "success" %}green{% else %}red{% endif %}', '{% if message.tags == "success" %}موفق{% else %}خطا{% endif %}', '{{ message|escapejs }}');
-            }
-            {% endfor %}
-        });
-        </script>
-        {% endif %}
     </main>
     {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
 </div>
