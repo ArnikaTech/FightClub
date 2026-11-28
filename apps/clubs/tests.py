@@ -7,6 +7,7 @@ from apps.clubs.models import City, Club, ClubMembership, Province
 from apps.accounts.views import managed_clubs_for as accounts_managed_clubs_for
 from apps.students.views import managed_clubs_for as students_managed_clubs_for
 from apps.finance.views import managed_clubs_for as finance_managed_clubs_for
+from apps.students.models import Student
 from .models import Organization, OrganizationMembership
 
 
@@ -211,7 +212,23 @@ class OrganizationMembershipTests(TestCase):
             phone="09120000042", password="test-pass", first_name="مدیر",
             last_name="مجموعه",
         )
+        province = Province.objects.create(name="آزمایش")
+        city = City.objects.create(name="شهر آزمایش", province=province)
+        candidate_branch = Club.objects.create(
+            organization=self.organization_a, name="شعبه نامزد", province=province, city=city
+        )
+        Student.objects.create(user=manager, club=candidate_branch, student_code="orgm-candidate")
+        foreign_user = User.objects.create_user(phone="09120000064", password="test-pass")
+        foreign_branch = Club.objects.create(
+            organization=self.organization_b, name="شعبه مجموعه ب", province=province, city=city
+        )
+        Student.objects.create(user=foreign_user, club=foreign_branch, student_code="foreign-candidate")
         self.client.force_login(platform_owner)
+        detail = self.client.get(reverse("clubs:organization_detail", args=[self.organization_a.pk]))
+        self.assertSetEqual(
+            set(detail.context["organization_manager_candidates"].values_list("pk", flat=True)),
+            {manager.pk},
+        )
 
         response = self.client.post(
             reverse("clubs:organization_manager_add", args=[self.organization_a.pk]),
@@ -224,6 +241,8 @@ class OrganizationMembershipTests(TestCase):
         )
         self.assertTrue(membership.is_active)
         self.assertFalse(manager.is_club_manager)
+        detail = self.client.get(reverse("clubs:organization_detail", args=[self.organization_a.pk]))
+        self.assertIn(manager, [item.user for item in detail.context["organization_managers"]])
 
         self.client.force_login(manager)
         self.assertEqual(self.client.get(reverse("clubs:club_list")).status_code, 200)
@@ -276,8 +295,16 @@ class OrganizationMembershipTests(TestCase):
         branch_b = Club.objects.create(organization=self.organization_a, name="ب", province=province, city=city)
         branch_foreign = Club.objects.create(organization=self.organization_b, name="ج", province=province, city=city)
         target = User.objects.create_user(phone="09120000061", password="test-pass")
+        Student.objects.create(user=target, club=branch_a, student_code="br-a-candidate")
+        foreign_target = User.objects.create_user(phone="09120000062", password="test-pass")
+        Student.objects.create(user=foreign_target, club=branch_foreign, student_code="branch-b-manager-candidate")
         OrganizationMembership.objects.create(user=self.user, organization=self.organization_a, role="manager")
         self.client.force_login(self.user)
+        detail = self.client.get(reverse("clubs:organization_detail", args=[self.organization_a.pk]))
+        self.assertSetEqual(
+            set(detail.context["branch_manager_candidates"].values_list("pk", flat=True)),
+            {target.pk},
+        )
 
         response = self.client.post(
             reverse("clubs:branch_manager_add", args=[self.organization_a.pk, branch_a.pk]),
@@ -296,7 +323,29 @@ class OrganizationMembershipTests(TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertFalse(accounts_managed_clubs_for(target).filter(pk__in=[branch_b.pk, branch_foreign.pk]).exists())
 
-    def test_cannot_revoke_last_active_organization_manager(self):
+    def test_can_revoke_last_branch_manager_and_leave_branch_unassigned(self):
+        province = Province.objects.create(name="آزمایش")
+        city = City.objects.create(name="شهر آزمایش", province=province)
+        branch = Club.objects.create(
+            organization=self.organization_a, name="شعبه بدون مدیر", province=province, city=city
+        )
+        manager_user = User.objects.create_user(phone="09120000063", password="test-pass")
+        membership = ClubMembership.objects.create(user=manager_user, club=branch, role="manager")
+        OrganizationMembership.objects.create(
+            user=self.user, organization=self.organization_a, role="manager"
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("clubs:branch_manager_deactivate", args=[self.organization_a.pk, branch.pk, membership.pk])
+        )
+
+        self.assertEqual(response.status_code, 302)
+        membership.refresh_from_db()
+        self.assertFalse(membership.is_active)
+        self.assertFalse(accounts_managed_clubs_for(manager_user).filter(pk=branch.pk).exists())
+
+    def test_can_revoke_last_active_organization_manager(self):
         platform_owner = User.objects.create_user(
             phone="09120000043", password="test-pass", first_name="پشتیبان",
             last_name="پلتفرم", is_super_manager=True,
@@ -315,7 +364,7 @@ class OrganizationMembershipTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         membership.refresh_from_db()
-        self.assertTrue(membership.is_active)
+        self.assertFalse(membership.is_active)
 
     def test_multiple_managers_can_belong_to_the_same_organization(self):
         second_manager = User.objects.create_user(

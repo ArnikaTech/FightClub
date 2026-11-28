@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.http import HttpResponse
@@ -19,6 +19,27 @@ from apps.accounts.models import User
 
 def active_managed_clubs_for(user):
     return managed_clubs_for(user).filter(is_active=True)
+
+
+def organization_people_for(organization):
+    return User.objects.filter(is_active=True, is_super_manager=False).filter(
+        Q(student_profile__club__organization=organization)
+        | Q(student_profile__club_memberships__club__organization=organization)
+        | Q(club_memberships__club__organization=organization)
+        | Q(organization_memberships__organization=organization)
+    ).distinct()
+
+
+def organization_manager_candidates_for(organization):
+    return organization_people_for(organization).exclude(
+        organization_memberships__organization=organization,
+        organization_memberships__is_active=True,
+        organization_memberships__role='manager',
+    ).order_by('first_name', 'last_name')
+
+
+def branch_manager_candidates_for(organization):
+    return organization_manager_candidates_for(organization)
 
 
 # ========== استان‌ها ==========
@@ -181,27 +202,13 @@ class OrganizationDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         organization = self.object
+        context['is_platform_owner'] = self.request.user.is_super_manager
+        context['can_manage_branch_staff'] = can_manage_organization(self.request.user, organization)
         context['organization_managers'] = organization.memberships.filter(
             role='manager', is_active=True
         ).select_related('user').order_by('user__first_name', 'user__last_name')
-        context['active_manager_count'] = organization.memberships.filter(
-            role='manager', is_active=True
-        ).count()
-        context['is_platform_owner'] = self.request.user.is_super_manager
-        context['can_manage_branch_staff'] = can_manage_organization(self.request.user, organization)
-        context['protect_last_manager'] = organization.is_active and context['active_manager_count'] <= 1
-        context['available_manager_users'] = User.objects.filter(
-            is_active=True, is_super_manager=False
-        ).exclude(
-            organization_memberships__organization=organization,
-            organization_memberships__is_active=True,
-        ).order_by('first_name', 'last_name')
-        context['branch_manager_candidates'] = User.objects.filter(
-            is_active=True, is_super_manager=False
-        ).exclude(
-            organization_memberships__organization=organization,
-            organization_memberships__is_active=True,
-        ).order_by('first_name', 'last_name')
+        context['organization_manager_candidates'] = organization_manager_candidates_for(organization)
+        context['branch_manager_candidates'] = branch_manager_candidates_for(organization)
         branches = list(organization.branches.all().select_related('city', 'province'))
         for branch in branches:
             branch.active_managers = list(branch.memberships.filter(
@@ -220,7 +227,7 @@ class OrganizationManagerAssignView(LoginRequiredMixin, UserPassesTestMixin, Vie
     def post(self, request, pk):
         organization = get_object_or_404(Organization, pk=pk, is_active=True)
         user = get_object_or_404(
-            User.objects.filter(is_active=True, is_super_manager=False),
+            organization_manager_candidates_for(organization),
             pk=request.POST.get('user_id'),
         )
         membership, created = OrganizationMembership.objects.update_or_create(
@@ -253,14 +260,9 @@ class OrganizationManagerDeactivateView(LoginRequiredMixin, UserPassesTestMixin,
                 is_active=True,
                 role='manager',
             )
-            if organization.is_active and organization.memberships.filter(
-                is_active=True, role='manager'
-            ).count() <= 1:
-                messages.error(request, 'برای مجموعهٔ فعال باید دست‌کم یک مدیر فعال باقی بماند.')
-            else:
-                membership.is_active = False
-                membership.save(update_fields=['is_active'])
-                messages.success(request, f'دسترسی مدیر مجموعه برای «{membership.user.get_full_name()}» لغو شد.')
+            membership.is_active = False
+            membership.save(update_fields=['is_active'])
+            messages.success(request, f'دسترسی مدیر مجموعه برای «{membership.user.get_full_name()}» لغو شد.')
         return redirect('clubs:organization_detail', pk=organization.pk)
 
 
@@ -273,7 +275,7 @@ class BranchManagerAssignView(LoginRequiredMixin, UserPassesTestMixin, View):
         organization = get_object_or_404(Organization, pk=pk, is_active=True)
         club = get_object_or_404(Club, pk=club_pk, organization=organization, is_active=True)
         user = get_object_or_404(
-            User.objects.filter(is_active=True, is_super_manager=False),
+            branch_manager_candidates_for(organization),
             pk=request.POST.get('user_id'),
         )
         ClubMembership.objects.update_or_create(
