@@ -269,6 +269,33 @@ class OrganizationMembershipTests(TestCase):
             {branch_b.pk},
         )
 
+    def test_organization_manager_can_assign_single_branch_manager(self):
+        province = Province.objects.create(name="آزمایش")
+        city = City.objects.create(name="شهر آزمایش", province=province)
+        branch_a = Club.objects.create(organization=self.organization_a, name="الف", province=province, city=city)
+        branch_b = Club.objects.create(organization=self.organization_a, name="ب", province=province, city=city)
+        branch_foreign = Club.objects.create(organization=self.organization_b, name="ج", province=province, city=city)
+        target = User.objects.create_user(phone="09120000061", password="test-pass")
+        OrganizationMembership.objects.create(user=self.user, organization=self.organization_a, role="manager")
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("clubs:branch_manager_add", args=[self.organization_a.pk, branch_a.pk]),
+            {"user_id": target.pk},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertSetEqual(
+            set(accounts_managed_clubs_for(target).values_list("pk", flat=True)),
+            {branch_a.pk},
+        )
+        response = self.client.post(
+            reverse("clubs:branch_manager_add", args=[self.organization_a.pk, branch_foreign.pk]),
+            {"user_id": target.pk},
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(accounts_managed_clubs_for(target).filter(pk__in=[branch_b.pk, branch_foreign.pk]).exists())
+
     def test_cannot_revoke_last_active_organization_manager(self):
         platform_owner = User.objects.create_user(
             phone="09120000043", password="test-pass", first_name="پشتیبان",

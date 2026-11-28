@@ -33,8 +33,14 @@
 .organization-manager-add-form { display:flex;align-items:center;gap:8px;min-width:min(100%,380px); }
 .organization-manager-add-form select { flex:1;min-width:0; }
 .organization-manager-add-form .btn-add { flex:0 0 auto;white-space:nowrap; }
-.organization-branch-card { display:flex;align-items:center;gap:12px; }
+.organization-branch-card { display:flex;flex-wrap:wrap;align-items:center;gap:12px; }
 .organization-branch-card .coach-info-page { min-width:0; }
+.branch-manager-panel { flex:1 0 100%;padding:14px;border:1px solid var(--border-glass);border-radius:12px;background:var(--input-bg); }
+.branch-manager-panel form { display:flex;gap:8px;align-items:center; }
+.branch-manager-panel select { flex:1;min-width:0; }
+.branch-manager-row { display:flex;justify-content:space-between;align-items:center;padding:8px;margin-top:8px;border-radius:8px;background:var(--card-bg); }
+.organization-detail-actions { display:flex;gap:8px; }
+
 .organization-branch-location { color:var(--text-muted);font-size:var(--font-size-xs);margin-top:4px; }
 .organization-branch-state { margin-right:auto;font-size:var(--font-size-xs);white-space:nowrap; }
 .organization-empty-state {
@@ -82,7 +88,7 @@
                     <h2 class="organization-section-title">مدیران مجموعه</h2>
                     <p class="text-muted mb-0">مدیران می‌توانند به شعبه‌های این مجموعه دسترسی مدیریتی داشته باشند و مدیران شعبه را تعیین کنند.</p>
                 </div>
-                {% if available_manager_users %}
+                {% if is_platform_owner and available_manager_users %}
                 <form method="post" action="{% url 'clubs:organization_manager_add' organization.pk %}" class="organization-manager-add-form">
                     {% csrf_token %}
                     <select name="user_id" class="input-glass" required aria-label="انتخاب کاربر برای مدیریت مجموعه">
@@ -93,7 +99,7 @@
                     </select>
                     <button type="submit" class="btn-add"><i class="bi bi-person-plus"></i> افزودن مدیر</button>
                 </form>
-                {% else %}
+                {% elif is_platform_owner %}
                 <p class="text-muted mb-0">کاربر فعالی برای افزودن وجود ندارد.</p>
                 {% endif %}
             </div>
@@ -105,10 +111,13 @@
                         <div class="coach-name-page">{{ membership.user.get_full_name }}</div>
                         <div class="organization-branch-location"><i class="bi bi-telephone"></i> {{ membership.user.phone }}</div>
                     </div>
-                    <form method="post" action="{% url 'clubs:organization_manager_deactivate' organization.pk membership.pk %}" onsubmit="return confirm('دسترسی این مدیر به مجموعه لغو شود؟')">
-                        {% csrf_token %}
-                        <button type="submit" class="coach-action-btn delete" aria-label="لغو دسترسی مدیر" title="لغو دسترسی"><i class="bi bi-person-dash"></i></button>
-                    </form>
+                    {% if is_platform_owner %}
+                    {% if not protect_last_manager %}
+                    <button type="button" class="coach-action-btn delete" aria-label="لغو دسترسی مدیر" title="لغو دسترسی" onclick="openRevokeManagerModal('{% url 'clubs:organization_manager_deactivate' organization.pk membership.pk %}', '{{ membership.user.get_full_name|escapejs }}')"><i class="bi bi-person-dash"></i></button>
+                    {% else %}
+                    <button type="button" class="coach-action-btn delete" disabled title="ابتدا مدیر دیگری اضافه کنید"><i class="bi bi-person-dash"></i></button>
+                    {% endif %}
+                    {% endif %}
                 </article>
                 {% empty %}
                 <div class="organization-empty-state">برای این مجموعه هنوز مدیری تعیین نشده است.</div>
@@ -119,7 +128,7 @@
         <section class="organization-panel-card organization-branches-section">
         <h2 class="organization-section-title">شعبه‌های مجموعه</h2>
         <div class="coach-list-page">
-            {% for branch in organization.branches.all %}
+            {% for branch in organization_branches %}
             <article class="coach-card-page organization-branch-card">
                 <div class="coach-avatar-page"><i class="bi bi-building"></i></div>
                 <div class="coach-info-page">
@@ -128,6 +137,28 @@
                     {% if branch.phone %}<div class="organization-branch-location"><i class="bi bi-telephone"></i> {{ branch.phone }}</div>{% endif %}
                 </div>
                 <span class="organization-branch-state">{% if branch.is_active %}فعال{% else %}غیرفعال{% endif %}</span>
+                {% if can_manage_branch_staff %}
+                <div class="branch-manager-panel">
+                    <strong>مدیران شعبه</strong>
+                    {% if branch.is_active and branch_manager_candidates %}
+                    <form method="post" action="{% url 'clubs:branch_manager_add' organization.pk branch.pk %}">
+                        {% csrf_token %}
+                        <select name="user_id" class="input-glass" required aria-label="انتخاب مدیر شعبه">
+                            <option value="">انتخاب کاربر…</option>
+                            {% for candidate in branch_manager_candidates %}<option value="{{ candidate.pk }}">{{ candidate.get_full_name }} — {{ candidate.phone }}</option>{% endfor %}
+                        </select>
+                        <button type="submit" class="btn-add"><i class="bi bi-person-plus"></i> افزودن</button>
+                    </form>
+                    {% endif %}
+                    {% for membership in branch.active_managers %}
+                    <div class="branch-manager-row"><span>{{ membership.user.get_full_name }} — {{ membership.user.phone }}</span>
+                        <form method="post" action="{% url 'clubs:branch_manager_deactivate' organization.pk branch.pk membership.pk %}" onsubmit="return confirm('دسترسی مدیر این شعبه لغو شود؟')">
+                            {% csrf_token %}<button type="submit" class="coach-action-btn delete" aria-label="لغو مدیر شعبه"><i class="bi bi-person-dash"></i></button>
+                        </form>
+                    </div>
+                    {% empty %}<p class="text-muted mb-0">مدیر مستقلی برای این شعبه تعیین نشده است.</p>{% endfor %}
+                </div>
+                {% endif %}
             </article>
             {% empty %}
             <div class="organization-empty-state">
@@ -137,6 +168,29 @@
             {% endfor %}
         </div>
         </section>
+        {% if is_platform_owner %}
+        <div class="modal-overlay" id="revokeManagerOverlay" onclick="closeRevokeManagerModal()"></div>
+        <div class="modal-sheet" id="revokeManagerModal" role="dialog" aria-modal="true" aria-labelledby="revokeManagerTitle">
+            <div class="modal-handle"></div><div class="modal-title" id="revokeManagerTitle">تأیید لغو مدیر</div>
+            <div class="modal-body text-center"><p id="revokeManagerText">دسترسی این مدیر لغو شود؟</p>
+                <form method="post" id="revokeManagerForm" action="">{% csrf_token %}
+                    <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeRevokeManagerModal()">انصراف</button><button type="submit" class="btn-submit-sm">لغو دسترسی</button></div>
+                </form>
+            </div>
+        </div>
+        <script>
+        function openRevokeManagerModal(url, name) {
+            document.getElementById('revokeManagerForm').action = url;
+            document.getElementById('revokeManagerText').textContent = 'دسترسی مدیر «' + name + '» به این مجموعه لغو شود؟';
+            document.getElementById('revokeManagerOverlay').classList.add('show');
+            document.getElementById('revokeManagerModal').classList.add('show');
+        }
+        function closeRevokeManagerModal() {
+            document.getElementById('revokeManagerOverlay').classList.remove('show');
+            document.getElementById('revokeManagerModal').classList.remove('show');
+        }
+        </script>
+        {% endif %}
     </main>
     {% include 'partials/_bottom_nav.html' %}{% include 'partials/_bottom_sheet.html' %}{% include 'partials/_toast.html' %}
 </div>

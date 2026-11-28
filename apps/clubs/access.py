@@ -45,6 +45,17 @@ def teaching_clubs_for(user):
     ).distinct()
 
 
+def can_manage_organization(user, organization):
+    if not user.is_authenticated:
+        return False
+    if user.is_super_manager:
+        return True
+    return OrganizationMembership.objects.filter(
+        user=user, organization=organization, is_active=True,
+        role='manager', organization__is_active=True,
+    ).exists()
+
+
 def can_manage_clubs(user):
     if not user.is_authenticated:
         return False
