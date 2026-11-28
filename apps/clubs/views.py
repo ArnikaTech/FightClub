@@ -24,10 +24,25 @@ def active_managed_clubs_for(user):
 
 def organization_people_for(organization):
     return User.objects.filter(is_active=True, is_super_manager=False).filter(
-        Q(student_profile__club__organization=organization)
-        | Q(student_profile__club_memberships__club__organization=organization)
-        | Q(club_memberships__club__organization=organization)
-        | Q(organization_memberships__organization=organization)
+        Q(
+            student_profile__club__organization=organization,
+            student_profile__is_active=True,
+            student_profile__club__is_active=True,
+        )
+        | Q(
+            student_profile__club_memberships__club__organization=organization,
+            student_profile__club_memberships__is_active=True,
+            student_profile__is_active=True,
+        )
+        | Q(
+            club_memberships__club__organization=organization,
+            club_memberships__club__is_active=True,
+            club_memberships__is_active=True,
+        )
+        | Q(
+            organization_memberships__organization=organization,
+            organization_memberships__is_active=True,
+        )
     ).distinct()
 
 

@@ -249,6 +249,10 @@ class OrganizationMembershipTests(TestCase):
             organization=self.organization_b, name="شعبه مجموعه ب", province=province, city=city
         )
         Student.objects.create(user=foreign_user, club=foreign_branch, student_code="foreign-candidate")
+        former_manager = User.objects.create_user(phone="09120000065", password="test-pass")
+        OrganizationMembership.objects.create(
+            user=former_manager, organization=self.organization_a, role="manager", is_active=False
+        )
         self.client.force_login(platform_owner)
         detail = self.client.get(reverse("clubs:access_management"), {"scope_org": self.organization_a.pk})
         self.assertSetEqual(
