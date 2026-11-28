@@ -5,10 +5,12 @@
 <style>
 .access-header-actions{display:flex;gap:8px;flex-wrap:wrap}
 .access-card{background:var(--card-bg);border:1px solid var(--border-glass);border-radius:16px;padding:18px;margin-bottom:16px}
-.access-org-grid,.access-branch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));grid-auto-rows:1fr;gap:12px}
+.access-org-grid,.access-branch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),min(100%,380px)));grid-auto-rows:1fr;justify-content:start;gap:12px}
 .access-org-card,.access-branch-card{height:100%;padding:16px;border:1px solid var(--border-glass);border-radius:13px;background:var(--input-bg)}
+.access-card--compact{max-width:760px}
+.access-card .organization-section-title{font-size:var(--font-size-sm);font-weight:700}
 .access-org-card{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.access-title{font-size:var(--font-size-base);font-weight:700}
+.access-title{font-size:var(--font-size-sm);font-weight:700;line-height:1.6}
 .access-subtitle,.access-meta{color:var(--text-muted);font-size:var(--font-size-xs);margin-top:6px}
 .access-branch-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 .access-add-form{display:flex;gap:8px;align-items:center;margin-top:14px}
@@ -47,12 +49,11 @@
         <section class="access-card">
             <div class="access-branch-head">
                 <div><div class="access-title">مجموعه: {{ selected_access_organization.name }}</div><div class="access-subtitle">مدیر مجموعه به همهٔ شعبه‌های این مجموعه دسترسی دارد. مدیر شعبه فقط به شعبهٔ مشخص‌شده دسترسی دارد.</div></div>
-                {% if access_organizations.count > 1 %}<a href="{% url 'clubs:access_management' %}" class="btn-cancel-sm">تغییر مجموعه</a>{% endif %}
             </div>
         </section>
 
         {% if can_assign_organization_manager %}
-        <section class="access-card">
+        <section class="access-card access-card--compact">
             <div class="access-branch-head"><div><h2 class="organization-section-title">مدیر مجموعه <small>(دسترسی به همهٔ شعبه‌ها)</small></h2><p class="text-muted mb-0">این نقش فقط برای افراد وابسته به همین مجموعه قابل انتخاب است.</p></div></div>
             {% if organization_manager_candidates %}
             <form method="post" action="{% url 'clubs:organization_manager_add' selected_access_organization.pk %}" class="access-add-form">

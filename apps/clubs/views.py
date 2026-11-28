@@ -595,7 +595,9 @@ class CoachListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     
     def get_queryset(self):
         return ClubMembership.objects.filter(
-            club__in=managed_clubs_for(self.request.user), is_active=True
+            club__in=managed_clubs_for(self.request.user),
+            is_active=True,
+            role__in=('instructor', 'assistant'),
         ).select_related('user', 'club')
     
     def get_context_data(self, **kwargs):
@@ -612,10 +614,17 @@ class CoachCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
         user_id = request.POST.get('user_id')
         club_id = request.POST.get('club_id')
         role = request.POST.get('role', 'instructor')
+        if role not in ('instructor', 'assistant'):
+            messages.error(request, 'مدیر شعبه را فقط از بخش «مدیران و دسترسی‌ها» مدیریت کنید.')
+            return redirect('clubs:coach_list')
         
         if user_id and club_id:
             user = get_object_or_404(User, pk=user_id)
             club = get_object_or_404(active_managed_clubs_for(request.user), pk=club_id)
+            existing_membership = ClubMembership.objects.filter(user=user, club=club).first()
+            if existing_membership and existing_membership.role == 'manager':
+                messages.error(request, 'این کاربر مدیر شعبه است؛ برای تغییر دسترسی از بخش «مدیران و دسترسی‌ها» استفاده کنید.')
+                return redirect('clubs:coach_list')
             user.is_instructor = True
             user.save()
             
@@ -636,10 +645,18 @@ class CoachEditView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self): return can_manage_clubs(self.request.user)
 
     def post(self, request, pk):
-        membership = get_object_or_404(ClubMembership, pk=pk, club__in=managed_clubs_for(request.user))
+        membership = get_object_or_404(
+            ClubMembership,
+            pk=pk,
+            club__in=managed_clubs_for(request.user),
+            role__in=('instructor', 'assistant'),
+        )
         user_id = request.POST.get('user_id')
         club_id = request.POST.get('club_id')
         role = request.POST.get('role')
+        if role not in ('instructor', 'assistant'):
+            messages.error(request, 'مدیر شعبه را فقط از بخش «مدیران و دسترسی‌ها» مدیریت کنید.')
+            return redirect('clubs:coach_list')
         club = get_object_or_404(active_managed_clubs_for(request.user), pk=club_id)
         
         # چک تکراری نبودن در باشگاه جدید
@@ -661,7 +678,12 @@ class CoachDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self): return can_manage_clubs(self.request.user)
 
     def post(self, request, pk):
-        membership = get_object_or_404(ClubMembership, pk=pk, club__in=managed_clubs_for(request.user))
+        membership = get_object_or_404(
+            ClubMembership,
+            pk=pk,
+            club__in=managed_clubs_for(request.user),
+            role__in=('instructor', 'assistant'),
+        )
         name = membership.user.get_full_name()
         membership.is_active = False
         membership.save()

@@ -43,7 +43,7 @@
             <input type="hidden" name="membership_id" id="coachMembershipId">
             <div class="modal-form-group"><label class="form-label-sm">کاربر *</label><select name="user_id" id="coachUser" class="input-glass" required><option value="">--</option>{% for u in users %}<option value="{{ u.id }}">{{ u.get_full_name }} ({{ u.phone }})</option>{% endfor %}</select></div>
             <div class="modal-form-group"><label class="form-label-sm">باشگاه *</label><select name="club_id" id="coachClub" class="input-glass" required><option value="">--</option>{% for c in clubs %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
-            <div class="modal-form-group"><label class="form-label-sm">نقش</label><select name="role" id="coachRole" class="input-glass"><option value="instructor">مربی</option><option value="manager">مدیر</option><option value="assistant">کمک‌مربی</option></select></div>
+            <div class="modal-form-group"><label class="form-label-sm">نقش</label><select name="role" id="coachRole" class="input-glass"><option value="instructor">مربی</option><option value="assistant">کمک‌مربی</option></select></div>
             <div class="modal-btn-row"><button type="button" class="btn-cancel-sm" onclick="closeCoachModal()">انصراف</button><button type="submit" class="btn-submit-sm"><i class="bi bi-check-lg"></i> ذخیره</button></div>
         </form>
     </div>

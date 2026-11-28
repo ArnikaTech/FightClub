@@ -3,7 +3,7 @@
 {% block title %}مدیریت مجموعه‌ها | {{ site_settings.gym_name }}{% endblock %}
 {% block content %}
 <style>
-.organization-list { align-items:stretch; }
+.organization-list { display:grid;align-items:stretch;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),min(100%,520px)));justify-content:start; }
 .organization-card {
     display:flex;
     flex-direction:column;
@@ -69,6 +69,7 @@
     gap:18px;
 }
 .organization-toolbar-heading { min-width:0; }
+.organization-toolbar-heading .page-title span { font-size:var(--font-size-sm);font-weight:500;color:var(--text-muted);white-space:nowrap; }
 .organization-toolbar-subtitle {
     display:flex;
     align-items:center;
@@ -88,11 +89,12 @@
     padding-top:16px;
     border-top:1px solid var(--border-glass);
 }
-.organization-toolbar-filter .form-select { width:auto; min-width:190px; }
+.organization-toolbar-filter .form-select { width:auto; min-width:190px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%2399a1ad' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.8' d='m2 4 4 4 4-4'/%3E%3C/svg%3E") !important;background-repeat:no-repeat;background-position:left 12px center;background-size:12px;padding-left:34px;cursor:pointer; }
 @media (max-width:575px) {
     .organization-toolbar-card { padding:16px; }
     .organization-toolbar-main { align-items:flex-start; flex-direction:column; }
-    .organization-toolbar-main > .btn-add { align-self:stretch; justify-content:center; }
+    .organization-toolbar-main > .btn-add { align-self:flex-start;min-width:180px;width:min(100%,220px);height:44px;padding:0 16px;border-radius:12px;justify-content:center; }
+    .organization-toolbar-main .btn-add-text { display:inline; }
     .organization-toolbar-filter { align-items:stretch; }
     .organization-toolbar-filter .form-select { flex:1; min-width:0; width:100%; max-width:none !important; }
 }

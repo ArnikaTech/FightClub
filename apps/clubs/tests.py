@@ -397,6 +397,26 @@ class OrganizationMembershipTests(TestCase):
         membership.refresh_from_db()
         self.assertFalse(membership.is_active)
 
+    def test_branch_manager_is_not_listed_or_editable_as_a_coach(self):
+        province = Province.objects.create(name="آزمایش")
+        city = City.objects.create(name="شهر آزمایش", province=province)
+        branch = Club.objects.create(
+            organization=self.organization_a, name="شعبه الف", province=province, city=city
+        )
+        membership = ClubMembership.objects.create(user=self.user, club=branch, role="manager")
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("clubs:coach_list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["coaches"].count(), 0)
+        edit_response = self.client.post(
+            reverse("clubs:coach_edit", args=[membership.pk]),
+            {"user_id": self.user.pk, "club_id": branch.pk, "role": "instructor"},
+        )
+        self.assertEqual(edit_response.status_code, 404)
+        membership.refresh_from_db()
+        self.assertEqual(membership.role, "manager")
+
     def test_multiple_managers_can_belong_to_the_same_organization(self):
         second_manager = User.objects.create_user(
             phone="09120000002",
